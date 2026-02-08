@@ -1,0 +1,160 @@
+/**
+ * Lightweight WebSocket wrapper with zstd decompression
+ * - Binary frames = compressed (decompress with fzstd)
+ * - Text frames = plain JSON
+ * 
+ * Server decides when to compress. Client just handles both.
+ */
+
+const FZSTD_CDN = 'https://cdn.jsdelivr.net/npm/fzstd@0.1.1/umd/index.min.js';
+const FZSTD_SRI = 'sha384-MhnRpMMxECUIiwGKUUKgm602Ohalv+N2TWG/AYjw9V90GIGHkeXCu/hLzLqBEkb4';
+
+class CompressedWebSocket {
+    constructor(url, options = {}) {
+        this.url = url;
+        this.options = options;
+        this.ws = null;
+        this.fzstd = null;
+        this.compressionEnabled = false;
+        this.refCounter = 1;
+        
+        this.onopen = null;
+        this.onmessage = null;
+        this.onclose = null;
+        this.onerror = null;
+        
+        this._connect();
+    }
+    
+    _connect() {
+        const protocols = this.options.protocols || [];
+        if (this.options.preferZstdHeader) {
+            protocols.push('zstd');
+        }
+        
+        this.ws = protocols.length > 0 
+            ? new WebSocket(this.url, protocols)
+            : new WebSocket(this.url);
+        
+        this.ws.binaryType = 'arraybuffer';
+        
+        this.ws.onopen = () => {
+            if (this.ws.protocol === 'zstd') {
+                this._loadFzstd().then(() => {
+                    this.compressionEnabled = true;
+                    if (this.onopen) this.onopen();
+                });
+            } else {
+                this._negotiateCompression();
+            }
+        };
+        
+        this.ws.onmessage = (event) => this._handleMessage(event.data);
+        this.ws.onclose = (event) => { if (this.onclose) this.onclose(event); };
+        this.ws.onerror = (event) => { if (this.onerror) this.onerror(event); };
+    }
+    
+    async _negotiateCompression() {
+        const ref = String(this.refCounter++);
+        this.send([null, ref, "system", "get_capabilities", {}]);
+        this._pendingCapabilities = ref;
+    }
+    
+    async _loadFzstd() {
+        if (this.fzstd) return this.fzstd;
+        if (window.fzstd) {
+            this.fzstd = window.fzstd;
+            return this.fzstd;
+        }
+        
+        return new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = FZSTD_CDN;
+            script.integrity = FZSTD_SRI;
+            script.crossOrigin = 'anonymous';
+            script.async = true;
+            script.onload = () => {
+                this.fzstd = window.fzstd;
+                resolve(this.fzstd);
+            };
+            script.onerror = reject;
+            document.head.appendChild(script);
+        });
+    }
+    
+    async _handleMessage(data) {
+        let parsed;
+        
+        // Binary = compressed, Text = plain
+        if (data instanceof ArrayBuffer) {
+            if (this.fzstd) {
+                try {
+                    const decompressed = this.fzstd.decompress(new Uint8Array(data));
+                    parsed = JSON.parse(new TextDecoder().decode(decompressed));
+                } catch (e) {
+                    console.error('Decompression failed:', e);
+                    return;
+                }
+            } else {
+                // Binary but no decompressor - try as plain text
+                try {
+                    parsed = JSON.parse(new TextDecoder().decode(data));
+                } catch (e) {
+                    console.error('Binary parse failed:', e);
+                    return;
+                }
+            }
+        } else {
+            try {
+                parsed = JSON.parse(data);
+            } catch (e) {
+                console.error('JSON parse failed:', e);
+                return;
+            }
+        }
+        
+        // Handle system responses internally
+        if (Array.isArray(parsed) && parsed.length >= 5) {
+            const [, ref, , , payload] = parsed;
+            
+            if (this._pendingCapabilities && ref === this._pendingCapabilities) {
+                this._pendingCapabilities = null;
+                if (payload.compression?.includes('zstd')) {
+                    await this._loadFzstd();
+                    const enableRef = String(this.refCounter++);
+                    this.send([null, enableRef, "system", "enable_compression", { type: "zstd" }]);
+                    this._pendingEnableCompression = enableRef;
+                    return;
+                }
+                if (this.onopen) this.onopen();
+                return;
+            }
+            
+            if (this._pendingEnableCompression && ref === this._pendingEnableCompression) {
+                this._pendingEnableCompression = null;
+                if (payload.status === 'ok' || payload.compression === 'zstd') {
+                    this.compressionEnabled = true;
+                }
+                if (this.onopen) this.onopen();
+                return;
+            }
+        }
+        
+        if (this.onmessage) this.onmessage(parsed);
+    }
+    
+    send(data) {
+        if (this.ws?.readyState === WebSocket.OPEN) {
+            this.ws.send(typeof data === 'string' ? data : JSON.stringify(data));
+        }
+    }
+    
+    close() { this.ws?.close(); }
+    get readyState() { return this.ws?.readyState ?? WebSocket.CLOSED; }
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = CompressedWebSocket;
+} else {
+    window.CompressedWebSocket = CompressedWebSocket;
+}

@@ -113,4 +113,3 @@
     setMode(checked ? checked.value : 'date');
 })();
 </script>
-

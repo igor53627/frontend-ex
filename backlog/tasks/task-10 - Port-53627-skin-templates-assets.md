@@ -1,10 +1,10 @@
 ---
 id: TASK-10
 title: Port 53627 skin (templates + assets)
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-02-08 13:37'
-updated_date: '2026-02-08 13:38'
+updated_date: '2026-02-09 01:26'
 labels:
   - skins
   - '53627'
@@ -20,6 +20,6 @@ priority: medium
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 53627 templates + static assets ported
-- [ ] #2 For implemented pages, HTML is byte-for-byte vs Rust (fixture-based)
+- [x] #1 53627 templates + static assets ported
+- [x] #2 For implemented pages, HTML is byte-for-byte vs Rust (fixture-based)
 <!-- AC:END -->

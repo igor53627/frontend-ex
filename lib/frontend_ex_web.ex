@@ -17,7 +17,8 @@ defmodule FrontendExWeb do
   those modules here.
   """
 
-  def static_paths, do: ~w(assets fonts images favicon.ico robots.txt)
+  # fast-frontend parity assets live under /static/** (CSS/JS).
+  def static_paths, do: ~w(assets fonts images static favicon.ico robots.txt)
 
   def router do
     quote do

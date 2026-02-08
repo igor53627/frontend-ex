@@ -46,14 +46,23 @@ Key configuration:
 
 ## Upstream API Client
 
-`FrontendEx.Blockscout.Client` wraps `Req` + a shared `Finch` pool:
+`FrontendEx.Blockscout.Client` wraps `Req` + a shared `Finch` pool.
 
 - Base URL: `BLOCKSCOUT_API_URL`
 - Timeouts: 10s (connect + receive)
-- Error mapping/retry behavior follows `fast-frontend/src/api/client.rs`:
+- Request adapter is pluggable via `:frontend_ex, :blockscout_request_adapter`:
+  - Default: `FrontendEx.Blockscout.RequestAdapter.Req` (real HTTP)
+  - Tests: `FrontendEx.Blockscout.RequestAdapter.Fixture` (reads on-disk fixtures)
+
+`get_json/1` (uncached) error mapping/retry behavior follows `fast-frontend/src/api/client.rs`:
   - 404 -> `:not_found` (no retry)
   - 429/5xx/transport -> retry once after 250ms
   - invalid JSON -> retry up to 3 attempts; then treat as `:not_found`
+
+`get_json_cached/2` uses the standard cache (60s) and also negative-caches `:not_found` for a short TTL (5s). Callers must pass a cache context (e.g. `:public`) that includes any inputs that can vary the upstream response:
+
+- `:not_found` -> cached for 5s (returned to callers as `{:error, :not_found}`)
+- Other upstream errors are not cached and are returned as-is.
 
 ## Cursor Pagination
 
@@ -75,8 +84,26 @@ Important nuance:
 
 ## Caching
 
-Caching strategies are tracked in backlog tasks and will mirror Rust:
+- `FrontendEx.Application` starts in-memory caches for Blockscout API responses.
 
-- Standard cache: 60s TTL
-- Immutable cache: 300s TTL
-- SWR: 5s fresh / 20s stale with background refresh
+`FrontendEx.Cache` implements a standard TTL cache with request coalescing (`FrontendEx.ApiCache`).
+
+- TTL: 60s (per entry, matching Rust's standard cache)
+- Cache key: `{context, kind, url}` where `url` is full URL (base URL + path + query)
+
+`FrontendEx.Cache.SWR` implements stale-while-revalidate caching (`FrontendEx.ApiSWRCache`).
+
+- 0-5s: serve fresh from cache
+- 5-20s: serve stale and refresh in background (deduped per key)
+- >20s: fetch fresh before serving (coalesced per key)
+
+Note: Rust also has an "immutable" 300s TTL cache for tx/block-by-hash; we have not implemented that yet.
+
+## Static Assets
+
+For parity, `frontend-ex` serves static assets at `/static/**` (CSS/JS) copied from `fast-frontend/static/**` into `priv/static/static/**`.
+
+## Parity Tests
+
+- Golden HTML snapshots live under `test/golden/` and are compared byte-for-byte in tests.
+- Blockscout API calls are served from fixtures in tests (no network). See `config/test.exs` for fixture adapter configuration.

@@ -9,6 +9,11 @@ Parity routes (pipeline `:fast_browser`):
 - `GET /exportData`
   - SSR HTML page (no upstream calls)
 
+Static assets (served by `Plug.Static`, not the router):
+
+- `GET /static/**`
+  - Parity CSS/JS copied from `fast-frontend/static/**` (served from `priv/static/static/**`)
+
 Non-parity routes (pipeline `:browser`):
 
 - `GET /`
@@ -56,4 +61,3 @@ Implementation:
 
 - `FrontendEx.Blockscout.Cursor.next_page_params_query/1`
 - `FrontendEx.Blockscout.Cursor.encode_next_page_params/1`
-

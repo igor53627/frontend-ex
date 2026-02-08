@@ -20,3 +20,10 @@ config :phoenix_live_view,
 # Sort query params output of verified routes for robust url comparisons
 config :phoenix,
   sort_verified_routes_query_params: true
+
+# Tests must not perform real network calls. Blockscout API requests are served
+# from on-disk fixtures via a pluggable request adapter.
+config :frontend_ex,
+  blockscout_request_adapter: FrontendEx.Blockscout.RequestAdapter.Fixture,
+  blockscout_fixture_dir: Path.expand("../test/fixtures/blockscout", __DIR__),
+  blockscout_fixture_on_missing: :raise

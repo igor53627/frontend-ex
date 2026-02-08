@@ -13,6 +13,9 @@ defmodule FrontendEx.Application do
       # Keep a single shared HTTP pool for all outbound requests.
       # Connect timeout is set to match fast-frontend's reqwest client (10s).
       {Finch, name: FrontendEx.Finch, pools: %{default: [conn_opts: [timeout: 10_000]]}},
+      # In-memory caches for Blockscout API responses.
+      {FrontendEx.Cache, name: FrontendEx.ApiCache, max_entries: 1000},
+      {FrontendEx.Cache.SWR, name: FrontendEx.ApiSWRCache, max_entries: 100},
       {Phoenix.PubSub, name: FrontendEx.PubSub},
       # Start a worker by calling: FrontendEx.Worker.start_link(arg)
       # {FrontendEx.Worker, arg},

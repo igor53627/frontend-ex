@@ -1,7 +1,14 @@
 defmodule FrontendEx.Blockscout.Client do
   @moduledoc false
 
-  @timeout_ms 10_000
+  @api_cache FrontendEx.ApiCache
+  @api_swr_cache FrontendEx.ApiSWRCache
+
+  @standard_ttl_ms 60_000
+  @negative_ttl_ms 5_000
+  @swr_fresh_ms 5_000
+  @swr_stale_ms 20_000
+
   @retry_sleep_ms 250
 
   @type error ::
@@ -11,18 +18,98 @@ defmodule FrontendEx.Blockscout.Client do
 
   @spec get_json(binary()) :: {:ok, term()} | {:error, error()}
   def get_json(path) when is_binary(path) do
+    get_json_uncached(path)
+  end
+
+  @spec get_json_uncached(binary()) :: {:ok, term()} | {:error, error()}
+  def get_json_uncached(path) when is_binary(path) do
     with {:ok, url} <- build_url(blockscout_api_url!(), path) do
-      case fetch_json_with_retry(url, 0) do
+      fetch_json_with_retry(url, 0)
+    else
+      {:error, reason} ->
+        {:error, {:transport, reason}}
+    end
+  end
+
+  @spec get_json_cached(binary(), term()) :: {:ok, term()} | {:error, error()}
+  def get_json_cached(path, context) when is_binary(path) do
+    get_json_cached(path, context, @standard_ttl_ms)
+  end
+
+  @spec get_json_cached(binary(), term(), non_neg_integer()) :: {:ok, term()} | {:error, error()}
+  def get_json_cached(path, context, ttl_ms)
+      when is_binary(path) and is_integer(ttl_ms) and ttl_ms >= 0 do
+    with {:ok, url} <- build_url(blockscout_api_url!(), path) do
+      # Cache keys must include any inputs that can vary the upstream response
+      # (auth headers, locale, etc). Callers must supply a context.
+      pos_key = {context, :pos, url}
+      neg_key = {context, :neg, url}
+
+      cache = api_cache_server()
+
+      case FrontendEx.Cache.get(cache, pos_key) do
         {:ok, json} ->
           {:ok, json}
 
-        {:error, _} = err ->
-          err
+        :error ->
+          case FrontendEx.Cache.get(cache, neg_key) do
+            {:ok, true} ->
+              {:error, :not_found}
+
+            :error ->
+              result =
+                FrontendEx.Cache.get_or_fetch(cache, pos_key, ttl_ms, fn ->
+                  fetch_json_with_retry(url, 0)
+                end)
+
+              case result do
+                {:ok, json} ->
+                  {:ok, json}
+
+                {:error, :not_found} ->
+                  _ = FrontendEx.Cache.put(cache, neg_key, true, @negative_ttl_ms)
+                  {:error, :not_found}
+
+                {:error, {:http_status, _, _} = err} ->
+                  {:error, err}
+
+                {:error, {:transport, _} = err} ->
+                  {:error, err}
+
+                {:error, other} ->
+                  {:error, {:transport, {:cache_fetch_failed, other}}}
+              end
+          end
       end
     else
       {:error, reason} ->
         {:error, {:transport, reason}}
     end
+  end
+
+  @spec get_json_swr(binary(), term(), non_neg_integer(), non_neg_integer()) ::
+          {:ok, term()} | {:error, error()}
+  def get_json_swr(path, context, fresh_ms \\ @swr_fresh_ms, stale_ms \\ @swr_stale_ms)
+
+  def get_json_swr(path, context, fresh_ms, stale_ms)
+      when is_binary(path) and is_integer(fresh_ms) and fresh_ms >= 0 and is_integer(stale_ms) and
+             stale_ms >= 0 and stale_ms >= fresh_ms do
+    with {:ok, url} <- build_url(blockscout_api_url!(), path) do
+      key = {context, fresh_ms, stale_ms, url}
+
+      FrontendEx.Cache.SWR.get_or_fetch(api_swr_cache_server(), key, fresh_ms, stale_ms, fn ->
+        fetch_json_with_retry(url, 0)
+      end)
+    else
+      {:error, reason} ->
+        {:error, {:transport, reason}}
+    end
+  end
+
+  def get_json_swr(_path, _context, fresh_ms, stale_ms)
+      when is_integer(fresh_ms) and fresh_ms >= 0 and is_integer(stale_ms) and stale_ms >= 0 and
+             stale_ms < fresh_ms do
+    {:error, {:transport, :invalid_window}}
   end
 
   # Retry semantics intentionally mirror fast-frontend (Rust):
@@ -75,20 +162,15 @@ defmodule FrontendEx.Blockscout.Client do
   end
 
   defp request_raw(url) when is_binary(url) do
-    Req.new(
-      url: url,
-      finch: FrontendEx.Finch,
-      # Disable Req's built-in retries; we implement Rust-matching semantics above.
-      retry: false,
-      # Keep raw bytes, decode JSON ourselves for consistent error mapping.
-      decode_body: false,
-      # Rust uses 10s total timeout; replicate via connect + receive timeouts.
-      receive_timeout: @timeout_ms,
-      headers: [
-        {"accept", "application/json"}
-      ]
+    request_adapter().request_raw(url)
+  end
+
+  defp request_adapter do
+    Application.get_env(
+      :frontend_ex,
+      :blockscout_request_adapter,
+      FrontendEx.Blockscout.RequestAdapter.Req
     )
-    |> Req.get()
   end
 
   defp blockscout_api_url! do
@@ -107,5 +189,13 @@ defmodule FrontendEx.Blockscout.Client do
     else
       {:ok, url}
     end
+  end
+
+  defp api_cache_server do
+    Application.get_env(:frontend_ex, :blockscout_api_cache_server) || @api_cache
+  end
+
+  defp api_swr_cache_server do
+    Application.get_env(:frontend_ex, :blockscout_api_swr_cache_server) || @api_swr_cache
   end
 end

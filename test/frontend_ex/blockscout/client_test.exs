@@ -4,97 +4,241 @@ defmodule FrontendEx.Blockscout.ClientTest do
   alias FrontendEx.Blockscout.Client
 
   setup do
-    bypass = Bypass.open()
-
+    old_adapter = Application.get_env(:frontend_ex, :blockscout_request_adapter)
+    old_stub_agent = Application.get_env(:frontend_ex, :blockscout_stub_agent)
     old_api_url = Application.get_env(:frontend_ex, :blockscout_api_url)
-    Application.put_env(:frontend_ex, :blockscout_api_url, "http://localhost:#{bypass.port}/")
+
+    Application.put_env(:frontend_ex, :blockscout_api_url, "http://stub")
+
+    stub_agent =
+      start_supervised!(
+        Supervisor.child_spec(
+          {Agent, fn -> %{script: %{}, calls: %{}} end},
+          id: make_ref()
+        )
+      )
+
+    Application.put_env(:frontend_ex, :blockscout_stub_agent, stub_agent)
+
+    Application.put_env(
+      :frontend_ex,
+      :blockscout_request_adapter,
+      FrontendEx.Blockscout.RequestAdapter.Stub
+    )
 
     on_exit(fn ->
-      Application.put_env(:frontend_ex, :blockscout_api_url, old_api_url)
-    end)
+      if is_nil(old_adapter) do
+        Application.delete_env(:frontend_ex, :blockscout_request_adapter)
+      else
+        Application.put_env(:frontend_ex, :blockscout_request_adapter, old_adapter)
+      end
 
-    {:ok, bypass: bypass}
-  end
+      if is_nil(old_stub_agent) do
+        Application.delete_env(:frontend_ex, :blockscout_stub_agent)
+      else
+        Application.put_env(:frontend_ex, :blockscout_stub_agent, old_stub_agent)
+      end
 
-  test "get_json/1 fetches and decodes JSON (stats endpoint)", %{bypass: bypass} do
-    Bypass.expect_once(bypass, "GET", "/api/v2/stats", fn conn ->
-      conn
-      |> Plug.Conn.put_resp_content_type("application/json")
-      |> Plug.Conn.resp(200, ~s({"ok":true}))
-    end)
-
-    assert {:ok, %{"ok" => true}} = Client.get_json("api/v2/stats")
-  end
-
-  test "get_json/1 maps 404 to :not_found (tx endpoint)", %{bypass: bypass} do
-    Bypass.expect_once(bypass, "GET", "/api/v2/transactions/0xdead", fn conn ->
-      Plug.Conn.resp(conn, 404, "not found")
-    end)
-
-    assert {:error, :not_found} = Client.get_json("/api/v2/transactions/0xdead")
-  end
-
-  test "get_json/1 retries once on 5xx then succeeds (blocks endpoint)", %{bypass: bypass} do
-    {:ok, counter} = Agent.start_link(fn -> 0 end)
-
-    Bypass.expect(bypass, "GET", "/api/v2/blocks", fn conn ->
-      assert conn.query_string == "limit=1"
-
-      n = Agent.get_and_update(counter, fn n -> {n, n + 1} end)
-
-      case n do
-        0 ->
-          Plug.Conn.resp(conn, 500, "upstream error")
-
-        _ ->
-          conn
-          |> Plug.Conn.put_resp_content_type("application/json")
-          |> Plug.Conn.resp(200, ~s({"items":[{"height":1}]}))
+      if is_nil(old_api_url) do
+        Application.delete_env(:frontend_ex, :blockscout_api_url)
+      else
+        Application.put_env(:frontend_ex, :blockscout_api_url, old_api_url)
       end
     end)
 
-    assert {:ok, %{"items" => [%{"height" => 1}]}} = Client.get_json("/api/v2/blocks?limit=1")
-    assert Agent.get(counter, & &1) == 2
+    {:ok, stub_agent: stub_agent}
   end
 
-  test "get_json/1 retries once on 429 then succeeds", %{bypass: bypass} do
-    {:ok, counter} = Agent.start_link(fn -> 0 end)
+  defp put_script(agent, url, results) when is_binary(url) and is_list(results) do
+    Agent.update(agent, fn %{script: script} = state ->
+      %{state | script: Map.put(script, url, results)}
+    end)
+  end
 
-    Bypass.expect(bypass, "GET", "/api/v2/stats", fn conn ->
-      n = Agent.get_and_update(counter, fn n -> {n, n + 1} end)
+  defp calls(agent, url) when is_binary(url) do
+    Agent.get(agent, fn state ->
+      state.calls |> Map.get(url, 0)
+    end)
+  end
 
-      case n do
-        0 ->
-          Plug.Conn.resp(conn, 429, "rate limited")
+  test "get_json_uncached/1 fetches and decodes JSON (stats endpoint)", %{stub_agent: agent} do
+    url = "http://stub/api/v2/stats"
 
-        _ ->
-          conn
-          |> Plug.Conn.put_resp_content_type("application/json")
-          |> Plug.Conn.resp(200, ~s({"ok":true}))
+    put_script(agent, url, [
+      {:ok, %Req.Response{status: 200, body: ~s({"ok":true})}}
+    ])
+
+    assert {:ok, %{"ok" => true}} = Client.get_json_uncached("api/v2/stats")
+    assert calls(agent, url) == 1
+  end
+
+  test "get_json_uncached/1 maps 404 to :not_found (tx endpoint)", %{stub_agent: agent} do
+    url = "http://stub/api/v2/transactions/0xdead"
+
+    put_script(agent, url, [
+      {:ok, %Req.Response{status: 404, body: "not found"}}
+    ])
+
+    assert {:error, :not_found} = Client.get_json_uncached("/api/v2/transactions/0xdead")
+    assert calls(agent, url) == 1
+  end
+
+  test "get_json_uncached/1 retries once on 5xx then succeeds (blocks endpoint)", %{
+    stub_agent: agent
+  } do
+    url = "http://stub/api/v2/blocks?limit=1"
+
+    put_script(agent, url, [
+      {:ok, %Req.Response{status: 500, body: "upstream error"}},
+      {:ok, %Req.Response{status: 200, body: ~s({"items":[{"height":1}]})}}
+    ])
+
+    assert {:ok, %{"items" => [%{"height" => 1}]}} =
+             Client.get_json_uncached("/api/v2/blocks?limit=1")
+
+    assert calls(agent, url) == 2
+  end
+
+  test "get_json_uncached/1 retries once on 429 then succeeds", %{stub_agent: agent} do
+    url = "http://stub/api/v2/stats"
+
+    put_script(agent, url, [
+      {:ok, %Req.Response{status: 429, body: "rate limited"}},
+      {:ok, %Req.Response{status: 200, body: ~s({"ok":true})}}
+    ])
+
+    assert {:ok, %{"ok" => true}} = Client.get_json_uncached("/api/v2/stats")
+    assert calls(agent, url) == 2
+  end
+
+  test "get_json_uncached/1 treats invalid JSON as :not_found after retries", %{stub_agent: agent} do
+    url = "http://stub/api/v2/bad-json"
+
+    put_script(agent, url, [
+      {:ok, %Req.Response{status: 200, body: "{"}},
+      {:ok, %Req.Response{status: 200, body: "{"}},
+      {:ok, %Req.Response{status: 200, body: "{"}}
+    ])
+
+    assert {:error, :not_found} = Client.get_json_uncached("/api/v2/bad-json")
+    assert calls(agent, url) == 3
+  end
+
+  test "get_json_uncached/1 rejects paths that produce invalid URLs", %{stub_agent: _agent} do
+    assert {:error, {:transport, :invalid_url}} = Client.get_json_uncached("/api/v2/blocks?x= y")
+  end
+
+  test "get_json_cached/2 caches successful responses for the TTL", %{stub_agent: agent} do
+    FrontendEx.Cache.clear(FrontendEx.ApiCache)
+
+    url = "http://stub/api/v2/stats"
+
+    put_script(agent, url, [
+      {:ok, %Req.Response{status: 200, body: ~s({"ok":true})}}
+    ])
+
+    assert {:ok, %{"ok" => true}} = Client.get_json_cached("/api/v2/stats", :public)
+    assert {:ok, %{"ok" => true}} = Client.get_json_cached("/api/v2/stats", :public)
+    assert calls(agent, url) == 1
+  end
+
+  test "get_json_cached/2 negative-caches :not_found (404) for ~5s", %{stub_agent: agent} do
+    FrontendEx.Cache.clear(FrontendEx.ApiCache)
+
+    url = "http://stub/api/v2/stats"
+
+    put_script(agent, url, [
+      {:ok, %Req.Response{status: 404, body: "not found"}},
+      {:ok, %Req.Response{status: 200, body: ~s({"ok":true})}}
+    ])
+
+    assert {:error, :not_found} = Client.get_json_cached("/api/v2/stats", :public)
+    assert {:error, :not_found} = Client.get_json_cached("/api/v2/stats", :public)
+    assert calls(agent, url) == 1
+  end
+
+  test "get_json_cached/2 does not cache non-:not_found upstream errors", %{stub_agent: agent} do
+    FrontendEx.Cache.clear(FrontendEx.ApiCache)
+
+    url = "http://stub/api/v2/stats"
+
+    put_script(agent, url, [
+      {:ok, %Req.Response{status: 400, body: "bad request"}},
+      {:ok, %Req.Response{status: 200, body: ~s({"ok":true})}}
+    ])
+
+    assert {:error, {:http_status, 400, _}} = Client.get_json_cached("/api/v2/stats", :public)
+    assert {:ok, %{"ok" => true}} = Client.get_json_cached("/api/v2/stats", :public)
+    assert calls(agent, url) == 2
+  end
+
+  test "get_json_cached/2 refetches after the positive TTL expires (deterministic clock)", %{
+    stub_agent: agent
+  } do
+    clock = start_supervised!(Supervisor.child_spec({Agent, fn -> 0 end}, id: make_ref()))
+    now_ms = fn -> Agent.get(clock, & &1) end
+
+    cache_name = Module.concat(__MODULE__, ApiCache)
+    start_supervised!({FrontendEx.Cache, name: cache_name, now_ms: now_ms, max_entries: 100})
+
+    old_cache_server = Application.fetch_env(:frontend_ex, :blockscout_api_cache_server)
+    Application.put_env(:frontend_ex, :blockscout_api_cache_server, cache_name)
+
+    on_exit(fn ->
+      case old_cache_server do
+        {:ok, value} -> Application.put_env(:frontend_ex, :blockscout_api_cache_server, value)
+        :error -> Application.delete_env(:frontend_ex, :blockscout_api_cache_server)
       end
     end)
 
-    assert {:ok, %{"ok" => true}} = Client.get_json("/api/v2/stats")
-    assert Agent.get(counter, & &1) == 2
+    url = "http://stub/api/v2/stats"
+
+    put_script(agent, url, [
+      {:ok, %Req.Response{status: 200, body: ~s({"v":1})}},
+      {:ok, %Req.Response{status: 200, body: ~s({"v":2})}}
+    ])
+
+    assert {:ok, %{"v" => 1}} = Client.get_json_cached("/api/v2/stats", :public)
+    assert {:ok, %{"v" => 1}} = Client.get_json_cached("/api/v2/stats", :public)
+    assert calls(agent, url) == 1
+
+    Agent.update(clock, fn _ -> 60_001 end)
+    assert {:ok, %{"v" => 2}} = Client.get_json_cached("/api/v2/stats", :public)
+    assert calls(agent, url) == 2
   end
 
-  test "get_json/1 treats invalid JSON as :not_found after retries", %{bypass: bypass} do
-    {:ok, counter} = Agent.start_link(fn -> 0 end)
+  test "get_json_cached/2 refetches after the negative TTL expires (deterministic clock)", %{
+    stub_agent: agent
+  } do
+    clock = start_supervised!(Supervisor.child_spec({Agent, fn -> 0 end}, id: make_ref()))
+    now_ms = fn -> Agent.get(clock, & &1) end
 
-    Bypass.expect(bypass, "GET", "/api/v2/bad-json", fn conn ->
-      _ = Agent.get_and_update(counter, fn n -> {n, n + 1} end)
+    cache_name = Module.concat(__MODULE__, ApiCache)
+    start_supervised!({FrontendEx.Cache, name: cache_name, now_ms: now_ms, max_entries: 100})
 
-      conn
-      |> Plug.Conn.put_resp_content_type("application/json")
-      |> Plug.Conn.resp(200, "{")
+    old_cache_server = Application.fetch_env(:frontend_ex, :blockscout_api_cache_server)
+    Application.put_env(:frontend_ex, :blockscout_api_cache_server, cache_name)
+
+    on_exit(fn ->
+      case old_cache_server do
+        {:ok, value} -> Application.put_env(:frontend_ex, :blockscout_api_cache_server, value)
+        :error -> Application.delete_env(:frontend_ex, :blockscout_api_cache_server)
+      end
     end)
 
-    assert {:error, :not_found} = Client.get_json("/api/v2/bad-json")
-    assert Agent.get(counter, & &1) == 3
-  end
+    url = "http://stub/api/v2/stats"
 
-  test "get_json/1 rejects paths that produce invalid URLs", %{bypass: bypass} do
-    _ = bypass
-    assert {:error, {:transport, :invalid_url}} = Client.get_json("/api/v2/blocks?x= y")
+    put_script(agent, url, [
+      {:ok, %Req.Response{status: 404, body: "not found"}},
+      {:ok, %Req.Response{status: 200, body: ~s({"ok":true})}}
+    ])
+
+    assert {:error, :not_found} = Client.get_json_cached("/api/v2/stats", :public)
+    assert {:error, :not_found} = Client.get_json_cached("/api/v2/stats", :public)
+    assert calls(agent, url) == 1
+
+    Agent.update(clock, fn _ -> 5_001 end)
+    assert {:ok, %{"ok" => true}} = Client.get_json_cached("/api/v2/stats", :public)
+    assert calls(agent, url) == 2
   end
 end
