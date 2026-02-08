@@ -88,7 +88,8 @@ defmodule FrontendEx.Blockscout.RequestAdapter.Fixture do
 
   defp canonical_query(query) when is_binary(query) do
     query
-    |> URI.decode_query()
+    |> URI.query_decoder()
+    |> Enum.to_list()
     |> Enum.sort()
     |> URI.encode_query()
   end
