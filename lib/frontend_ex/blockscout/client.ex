@@ -11,17 +11,24 @@ defmodule FrontendEx.Blockscout.Client do
 
   @spec get_json(binary()) :: {:ok, term()} | {:error, error()}
   def get_json(path) when is_binary(path) do
-    url = build_url(blockscout_api_url!(), path)
+    with {:ok, url} <- build_url(blockscout_api_url!(), path) do
+      case fetch_json_with_retry(url, 0) do
+        {:ok, json} ->
+          {:ok, json}
 
-    case fetch_json_with_retry(url, 0) do
-      {:ok, json} ->
-        {:ok, json}
-
-      {:error, _} = err ->
-        err
+        {:error, _} = err ->
+          err
+      end
+    else
+      {:error, reason} ->
+        {:error, {:transport, reason}}
     end
   end
 
+  # Retry semantics intentionally mirror fast-frontend (Rust):
+  # - transport errors: retry once (attempt 0 -> 1)
+  # - 429/5xx: retry once (attempt 0 -> 1)
+  # - invalid JSON in 2xx: retry twice (3 attempts total)
   defp fetch_json_with_retry(url, attempt) when attempt in 0..2 do
     case request_raw(url) do
       {:ok, %Req.Response{status: status, body: body}}
@@ -93,6 +100,12 @@ defmodule FrontendEx.Blockscout.Client do
     base_url = String.trim(base_url) |> String.trim_trailing("/")
     path = String.trim(path)
     path = if String.starts_with?(path, "/"), do: path, else: "/" <> path
-    base_url <> path
+    url = base_url <> path
+
+    if String.match?(url, ~r/\s/u) do
+      {:error, :invalid_url}
+    else
+      {:ok, url}
+    end
   end
 end

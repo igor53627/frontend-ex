@@ -6,6 +6,8 @@ defmodule FrontendExWeb.ExportDataController do
   def index(conn, params) do
     skin = FrontendExWeb.Skin.current()
 
+    safe_empty = {:safe, ""}
+
     export_type =
       case params["type"] do
         "nft-mints" -> "nft-mints"
@@ -40,15 +42,15 @@ defmodule FrontendExWeb.ExportDataController do
       end_date: Date.to_string(end_date),
       start_block: start_block,
       end_block: end_block,
-      head_meta: "",
-      scripts: "",
-      styles: "",
-      topbar: ""
+      head_meta: safe_empty,
+      scripts: safe_empty,
+      styles: safe_empty,
+      topbar: safe_empty
     }
 
     case skin do
       :classic ->
-        styles = ExportDataHTML.classic_styles(base_assigns) |> Phoenix.HTML.safe_to_string()
+        styles = ExportDataHTML.classic_styles(base_assigns)
 
         render(conn, :classic_content, %{
           base_assigns

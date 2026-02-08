@@ -7,8 +7,8 @@
     <link rel="icon" type="image/png" href="https://sepolia.53627.org/favicon/favicon-32x32.png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/style1.css">
-    <%= Phoenix.HTML.raw(@head_meta || "") %>
-    <%= Phoenix.HTML.raw(@styles || "") %>
+    <%= @head_meta || "" %>
+    <%= @styles || "" %>
 </head>
 <body>
     <div class="layout">
@@ -70,11 +70,11 @@
             </div>
         </aside>
         <div class="main-wrapper">
-            <%= Phoenix.HTML.raw(assigns[:topbar] || "") %>
+            <%= assigns[:topbar] || "" %>
             <main class="main-content"><%= @inner_content %></main>
         </div>
     </div>
-    <%= Phoenix.HTML.raw(@scripts || "") %>
+    <%= @scripts || "" %>
     <script>
     document.querySelectorAll('.copy-btn[data-copy]').forEach(function(btn) {
         btn.addEventListener('click', function() {

@@ -66,12 +66,12 @@ Helpers:
   - Encodes it as a single `cursor=` value by percent-encoding the full string.
 
 - `FrontendExWeb.CursorLinks`
-  - Builds deterministic query strings and avoids double-encoding `cursor`.
+  - Builds deterministic query strings, merges existing query params, and safely encodes `cursor`.
 
 Important nuance:
 
 - Plug/Phoenix decode query params once. If you read `cursor` from `conn.params`, it is already decoded and may contain `&`.
-- When placing a cursor back into a link, always re-encode it with `FrontendEx.Blockscout.Cursor.encode_cursor_value/1` or use the already-encoded cursor value produced from `next_page_params`.
+- When placing a cursor back into a link, encode the decoded cursor query string before embedding it in `cursor=...` (handled by `FrontendExWeb.CursorLinks.with_cursor/3`).
 
 ## Caching
 
@@ -80,4 +80,3 @@ Caching strategies are tracked in backlog tasks and will mirror Rust:
 - Standard cache: 60s TTL
 - Immutable cache: 300s TTL
 - SWR: 5s fresh / 20s stale with background refresh
-
