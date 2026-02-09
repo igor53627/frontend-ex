@@ -45,18 +45,18 @@ run() {
     log "[DRY RUN] $*"
     return 0
   fi
-  eval "$@"
+  "$@"
 }
 
 if [ "$SKIP_SYNC" = false ]; then
   log "Syncing repo to $SERVER:$REMOTE_PATH..."
-  run "rsync -avz --delete \
+  run rsync -avz --delete \
     --exclude _build/ \
     --exclude deps/ \
     --exclude .git/ \
     --exclude .jj/ \
     --exclude tmp/ \
-    \"$LOCAL_PATH/\" \"$SERVER:$REMOTE_PATH/\""
+    "$LOCAL_PATH/" "$SERVER:$REMOTE_PATH/"
 else
   log "Skipping rsync (requested)"
 fi
@@ -88,7 +88,7 @@ else
     \"$BUILD_IMAGE\" \
     sh -lc 'mix local.hex --force && mix local.rebar --force && mix deps.get --only prod && mix compile && mix release --overwrite'
 fi"
-  run "ssh \"$SERVER\" \"$build_cmd\""
+  run ssh "$SERVER" "$build_cmd"
 
   log "Promoting release (versioned dir + current symlink)..."
   promote_cmd="set -euo pipefail
@@ -101,7 +101,7 @@ mkdir -p \"\$dst\"
 rsync -a --delete \"\$src/\" \"\$dst/\"
 ln -sfn \"\$dst\" current
 echo \"promoted=\$release_id\""
-  run "ssh \"$SERVER\" \"$promote_cmd\""
+  run ssh "$SERVER" "$promote_cmd"
 
   log "Pruning old releases (keep $KEEP_RELEASES)..."
   prune_cmd="set -euo pipefail
@@ -111,14 +111,14 @@ keep=$KEEP_RELEASES
 if [ \"\$keep\" -gt 0 ]; then
   ls -1dt releases/* 2>/dev/null | tail -n +\$((keep + 1)) | xargs -r rm -rf --
 fi"
-  run "ssh \"$SERVER\" \"$prune_cmd\""
+  run ssh "$SERVER" "$prune_cmd"
 else
   log "Skipping build/promotion (requested)"
 fi
 
 if [ "$SKIP_RESTART" = false ]; then
   log "Restarting systemd service: $SERVICE_NAME"
-  run "ssh \"$SERVER\" \"systemctl restart \\\"$SERVICE_NAME\\\"\""
+  run ssh "$SERVER" "systemctl restart \"$SERVICE_NAME\""
 else
   log "Skipping service restart (requested)"
 fi
