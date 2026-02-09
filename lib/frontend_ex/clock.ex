@@ -21,4 +21,3 @@ defmodule FrontendEx.Clock do
     end
   end
 end
-

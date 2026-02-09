@@ -23,7 +23,9 @@ defmodule FrontendExWeb.AddressController do
       end
 
     stats_task = Task.async(fn -> Client.get_json_cached("/api/v2/stats", :public) end)
-    addr_task = Task.async(fn -> Client.get_json_cached("/api/v2/addresses/#{address}", :public) end)
+
+    addr_task =
+      Task.async(fn -> Client.get_json_cached("/api/v2/addresses/#{address}", :public) end)
 
     txs_task =
       Task.async(fn ->
@@ -141,7 +143,7 @@ defmodule FrontendExWeb.AddressController do
     gas_price =
       case get_in(stats_json, ["gas_prices", "average", "price"]) do
         v when is_number(v) ->
-          :io_lib.format("~.1f", [v]) |> IO.iodata_to_binary()
+          Format.format_one_decimal(v)
 
         _ ->
           nil
@@ -162,7 +164,14 @@ defmodule FrontendExWeb.AddressController do
     }
   end
 
-  defp parse_address(_), do: %{hash: "", is_contract: nil, is_verified: nil, coin_balance: nil, transactions_count: nil}
+  defp parse_address(_),
+    do: %{
+      hash: "",
+      is_contract: nil,
+      is_verified: nil,
+      coin_balance: nil,
+      transactions_count: nil
+    }
 
   defp parse_transactions(nil, _addr_hash), do: []
 
@@ -273,7 +282,8 @@ defmodule FrontendExWeb.AddressController do
   defp derive_balance_usd_display(nil, _coin_price), do: nil
   defp derive_balance_usd_display(_wei_balance, nil), do: nil
 
-  defp derive_balance_usd_display(wei_balance, coin_price) when is_binary(wei_balance) and is_binary(coin_price) do
+  defp derive_balance_usd_display(wei_balance, coin_price)
+       when is_binary(wei_balance) and is_binary(coin_price) do
     with {eth, ""} <- Float.parse(Format.format_wei_to_eth(wei_balance)),
          {cp, ""} <- Float.parse(String.replace(coin_price, ",", "")) do
       usd = eth * cp
@@ -312,4 +322,3 @@ defmodule FrontendExWeb.AddressController do
 
   defp parse_u64(_), do: nil
 end
-

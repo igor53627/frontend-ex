@@ -142,14 +142,16 @@ defmodule FrontendExWeb.HomeController do
 
     gas_prices = json["gas_prices"] || %{}
 
-    %{average_block_time: avg_s,
+    %{
+      average_block_time: avg_s,
       total_blocks: total_blocks,
       total_transactions: total_transactions,
       total_addresses: total_addresses,
       network_utilization_percentage: network_util,
       coin_price: coin_price,
       coin_price_change_percentage: coin_price_change,
-      gas_prices: gas_prices}
+      gas_prices: gas_prices
+    }
   end
 
   defp parse_blocks(nil), do: []
@@ -168,7 +170,10 @@ defmodule FrontendExWeb.HomeController do
 
   defp display_block(%{} = b) do
     height = b["height"]
-    height_formatted = if is_integer(height), do: Integer.to_string(height), else: to_string(height)
+
+    height_formatted =
+      if is_integer(height), do: Integer.to_string(height), else: to_string(height)
+
     hash = to_string(b["hash"] || "")
     ts_raw = to_string(b["timestamp"] || "")
 
@@ -287,9 +292,14 @@ defmodule FrontendExWeb.HomeController do
 
     gas_price =
       cond do
-        is_number(gas_avg) and gas_avg < 0.1 -> "< 0.1"
-        is_number(gas_avg) -> :io_lib.format("~.1f", [gas_avg]) |> IO.iodata_to_binary()
-        true -> nil
+        is_number(gas_avg) and gas_avg < 0.1 ->
+          "< 0.1"
+
+        is_number(gas_avg) ->
+          Format.format_one_decimal(gas_avg)
+
+        true ->
+          nil
       end
 
     {coin_price, coin_price_change, gas_slow, gas_avg, gas_fast, gas_price}

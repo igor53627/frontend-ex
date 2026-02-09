@@ -221,7 +221,7 @@ defmodule FrontendExWeb.TxController do
     gas_price =
       case get_in(stats_json, ["gas_prices", "average", "price"]) do
         v when is_number(v) ->
-          :io_lib.format("~.1f", [v]) |> IO.iodata_to_binary()
+          Format.format_one_decimal(v)
 
         _ ->
           nil

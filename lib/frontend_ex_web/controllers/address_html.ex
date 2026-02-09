@@ -15,4 +15,3 @@ defmodule FrontendExWeb.AddressHTML do
 
   def dot_bold(value), do: value
 end
-

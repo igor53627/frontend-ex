@@ -104,4 +104,3 @@ defmodule FrontendExWeb.BlockParityTest do
     end
   end
 end
-

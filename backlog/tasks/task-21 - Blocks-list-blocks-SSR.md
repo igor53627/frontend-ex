@@ -1,10 +1,10 @@
 ---
 id: TASK-21
 title: 'Blocks list: /blocks (SSR)'
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-02-09 15:04'
-updated_date: '2026-02-09 15:23'
+updated_date: '2026-02-09 15:59'
 labels:
   - pages
   - blocks
@@ -26,8 +26,8 @@ Implement the missing `/blocks` page (SSR) to match `fast-frontend` output and a
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 GET /blocks renders SSR
-- [ ] #2 HTML snapshot matches Rust (fixtures)
+- [x] #1 GET /blocks renders SSR
+- [x] #2 HTML snapshot matches Rust (fixtures)
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -42,3 +42,9 @@ Implement the missing `/blocks` page (SSR) to match `fast-frontend` output and a
 - number formatting for gas used/limit and tx count
 - Testing: add fixtures + golden snapshot test for `/blocks`.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Added /blocks SSR (Classic + 53627), including Rust-matching time_ago formatting, fixtures + Rust goldens parity test, and docs.
+<!-- SECTION:FINAL_SUMMARY:END -->

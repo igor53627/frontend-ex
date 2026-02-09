@@ -52,7 +52,7 @@
         <div class="overview-content">
             <div class="overview-label">Total Transactions</div>
             <div class="overview-value" id="total-txs"><%= if @stats, do: (@stats.total_transactions || "-"), else: "-" %></div>
-            <div class="overview-sub"><%= if @stats && is_number(@stats.average_block_time), do: ((:io_lib.format("~.1f", [@stats.average_block_time]) |> IO.iodata_to_binary()) <> "s avg block time"), else: "" %></div>
+            <div class="overview-sub"><%= if @stats && is_number(@stats.average_block_time), do: (FrontendEx.Format.format_one_decimal(@stats.average_block_time) <> "s avg block time"), else: "" %></div>
         </div>
     </div>
     <div class="overview-card">

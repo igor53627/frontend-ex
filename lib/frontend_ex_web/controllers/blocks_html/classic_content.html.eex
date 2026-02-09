@@ -1,0 +1,46 @@
+
+<div class="page-header">
+    <h1 class="page-title">Blocks</h1>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <span>Latest Blocks</span>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Block</th>
+                <th>Age</th>
+                <th>Txn</th>
+                <th>Fee Recipient</th>
+                <th>Gas Used</th>
+                <th>Gas Limit</th>
+            </tr>
+        </thead>
+        <tbody>
+            <%= for block <- @blocks do %>
+            <tr>
+                <td>
+                    <a href="/block/<%= block.height %>" class="hash"><%= block.height %></a>
+                </td>
+                <td>
+                    <span class="time-ago"><%= block.time_ago %></span>
+                </td>
+                <td>
+                    <a href="/block/<%= block.height %>/txs"><%= block.tx_count %></a>
+                </td>
+                <td>
+                    <%= if block.miner_hash do %>
+                        <a href="/address/<%= block.miner_hash %>" class="hash hash--truncate"><%= block.miner_hash %></a>
+                    <% else %>
+                        <span class="text-muted">-</span>
+                    <% end %>
+                </td>
+                <td><%= block.gas_used %></td>
+                <td><%= block.gas_limit %></td>
+            </tr>
+            <% end %>
+        </tbody>
+    </table>
+</div>

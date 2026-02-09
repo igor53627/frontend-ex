@@ -5,4 +5,3 @@ defmodule FrontendExWeb.BlockHTML do
 
   embed_templates "block_html/*"
 end
-

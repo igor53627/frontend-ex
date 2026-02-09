@@ -22,6 +22,12 @@ Parity routes (pipeline `:fast_browser`):
     - all digits -> `302 /block/<q>`
     - otherwise -> `302 <BLOCKSCOUT_URL>/search?q=<q>`
 
+- `GET /blocks`
+  - SSR HTML blocks list page
+  - Upstream calls (Blockscout API v2):
+    - `GET /api/v2/stats`
+    - `GET /api/v2/blocks?limit=50`
+
 - `GET /block/:id`
   - SSR HTML block details page
   - Upstream calls (Blockscout API v2):

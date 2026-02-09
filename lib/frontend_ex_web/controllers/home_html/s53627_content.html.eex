@@ -32,7 +32,7 @@
         </div>
         <div class="stat-content">
             <div class="stat-label">Average block time</div>
-            <div class="stat-value"><%= if is_number(s.average_block_time), do: ((:io_lib.format("~.1f", [s.average_block_time]) |> IO.iodata_to_binary()) <> "s"), else: "-" %></div>
+            <div class="stat-value"><%= if is_number(s.average_block_time), do: (FrontendEx.Format.format_one_decimal(s.average_block_time) <> "s"), else: "-" %></div>
         </div>
     </div>
     <a href="<%= @explorer_url %>/txs" class="stat-card">

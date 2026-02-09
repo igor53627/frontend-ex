@@ -167,4 +167,3 @@ defmodule FrontendExWeb.TxParityTest do
     end
   end
 end
-

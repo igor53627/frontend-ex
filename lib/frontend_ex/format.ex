@@ -237,6 +237,13 @@ defmodule FrontendEx.Format do
     end
   end
 
+  @spec format_one_decimal(number()) :: binary()
+  def format_one_decimal(v) when is_number(v) do
+    # Erlang's `~.1f` expects a float; integer input is a badarg.
+    v = if is_integer(v), do: v * 1.0, else: v
+    :io_lib.format("~.1f", [v]) |> IO.iodata_to_binary()
+  end
+
   @spec format_number_with_commas(binary()) :: binary()
   def format_number_with_commas(s) when is_binary(s) do
     s = String.trim(s)
@@ -347,6 +354,46 @@ defmodule FrontendEx.Format do
                 years = div(days, 365)
                 unit = if years == 1, do: "yr", else: "yrs"
                 "#{years} #{unit} ago"
+            end
+        end
+
+      _ ->
+        timestamp
+    end
+  end
+
+  # Matches Rust `blocks.rs`: always plural `secs/mins/hrs/days`, and stops at days.
+  @spec format_blocks_time_ago(binary()) :: binary()
+  def format_blocks_time_ago(timestamp) when is_binary(timestamp) do
+    timestamp = String.trim(timestamp)
+
+    case DateTime.from_iso8601(timestamp) do
+      {:ok, dt, _offset} ->
+        now = Clock.utc_now()
+        secs = max(DateTime.diff(now, dt, :second), 0)
+
+        cond do
+          secs < 60 ->
+            "#{secs} secs ago"
+
+          true ->
+            mins = div(secs, 60)
+
+            cond do
+              mins < 60 ->
+                "#{mins} mins ago"
+
+              true ->
+                hours = div(secs, 3600)
+
+                cond do
+                  hours < 24 ->
+                    "#{hours} hrs ago"
+
+                  true ->
+                    days = div(secs, 86_400)
+                    "#{days} days ago"
+                end
             end
         end
 

@@ -1,19 +1,19 @@
-defmodule FrontendExWeb.AddressParityTest do
+defmodule FrontendExWeb.BlocksParityTest do
   # Parity tests mutate global Application env (skin, URLs), so they must be serial.
   use FrontendExWeb.ConnCase, async: false
 
   alias FrontendEx.TestSupport.Golden
 
-  @address "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  @golden_classic_path Path.expand("../golden/blocks.classic.rust.html", __DIR__)
+  @golden_53627_path Path.expand("../golden/blocks.53627.rust.html", __DIR__)
 
-  @golden_classic_path Path.expand("../golden/address.classic.rust.html", __DIR__)
-  @golden_53627_path Path.expand("../golden/address.53627.rust.html", __DIR__)
-
-  @frozen_now ~U[2026-02-01 00:00:00Z]
+  # Rust goldens are generated against API fixtures whose timestamps are in late 2025.
+  # Freeze "now" so relative time strings stay stable.
+  @frozen_now ~U[2026-02-09 12:00:00Z]
   @fixture_api_url "http://127.0.0.1:4901"
   @explorer_url "https://sepolia.53627.org"
 
-  test "classic /address/:address matches Rust HTML byte-for-byte" do
+  test "classic /blocks matches Rust HTML byte-for-byte" do
     restore =
       put_env(%{
         ff_skin: "classic",
@@ -25,12 +25,12 @@ defmodule FrontendExWeb.AddressParityTest do
 
     on_exit(restore)
 
-    body = html_response(get(build_conn(), "/address/#{@address}"), 200)
+    body = html_response(get(build_conn(), "/blocks"), 200)
 
     Golden.assert_golden!(@golden_classic_path, body)
   end
 
-  test "53627 /address/:address matches Rust HTML byte-for-byte" do
+  test "53627 /blocks matches Rust HTML byte-for-byte" do
     restore =
       put_env(%{
         ff_skin: "53627",
@@ -42,26 +42,9 @@ defmodule FrontendExWeb.AddressParityTest do
 
     on_exit(restore)
 
-    body = html_response(get(build_conn(), "/address/#{@address}"), 200)
+    body = html_response(get(build_conn(), "/blocks"), 200)
 
     Golden.assert_golden!(@golden_53627_path, body)
-  end
-
-  test "not found returns 404 with Rust body" do
-    restore =
-      put_env(%{
-        ff_skin: "classic",
-        blockscout_url: @explorer_url,
-        blockscout_api_url: @fixture_api_url,
-        blockscout_ws_url: nil,
-        clock_utc_now: @frozen_now,
-        blockscout_fixture_on_missing: :not_found
-      })
-
-    on_exit(restore)
-
-    body = response(get(build_conn(), "/address/0xdeadbeef"), 404)
-    assert body == "Address not found"
   end
 
   defp put_env(kvs) when is_map(kvs) do

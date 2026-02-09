@@ -170,7 +170,7 @@ defmodule FrontendExWeb.BlockController do
     gas_price =
       case get_in(stats_json, ["gas_prices", "average", "price"]) do
         v when is_number(v) ->
-          :io_lib.format("~.1f", [v]) |> IO.iodata_to_binary()
+          Format.format_one_decimal(v)
 
         _ ->
           nil
@@ -323,7 +323,8 @@ defmodule FrontendExWeb.BlockController do
     }
   end
 
-  defp display_tx(_), do: %{hash: "", method: nil, from: %{hash: ""}, to: nil, value: "0", fee: nil}
+  defp display_tx(_),
+    do: %{hash: "", method: nil, from: %{hash: ""}, to: nil, value: "0", fee: nil}
 
   defp fee_recipient_in_secs(nil, _cur_ts), do: nil
 
@@ -442,7 +443,10 @@ defmodule FrontendExWeb.BlockController do
   defp format_signed(n) when is_integer(n), do: Integer.to_string(n)
 
   defp format_optional_number_string(v) when is_binary(v), do: Format.format_number_with_commas(v)
-  defp format_optional_number_string(v) when is_integer(v), do: Format.format_number_with_commas(Integer.to_string(v))
+
+  defp format_optional_number_string(v) when is_integer(v),
+    do: Format.format_number_with_commas(Integer.to_string(v))
+
   defp format_optional_number_string(_), do: nil
 
   defp format_optional_size(v) when is_integer(v) do
@@ -455,6 +459,8 @@ defmodule FrontendExWeb.BlockController do
 
   defp format_optional_size(_), do: nil
 
-  defp format_timestamp_readable(timestamp, :classic), do: Format.format_readable_date_classic_plus_utc(timestamp)
+  defp format_timestamp_readable(timestamp, :classic),
+    do: Format.format_readable_date_classic_plus_utc(timestamp)
+
   defp format_timestamp_readable(timestamp, _skin), do: Format.format_readable_date(timestamp)
 end

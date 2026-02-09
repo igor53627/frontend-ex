@@ -5,4 +5,3 @@ defmodule FrontendExWeb.HomeHTML do
 
   embed_templates "home_html/*"
 end
-

@@ -5,4 +5,3 @@ defmodule FrontendExWeb.TxHTML do
 
   embed_templates "tx_html/*"
 end
-
