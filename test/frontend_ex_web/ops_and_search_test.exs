@@ -1,5 +1,7 @@
 defmodule FrontendExWeb.OpsAndSearchTest do
-  use FrontendExWeb.ConnCase, async: true
+  # Mutates global Application env (:blockscout_url) in one test, so it must not run
+  # concurrently with parity tests that depend on stable URLs.
+  use FrontendExWeb.ConnCase, async: false
 
   describe "GET /health" do
     test "returns 200 OK (text/plain)", %{conn: conn} do

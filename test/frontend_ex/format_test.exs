@@ -1,5 +1,7 @@
 defmodule FrontendEx.FormatTest do
-  use ExUnit.Case, async: true
+  # Mutates global Application env (:clock_utc_now) for deterministic time formatting,
+  # so it must not run concurrently with other tests that also depend on the clock.
+  use ExUnit.Case, async: false
 
   alias FrontendEx.Format
 

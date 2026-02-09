@@ -1,0 +1,19 @@
+
+<style>
+.page-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 48px 0;
+    margin-top: -24px;
+    margin-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+}
+.page-title { font-size: 20px; font-weight: 500; color: var(--text); margin: 0; }
+.card { margin-bottom: 16px; }
+.hash--truncate { max-width: 200px; }
+.mono { font-family: SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 12px; }
+.change-positive { color: #198754; }
+.change-negative { color: #dc3545; }
+.empty-state { padding: 24px 16px; text-align: center; color: var(--text-muted); font-size: 13px; }
+</style>

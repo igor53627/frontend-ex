@@ -1,0 +1,65 @@
+<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a2e"/>
+      <stop offset="50%" style="stop-color:#16213e"/>
+      <stop offset="100%" style="stop-color:#0f3460"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#00d4ff"/>
+      <stop offset="50%" style="stop-color:#7c3aed"/>
+      <stop offset="100%" style="stop-color:#f59e0b"/>
+    </linearGradient>
+    <linearGradient id="value-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#00d4ff"/>
+      <stop offset="100%" style="stop-color:#7c3aed"/>
+    </linearGradient>
+  </defs>
+  
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect x="0" y="0" width="1200" height="6" fill="url(#accent)"/>
+  
+  <!-- Logo -->
+  <g transform="translate(60, 50)">
+    <path d="M24 2L4 14v24l20 12 20-12V14L24 2z" fill="#7c3aed"/>
+    <path d="M24 8L10 16v16l14 8 14-8V16L24 8z" fill="white"/>
+    <path d="M24 14L16 19v10l8 5 8-5V19l-8-5z" fill="#7c3aed"/>
+  </g>
+  <text x="120" y="85" font-family="Inter, system-ui, sans-serif" font-size="28" font-weight="700" fill="white">Blockscout</text>
+  
+  <!-- Status Badge -->
+  <rect x="1000" y="50" width="140" height="40" rx="20" fill="rgba(34, 197, 94, 0.2)"/>
+  <text x="1070" y="78" font-family="Inter, system-ui, sans-serif" font-size="18" font-weight="600" fill="#22c55e" text-anchor="middle">Success</text>
+  
+  <!-- Transaction Label -->
+  <text x="600" y="180" font-family="Inter, system-ui, sans-serif" font-size="16" fill="rgba(255,255,255,0.5)" text-anchor="middle" letter-spacing="3">TRANSACTION</text>
+  
+  <!-- Value -->
+  <text x="600" y="260" font-family="Inter, system-ui, sans-serif" font-size="72" font-weight="700" fill="url(#value-gradient)" text-anchor="middle">0 ETH</text>
+  
+  <!-- From/To Flow -->
+  <rect x="80" y="320" width="440" height="120" rx="16" fill="rgba(255,255,255,0.05)"/>
+  <text x="300" y="360" font-family="Inter, system-ui, sans-serif" font-size="14" fill="rgba(255,255,255,0.5)" text-anchor="middle" letter-spacing="1">FROM</text>
+  <text x="300" y="400" font-family="monospace" font-size="20" fill="#00d4ff" text-anchor="middle">0xdfb6...cedc</text>
+  
+  <!-- Arrow -->
+  <circle cx="600" cy="380" r="30" fill="url(#value-gradient)"/>
+  <path d="M588 380 L612 380 M602 370 L612 380 L602 390" stroke="white" stroke-width="3" fill="none"/>
+  
+  <rect x="680" y="320" width="440" height="120" rx="16" fill="rgba(255,255,255,0.05)"/>
+  <text x="900" y="360" font-family="Inter, system-ui, sans-serif" font-size="14" fill="rgba(255,255,255,0.5)" text-anchor="middle" letter-spacing="1">TO</text>
+  <text x="900" y="400" font-family="monospace" font-size="20" fill="#00d4ff" text-anchor="middle">0x0064...d926</text>
+  
+  <!-- Details -->
+  <rect x="80" y="480" width="340" height="90" rx="12" fill="rgba(255,255,255,0.03)"/>
+  <text x="250" y="515" font-family="Inter, system-ui, sans-serif" font-size="12" fill="rgba(255,255,255,0.5)" text-anchor="middle" letter-spacing="1">BLOCK</text>
+  <text x="250" y="545" font-family="Inter, system-ui, sans-serif" font-size="22" font-weight="600" fill="white" text-anchor="middle">#9824086</text>
+  
+  <rect x="440" y="480" width="320" height="90" rx="12" fill="rgba(255,255,255,0.03)"/>
+  <text x="600" y="515" font-family="Inter, system-ui, sans-serif" font-size="12" fill="rgba(255,255,255,0.5)" text-anchor="middle" letter-spacing="1">FEE</text>
+  <text x="600" y="545" font-family="Inter, system-ui, sans-serif" font-size="22" font-weight="600" fill="white" text-anchor="middle">0.0028 ETH</text>
+  
+  <rect x="780" y="480" width="340" height="90" rx="12" fill="rgba(255,255,255,0.03)"/>
+  <text x="950" y="515" font-family="Inter, system-ui, sans-serif" font-size="12" fill="rgba(255,255,255,0.5)" text-anchor="middle" letter-spacing="1">HASH</text>
+  <text x="950" y="545" font-family="monospace" font-size="16" fill="rgba(255,255,255,0.6)" text-anchor="middle">0xa4e0caea...b84b4126</text>
+</svg>

@@ -1,0 +1,98 @@
+
+<div class="page-header">
+    <h1 class="page-title">Transaction Details</h1>
+</div>
+
+<div class="testnet-banner">
+    This is a Sepolia Testnet transaction only
+</div>
+
+<div class="tabs">
+    <a href="/tx/<%= @tx_hash %>" class="tab">Overview</a>
+    <a href="/tx/<%= @tx_hash %>/internal" class="tab">Internal Txns</a>
+    <a href="/tx/<%= @tx_hash %>/logs" class="tab active">Logs<%= if @logs_count > 0 do %> (<%= @logs_count %>)<% end %></a>
+    <a href="/tx/<%= @tx_hash %>/state" class="tab">State</a>
+    <a href="#" class="tab disabled" aria-disabled="true" tabindex="-1">Blobs</a>
+</div>
+
+<%= if Enum.empty?(@logs) do %>
+<div class="card">
+    <div class="empty-state">There are no logs for this transaction.</div>
+</div>
+<% else %>
+<div class="card logs-card">
+    <h6 class="logs-title">Transaction Receipt Event Logs</h6>
+    <%= for log <- @logs do %>
+    <div class="log-entry" id="logI_<%= log.index %>">
+        <div class="log-badge"><%= log.index %></div>
+        <div class="log-grid">
+            <div class="log-term">Address</div>
+            <div class="log-def">
+                <span class="hash-inline">
+                    <a href="/address/<%= log.address_hash %>" class="hash"><%= log.address_hash %></a>
+                    <button class="copy-btn" data-copy="<%= log.address_hash %>" title="Copy address">
+                        <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+                    </button>
+                </span>
+            </div>
+
+            <%= if log.decoded do %>
+            <div class="log-term">Name</div>
+            <div class="log-def">
+                <span class="sig">
+                    <%= log.decoded.event_name %>
+                    (<span>
+                    <% params = log.decoded.params %>
+                    <% last_idx = length(params) - 1 %>
+                    <%= for {p, idx} <- Enum.with_index(params) do %>
+                        <span class="sig-type"><%= p.param_type %></span>
+                        <span class="sig-name"><%= p.name %></span><%= if idx != last_idx, do: ", " %>
+                    <% end %>
+                    </span>)
+                </span>
+                <a href="<%= @explorer_url %>/address/<%= log.address_hash %>" class="link" style="margin-left:8px;">View Source</a>
+            </div>
+            <% end %>
+
+            <div class="log-term">Topics</div>
+            <div class="log-def">
+                <div class="topic-list">
+                    <%= for {topic, idx} <- Enum.with_index(log.topics) do %>
+                    <div class="topic-item">
+                        <span class="topic-index"><%= idx %></span>
+                        <span class="topic-hash"><%= topic %></span>
+                    </div>
+                    <% end %>
+                </div>
+            </div>
+
+            <div class="log-term">Data</div>
+            <div class="log-def">
+                <div class="data-row">
+                    <div class="data-box">
+                        <%= if log.decoded do %>
+                            <%= for p <- log.decoded.params do %>
+                            <div class="param-line">
+                                <span class="param-key"><%= p.name %></span>
+                                <span class="param-val"><%= p.value %></span>
+                            </div>
+                            <% end %>
+                        <% else %>
+                            <%= if is_binary(log.data) do %>
+                                <span class="param-val"><%= log.data %></span>
+                            <% else %>
+                                <span class="text-muted">-</span>
+                            <% end %>
+                        <% end %>
+                    </div>
+                    <div class="btn-group" aria-label="Data format toggle">
+                        <button class="btn btn-sm" type="button" disabled>Dec</button>
+                        <button class="btn btn-sm" type="button" disabled>Hex</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <% end %>
+</div>
+<% end %>

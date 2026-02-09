@@ -142,7 +142,7 @@
             <%= for tt <- @token_transfers do %>
             <tr>
                 <td class="dir-cell preview-cell">
-                    <a href="/tx/<%= tt.tx_hash %>" class="btn preview-btn" aria-label="Preview transaction">
+                    <a href="<%= tt.tx_path %>" class="btn preview-btn" aria-label="Preview transaction"<%= if tt.tx_hash == "-", do: Phoenix.HTML.raw(" aria-disabled=\"true\" tabindex=\"-1\" onclick=\"return false;\""), else: Phoenix.HTML.raw("") %>>
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <path d="M2.5 12s3.5-7 9.5-7 9.5 7 9.5 7-3.5 7-9.5 7-9.5-7-9.5-7z"/>
                             <circle cx="12" cy="12" r="3"/>
@@ -151,8 +151,8 @@
                 </td>
                 <td>
                     <span class="hash-inline">
-                        <a href="/tx/<%= tt.tx_hash %>" class="hash hash--truncate hash--tx"><%= tt.tx_hash %></a>
-                        <button class="copy-btn" data-copy="<%= tt.tx_hash %>" title="Copy transaction hash">
+                        <a href="<%= tt.tx_path %>" class="hash hash--truncate hash--tx"<%= if tt.tx_hash == "-", do: Phoenix.HTML.raw(" aria-disabled=\"true\" tabindex=\"-1\" onclick=\"return false;\""), else: Phoenix.HTML.raw("") %>><%= tt.tx_hash %></a>
+                        <button class="copy-btn" data-copy="<%= tt.tx_copy %>" title="Copy transaction hash"<%= if tt.tx_hash == "-", do: " disabled", else: "" %>>
                             <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
                         </button>
                     </span>
@@ -161,30 +161,33 @@
                     <span class="badge badge-secondary method-pill"><%= tt.method %></span>
                 </td>
                 <td>
-                    <a href="/block/<%= tt.block_number %>"><%= tt.block_number %></a>
+                    <a href="<%= tt.block_path %>"<%= if tt.block_number == "-", do: Phoenix.HTML.raw(" aria-disabled=\"true\" tabindex=\"-1\" onclick=\"return false;\""), else: Phoenix.HTML.raw("") %>><%= tt.block_number %></a>
                 </td>
                 <td>
                     <span class="text-muted"><%= tt.age %></span>
                 </td>
                 <td>
                     <span class="hash-inline">
-                        <a href="/address/<%= tt.from_hash %>" class="hash hash--truncate hash--sm" title="<%= tt.from_hash %>"><%= FrontendEx.Format.truncate_addr_classic(tt.from_hash) %></a>
-                        <button class="copy-btn" data-copy="<%= tt.from_hash %>" title="Copy from address">
+                        <a href="<%= tt.from_path %>" class="hash hash--truncate hash--sm" title="<%= tt.from_hash %>"<%= if tt.from_hash == "-", do: Phoenix.HTML.raw(" aria-disabled=\"true\" tabindex=\"-1\" onclick=\"return false;\""), else: Phoenix.HTML.raw("") %>><%= FrontendEx.Format.truncate_addr_classic(tt.from_hash) %></a>
+                        <button class="copy-btn" data-copy="<%= tt.from_copy %>" title="Copy from address"<%= if tt.from_hash == "-", do: " disabled", else: "" %>>
                             <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
                         </button>
                     </span>
                 </td>
                 <td class="dir-cell dir-col">
-                    <%= if tt.is_out do %>
+                    <%= case tt.is_out do %>
+                    <% true -> %>
                         <span class="dir-badge dir-badge-out">OUT</span>
-                    <% else %>
+                    <% false -> %>
                         <span class="dir-badge dir-badge-in">IN</span>
+                    <% _ -> %>
+                        <span class="text-muted">-</span>
                     <% end %>
                 </td>
                 <td>
                     <span class="hash-inline">
-                        <a href="/address/<%= tt.to_hash %>" class="hash hash--truncate hash--sm" title="<%= tt.to_hash %>"><%= FrontendEx.Format.truncate_addr_classic(tt.to_hash) %></a>
-                        <button class="copy-btn" data-copy="<%= tt.to_hash %>" title="Copy to address">
+                        <a href="<%= tt.to_path %>" class="hash hash--truncate hash--sm" title="<%= tt.to_hash %>"<%= if tt.to_hash == "-", do: Phoenix.HTML.raw(" aria-disabled=\"true\" tabindex=\"-1\" onclick=\"return false;\""), else: Phoenix.HTML.raw("") %>><%= FrontendEx.Format.truncate_addr_classic(tt.to_hash) %></a>
+                        <button class="copy-btn" data-copy="<%= tt.to_copy %>" title="Copy to address"<%= if tt.to_hash == "-", do: " disabled", else: "" %>>
                             <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
                         </button>
                     </span>

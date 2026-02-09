@@ -1,0 +1,113 @@
+
+<style>
+.page-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 24px 0 16px;
+    margin-top: -12px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+}
+.page-title { font-size: 20px; font-weight: 500; color: var(--text); margin: 0; }
+.card { margin-bottom: 12px; }
+.empty-state { padding: 24px 16px; text-align: center; color: var(--text-muted); font-size: 13px; }
+
+.logs-card { padding: 16px; }
+.logs-title { font-size: 13px; font-weight: 400; margin: 0 0 10px; }
+
+.log-entry {
+    display: flex;
+    gap: 10px;
+    padding: 8px 0;
+    overflow-x: auto;
+}
+.log-entry + .log-entry { border-top: 1px solid var(--border); }
+
+.log-badge {
+    width: 30px;
+    height: 30px;
+    border-radius: 999px;
+    background: rgba(0, 161, 134, 0.10);
+    color: var(--success);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 500;
+    flex-shrink: 0;
+}
+
+.log-grid {
+    display: grid;
+    grid-template-columns: 120px minmax(0, 1fr);
+    row-gap: 8px;
+    column-gap: 12px;
+    align-items: baseline;
+    min-width: 720px;
+}
+.log-term {
+    color: var(--text-muted);
+    font-weight: 500;
+    font-size: 12px;
+    text-align: right;
+}
+.log-def { min-width: 0; word-break: break-word; }
+
+.topic-list { display: flex; flex-direction: column; gap: 6px; }
+.topic-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #f8f9fa;
+    border: 1px solid #e6ebf0;
+    border-radius: 6px;
+    padding: 6px 8px;
+    font-family: SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 11px;
+}
+.topic-index {
+    width: 22px;
+    height: 22px;
+    border-radius: 999px;
+    background: #eef1f4;
+    color: var(--text-muted);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    flex-shrink: 0;
+}
+.topic-hash { word-break: break-all; }
+
+.sig {
+    font-family: SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+.sig-type { color: var(--success); }
+.sig-name { color: var(--danger); }
+
+.data-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+}
+.data-box {
+    flex: 1;
+    background: #f8f9fa;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-family: SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 11px;
+}
+.param-line { display: grid; grid-template-columns: 100px minmax(0, 1fr); gap: 6px; padding: 3px 0; }
+.param-key { color: var(--text-muted); }
+.param-val { word-break: break-all; }
+.btn-group { display: inline-flex; gap: 6px; flex-shrink: 0; }
+.btn.btn-sm { padding: 3px 6px; font-size: 10px; }
+.tabs { margin: 12px 0; }
+.testnet-banner { margin-bottom: 12px; }
+</style>

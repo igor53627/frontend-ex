@@ -96,16 +96,53 @@ Parity routes (pipeline `:fast_browser`):
     - Invalid hashes (not `0x` + 64 hex chars) return `404 Transaction not found` without upstream calls.
   - Upstream calls (Blockscout API v2):
     - `GET /api/v2/stats`
-    - `GET /api/v2/transactions/:hash`
-    - `GET /api/v2/transactions/:hash/logs`
+    - `GET /api/v2/transactions/:hash` (cached 300s)
+    - `GET /api/v2/transactions/:hash/logs` (cached 300s)
     - `GET /api/v2/blocks?limit=1` (SWR; confirmations)
     - `GET /api/v2/addresses/:address` (from/to flags; `to` is best-effort)
 
-- `GET /tx/:hash/internal`
-- `GET /tx/:hash/logs`
-- `GET /tx/:hash/state`
+- `GET /tx/:hash/logs` (classic skin)
+  - SSR HTML transaction "Logs" tab page
+  - Input validation:
+    - Invalid hashes (not `0x` + 64 hex chars) return `404 Transaction not found` without upstream calls.
+  - Upstream calls (Blockscout API v2):
+    - `GET /api/v2/stats`
+    - `GET /api/v2/transactions/:hash/logs` (cached 300s)
+
+- `GET /tx/:hash/state` (classic skin)
+  - SSR HTML transaction "State" tab page
+  - Input validation:
+    - Invalid hashes (not `0x` + 64 hex chars) return `404 Transaction not found` without upstream calls.
+  - Upstream calls (Blockscout API v2):
+    - `GET /api/v2/stats`
+    - `GET /api/v2/transactions/:hash/state-changes` (cached 300s)
+    - `GET /api/v2/transactions/:hash/logs` (cached 300s; tab count)
+
+- `GET /tx/:hash/internal` (classic skin)
+  - SSR HTML transaction "Internal Txns" tab page
+  - Query params:
+    - `advanced=true|false` toggles showing zero value internal transactions (no upstream change).
+  - Input validation:
+    - Invalid hashes (not `0x` + 64 hex chars) return `404 Transaction not found` without upstream calls.
+  - Upstream calls (Blockscout API v2):
+    - `GET /api/v2/stats`
+    - `GET /api/v2/transactions/:hash/internal-transactions` (cached 300s)
+    - `GET /api/v2/transactions/:hash/logs` (cached 300s; tab count)
+
 - `GET /tx/:hash/card`
-  - Placeholder routes for tabs/links; currently `302` redirect to `GET /tx/:hash`.
+  - Standalone share card HTML (s53627 style; not wrapped in skin root layout)
+  - Input validation:
+    - Invalid hashes (not `0x` + 64 hex chars) return `404 Transaction not found` without upstream calls.
+  - Upstream calls (Blockscout API v2):
+    - `GET /api/v2/stats`
+    - `GET /api/v2/transactions/:hash` (cached 300s)
+
+- `GET /tx/:hash/og-image.svg`
+  - SVG OG image (`Content-Type: image/svg+xml`, `Cache-Control: public, max-age=300`)
+  - Input validation:
+    - Invalid hashes (not `0x` + 64 hex chars) return `404 Transaction not found` without upstream calls.
+  - Upstream calls (Blockscout API v2):
+    - `GET /api/v2/transactions/:hash` (cached 300s)
 
 - `GET /address/:address`
   - SSR HTML address page

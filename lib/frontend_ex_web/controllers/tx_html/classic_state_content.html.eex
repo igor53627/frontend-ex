@@ -1,0 +1,66 @@
+
+<div class="page-header">
+    <h1 class="page-title">Transaction Details</h1>
+</div>
+
+<div class="testnet-banner">
+    This is a Sepolia Testnet transaction only
+</div>
+
+<div class="tabs">
+    <a href="/tx/<%= @tx_hash %>" class="tab">Overview</a>
+    <a href="/tx/<%= @tx_hash %>/internal" class="tab">Internal Txns</a>
+    <a href="/tx/<%= @tx_hash %>/logs" class="tab">Logs<%= if @logs_count > 0 do %> (<%= @logs_count %>)<% end %></a>
+    <a href="/tx/<%= @tx_hash %>/state" class="tab active">State</a>
+    <a href="#" class="tab disabled" aria-disabled="true" tabindex="-1">Blobs</a>
+</div>
+
+<%= if Enum.empty?(@state_changes) do %>
+<div class="card">
+    <div class="empty-state">No state changes found for this transaction</div>
+</div>
+<% else %>
+<div class="card">
+    <div class="card-header">State Changes</div>
+    <table>
+        <thead>
+            <tr>
+                <th>Address</th>
+                <th>Before</th>
+                <th>After</th>
+                <th>Change</th>
+            </tr>
+        </thead>
+        <tbody>
+            <%= for sc <- @state_changes do %>
+            <tr>
+                <td>
+                    <a href="/address/<%= get_in(sc, ["address", "hash"]) %>" class="hash hash--truncate"><%= get_in(sc, ["address", "hash"]) %></a>
+                    <%= if get_in(sc, ["is_miner"]) == true do %>
+                        <span class="badge badge-secondary">Miner</span>
+                    <% end %>
+                </td>
+                <td class="text-muted mono">
+                    <%= case Map.get(sc, "balance_before") do %>
+                    <% v when is_binary(v) -> %><%= v %><% _ -> %>-<% end %>
+                </td>
+                <td class="mono">
+                    <%= case Map.get(sc, "balance_after") do %>
+                    <% v when is_binary(v) -> %><%= v %><% _ -> %>-<% end %>
+                </td>
+                <td class="mono">
+                    <%= case Map.get(sc, "change") do %>
+                    <% c when is_binary(c) -> %>
+                        <%= if String.starts_with?(c, "-") do %>
+                            <span class="change-negative"><%= c %></span>
+                        <% else %>
+                            <span class="change-positive">+<%= c %></span>
+                        <% end %>
+                    <% _ -> %>-<% end %>
+                </td>
+            </tr>
+            <% end %>
+        </tbody>
+    </table>
+</div>
+<% end %>

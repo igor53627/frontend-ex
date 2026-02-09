@@ -41,6 +41,24 @@ defmodule FrontendExWeb.Router do
     plug FrontendExWeb.Plugs.TrimTrailingNewline
   end
 
+  # Standalone HTML documents (no root layout). Used for share cards that are
+  # full HTML pages and should not be wrapped by the skin layout.
+  pipeline :fast_plain_html do
+    plug :accepts, ["html"]
+    plug :put_root_layout, false
+    plug :put_layout, false
+    plug :put_secure_browser_headers
+    plug FrontendExWeb.Plugs.TrimTrailingNewline
+  end
+
+  # Non-HTML assets (e.g. SVG) that should not be wrapped by the skin layout.
+  pipeline :fast_svg do
+    plug :accepts, ["html", "svg"]
+    plug :put_root_layout, false
+    plug :put_layout, false
+    plug :put_secure_browser_headers
+  end
+
   pipeline :api do
     plug :accepts, ["json"]
   end
@@ -73,7 +91,6 @@ defmodule FrontendExWeb.Router do
     get "/tx/:hash/internal", TxController, :internal
     get "/tx/:hash/logs", TxController, :logs
     get "/tx/:hash/state", TxController, :state
-    get "/tx/:hash/card", TxController, :card
     get "/address/:address", AddressController, :show
     get "/address/:address/tokens", AddressTabsController, :tokens
     get "/address/:address/token-transfers", AddressTabsController, :token_transfers
@@ -81,6 +98,18 @@ defmodule FrontendExWeb.Router do
     get "/token/:address", TokenController, :show
     get "/token/:address/holders", TokenController, :holders
     get "/exportData", ExportDataController, :index
+  end
+
+  scope "/", FrontendExWeb do
+    pipe_through :fast_plain_html
+
+    get "/tx/:hash/card", TxController, :card
+  end
+
+  scope "/", FrontendExWeb do
+    pipe_through :fast_svg
+
+    get "/tx/:hash/og-image.svg", TxController, :og_image
   end
 
   scope "/", FrontendExWeb do

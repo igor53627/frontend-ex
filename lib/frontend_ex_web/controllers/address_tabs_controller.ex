@@ -12,6 +12,7 @@ defmodule FrontendExWeb.AddressTabsController do
   @preview_limit 25
 
   @address_re ~r/\A0x[0-9a-fA-F]{40}\z/
+  @digits_re ~r/\A\d+\z/
 
   def tokens(conn, %{"address" => address}) when is_binary(address) do
     address = normalize_address_param(address)
@@ -107,50 +108,54 @@ defmodule FrontendExWeb.AddressTabsController do
       {coin_price, gas_price} = derive_coin_gas(stats_json)
       address_info = parse_address(addr_json)
 
-      token_balances = parse_token_balances(tokens_json)
-      token_holdings_count = length(token_balances)
+      if String.trim(address_info.hash || "") == "" do
+        send_address_not_found(conn)
+      else
+        token_balances = parse_token_balances(tokens_json)
+        token_holdings_count = length(token_balances)
 
-      balance_display = format_balance_display(address_info.coin_balance)
-      balance_usd_display = derive_balance_usd_display(address_info.coin_balance, coin_price)
+        balance_display = format_balance_display(address_info.coin_balance)
+        balance_usd_display = derive_balance_usd_display(address_info.coin_balance, coin_price)
 
-      token_holdings_display =
-        if token_holdings_count == 0 do
-          "N/A"
-        else
-          ">$0.00 (#{token_holdings_count} Tokens)"
-        end
+        token_holdings_display =
+          if token_holdings_count == 0 do
+            "N/A"
+          else
+            ">$0.00 (#{token_holdings_count} Tokens)"
+          end
 
-      tx_count_display = format_tx_count_display(address_info.transactions_count)
+        tx_count_display = format_tx_count_display(address_info.transactions_count)
 
-      base_assigns = %{
-        page_title: "",
-        explorer_url: explorer_url,
-        head_meta: safe_empty,
-        styles: safe_empty,
-        scripts: safe_empty,
-        topbar: safe_empty,
-        nav_home: "",
-        nav_blocks: "",
-        nav_txs: "",
-        nav_tokens: "",
-        nav_nfts: "",
-        address: address_info,
-        token_balances: token_balances,
-        balance_display: balance_display,
-        balance_usd_display: balance_usd_display,
-        token_holdings_display: token_holdings_display,
-        tx_count_display: tx_count_display,
-        coin_price: coin_price,
-        gas_price: gas_price
-      }
+        base_assigns = %{
+          page_title: "",
+          explorer_url: explorer_url,
+          head_meta: safe_empty,
+          styles: safe_empty,
+          scripts: safe_empty,
+          topbar: safe_empty,
+          nav_home: "",
+          nav_blocks: "",
+          nav_txs: "",
+          nav_tokens: "",
+          nav_nfts: "",
+          address: address_info,
+          token_balances: token_balances,
+          balance_display: balance_display,
+          balance_usd_display: balance_usd_display,
+          token_holdings_display: token_holdings_display,
+          tx_count_display: tx_count_display,
+          coin_price: coin_price,
+          gas_price: gas_price
+        }
 
-      styles = AddressTabsHTML.classic_tokens_styles(base_assigns)
+        styles = AddressTabsHTML.classic_tokens_styles(base_assigns)
 
-      render(conn, :classic_tokens_content, %{
-        base_assigns
-        | page_title: "Address #{address_info.hash} Token Holdings | Sepolia",
-          styles: styles
-      })
+        render(conn, :classic_tokens_content, %{
+          base_assigns
+          | page_title: "Address #{address_info.hash} Token Holdings | Sepolia",
+            styles: styles
+        })
+      end
     end
   end
 
@@ -181,58 +186,60 @@ defmodule FrontendExWeb.AddressTabsController do
       )
 
     if is_nil(addr_json) do
-      conn
-      |> put_resp_content_type("text/plain")
-      |> send_resp(404, "Address not found")
+      send_address_not_found(conn)
     else
       {coin_price, gas_price} = derive_coin_gas(stats_json)
       address_info = parse_address(addr_json)
 
-      token_transfers = parse_token_transfers(transfers_json, address)
+      if String.trim(address_info.hash || "") == "" do
+        send_address_not_found(conn)
+      else
+        token_transfers = parse_token_transfers(transfers_json, address)
 
-      token_holdings_count = token_balances_count(tokens_json)
+        token_holdings_count = tokens_json |> parse_token_balances() |> length()
 
-      balance_display = format_balance_display(address_info.coin_balance)
-      balance_usd_display = derive_balance_usd_display(address_info.coin_balance, coin_price)
+        balance_display = format_balance_display(address_info.coin_balance)
+        balance_usd_display = derive_balance_usd_display(address_info.coin_balance, coin_price)
 
-      token_holdings_display =
-        if token_holdings_count == 0 do
-          "N/A"
-        else
-          ">$0.00 (#{token_holdings_count} Tokens)"
-        end
+        token_holdings_display =
+          if token_holdings_count == 0 do
+            "N/A"
+          else
+            ">$0.00 (#{token_holdings_count} Tokens)"
+          end
 
-      tx_count_display = format_tx_count_display(address_info.transactions_count)
+        tx_count_display = format_tx_count_display(address_info.transactions_count)
 
-      base_assigns = %{
-        page_title: "",
-        explorer_url: explorer_url,
-        head_meta: safe_empty,
-        styles: safe_empty,
-        scripts: safe_empty,
-        topbar: safe_empty,
-        nav_home: "",
-        nav_blocks: "",
-        nav_txs: "",
-        nav_tokens: "",
-        nav_nfts: "",
-        address: address_info,
-        token_transfers: token_transfers,
-        balance_display: balance_display,
-        balance_usd_display: balance_usd_display,
-        token_holdings_display: token_holdings_display,
-        tx_count_display: tx_count_display,
-        coin_price: coin_price,
-        gas_price: gas_price
-      }
+        base_assigns = %{
+          page_title: "",
+          explorer_url: explorer_url,
+          head_meta: safe_empty,
+          styles: safe_empty,
+          scripts: safe_empty,
+          topbar: safe_empty,
+          nav_home: "",
+          nav_blocks: "",
+          nav_txs: "",
+          nav_tokens: "",
+          nav_nfts: "",
+          address: address_info,
+          token_transfers: token_transfers,
+          balance_display: balance_display,
+          balance_usd_display: balance_usd_display,
+          token_holdings_display: token_holdings_display,
+          tx_count_display: tx_count_display,
+          coin_price: coin_price,
+          gas_price: gas_price
+        }
 
-      styles = AddressHTML.classic_styles(base_assigns)
+        styles = AddressHTML.classic_styles(base_assigns)
 
-      render(conn, :classic_token_transfers_content, %{
-        base_assigns
-        | page_title: "Address #{address_info.hash} Token Transfers | Sepolia",
-          styles: styles
-      })
+        render(conn, :classic_token_transfers_content, %{
+          base_assigns
+          | page_title: "Address #{address_info.hash} Token Transfers | Sepolia",
+            styles: styles
+        })
+      end
     end
   end
 
@@ -263,58 +270,60 @@ defmodule FrontendExWeb.AddressTabsController do
       )
 
     if is_nil(addr_json) do
-      conn
-      |> put_resp_content_type("text/plain")
-      |> send_resp(404, "Address not found")
+      send_address_not_found(conn)
     else
       {coin_price, gas_price} = derive_coin_gas(stats_json)
       address_info = parse_address(addr_json)
 
-      internal_txns = parse_internal_transactions(internal_json)
+      if String.trim(address_info.hash || "") == "" do
+        send_address_not_found(conn)
+      else
+        internal_txns = parse_internal_transactions(internal_json)
 
-      token_holdings_count = token_balances_count(tokens_json)
+        token_holdings_count = tokens_json |> parse_token_balances() |> length()
 
-      balance_display = format_balance_display(address_info.coin_balance)
-      balance_usd_display = derive_balance_usd_display(address_info.coin_balance, coin_price)
+        balance_display = format_balance_display(address_info.coin_balance)
+        balance_usd_display = derive_balance_usd_display(address_info.coin_balance, coin_price)
 
-      token_holdings_display =
-        if token_holdings_count == 0 do
-          "N/A"
-        else
-          ">$0.00 (#{token_holdings_count} Tokens)"
-        end
+        token_holdings_display =
+          if token_holdings_count == 0 do
+            "N/A"
+          else
+            ">$0.00 (#{token_holdings_count} Tokens)"
+          end
 
-      tx_count_display = format_tx_count_display(address_info.transactions_count)
+        tx_count_display = format_tx_count_display(address_info.transactions_count)
 
-      base_assigns = %{
-        page_title: "",
-        explorer_url: explorer_url,
-        head_meta: safe_empty,
-        styles: safe_empty,
-        scripts: safe_empty,
-        topbar: safe_empty,
-        nav_home: "",
-        nav_blocks: "",
-        nav_txs: "",
-        nav_tokens: "",
-        nav_nfts: "",
-        address: address_info,
-        internal_txns: internal_txns,
-        balance_display: balance_display,
-        balance_usd_display: balance_usd_display,
-        token_holdings_display: token_holdings_display,
-        tx_count_display: tx_count_display,
-        coin_price: coin_price,
-        gas_price: gas_price
-      }
+        base_assigns = %{
+          page_title: "",
+          explorer_url: explorer_url,
+          head_meta: safe_empty,
+          styles: safe_empty,
+          scripts: safe_empty,
+          topbar: safe_empty,
+          nav_home: "",
+          nav_blocks: "",
+          nav_txs: "",
+          nav_tokens: "",
+          nav_nfts: "",
+          address: address_info,
+          internal_txns: internal_txns,
+          balance_display: balance_display,
+          balance_usd_display: balance_usd_display,
+          token_holdings_display: token_holdings_display,
+          tx_count_display: tx_count_display,
+          coin_price: coin_price,
+          gas_price: gas_price
+        }
 
-      styles = AddressHTML.classic_styles(base_assigns)
+        styles = AddressHTML.classic_styles(base_assigns)
 
-      render(conn, :classic_internal_content, %{
-        base_assigns
-        | page_title: "Address #{address_info.hash} Internal Transactions | Sepolia",
-          styles: styles
-      })
+        render(conn, :classic_internal_content, %{
+          base_assigns
+          | page_title: "Address #{address_info.hash} Internal Transactions | Sepolia",
+            styles: styles
+        })
+      end
     end
   end
 
@@ -462,6 +471,14 @@ defmodule FrontendExWeb.AddressTabsController do
   defp normalize_opt_string(v) when is_binary(v), do: String.trim(v)
   defp normalize_opt_string(_), do: nil
 
+  defp normalize_id_or_dash(v) when is_binary(v) do
+    v = String.trim(v)
+    if v == "", do: "-", else: v
+  end
+
+  defp normalize_id_or_dash(v) when is_integer(v), do: Integer.to_string(v)
+  defp normalize_id_or_dash(_), do: "-"
+
   defp parse_u64(v) when is_integer(v) and v >= 0, do: v
 
   defp parse_u64(v) when is_binary(v) do
@@ -516,8 +533,18 @@ defmodule FrontendExWeb.AddressTabsController do
           cond do
             is_binary(value) -> value
             is_integer(value) -> Integer.to_string(value)
-            is_float(value) -> to_string(value)
+            # Blockscout token unit values should be integers; treat floats as invalid to avoid
+            # incorrect decimal formatting (e.g. "1.0").
+            is_float(value) -> "0"
             true -> "0"
+          end
+          |> String.trim()
+
+        value_s =
+          if Regex.match?(@digits_re, value_s) do
+            value_s
+          else
+            "0"
           end
 
         balance =
@@ -553,17 +580,6 @@ defmodule FrontendExWeb.AddressTabsController do
     end)
   end
 
-  defp token_balances_count(nil), do: 0
-
-  defp token_balances_count(%{} = tokens_json) do
-    case tokens_json["items"] do
-      list when is_list(list) -> length(list)
-      _ -> 0
-    end
-  end
-
-  defp token_balances_count(_), do: 0
-
   defp parse_token_transfers(nil, _address), do: []
 
   defp parse_token_transfers(%{} = json, address) when is_binary(address) do
@@ -582,11 +598,7 @@ defmodule FrontendExWeb.AddressTabsController do
   defp parse_token_transfers(_other, _address), do: []
 
   defp build_token_transfer_row(%{} = transfer, address) when is_binary(address) do
-    tx_hash =
-      case transfer["transaction_hash"] do
-        v when is_binary(v) -> v
-        _ -> "-"
-      end
+    tx_hash = normalize_id_or_dash(transfer["transaction_hash"])
 
     method =
       transfer["method"]
@@ -596,12 +608,7 @@ defmodule FrontendExWeb.AddressTabsController do
       end
       |> Format.format_method_name()
 
-    block_number =
-      case transfer["block_number"] do
-        v when is_integer(v) -> Integer.to_string(v)
-        v when is_binary(v) -> String.trim(v)
-        _ -> "-"
-      end
+    block_number = normalize_id_or_dash(transfer["block_number"])
 
     age =
       case transfer["timestamp"] do
@@ -609,19 +616,18 @@ defmodule FrontendExWeb.AddressTabsController do
         _ -> "-"
       end
 
-    from_hash =
-      case get_in(transfer, ["from", "hash"]) do
-        v when is_binary(v) -> v
-        _ -> ""
-      end
+    from_hash = normalize_id_or_dash(get_in(transfer, ["from", "hash"]))
 
-    to_hash =
-      case get_in(transfer, ["to", "hash"]) do
-        v when is_binary(v) -> v
-        _ -> ""
-      end
+    to_hash = normalize_id_or_dash(get_in(transfer, ["to", "hash"]))
 
-    is_out = String.downcase(from_hash) == String.downcase(address)
+    address_lc = String.downcase(address)
+
+    is_out =
+      if from_hash == "-" do
+        nil
+      else
+        String.downcase(from_hash) == address_lc
+      end
 
     amount = format_token_amount(get_in(transfer, ["total"]), get_in(transfer, ["token"]))
 
@@ -643,13 +649,29 @@ defmodule FrontendExWeb.AddressTabsController do
         _ -> nil
       end
 
+    tx_path = if tx_hash == "-", do: "#", else: "/tx/#{tx_hash}"
+    block_path = if block_number == "-", do: "#", else: "/block/#{block_number}"
+    from_path = if from_hash == "-", do: "#", else: "/address/#{from_hash}"
+    to_path = if to_hash == "-", do: "#", else: "/address/#{to_hash}"
+
+    tx_copy = if tx_hash == "-", do: "", else: tx_hash
+    from_copy = if from_hash == "-", do: "", else: from_hash
+    to_copy = if to_hash == "-", do: "", else: to_hash
+
     %{
       tx_hash: tx_hash,
+      tx_path: tx_path,
+      tx_copy: tx_copy,
       method: method,
       block_number: block_number,
+      block_path: block_path,
       age: age,
       from_hash: from_hash,
+      from_path: from_path,
+      from_copy: from_copy,
       to_hash: to_hash,
+      to_path: to_path,
+      to_copy: to_copy,
       is_out: is_out,
       amount: amount,
       token_label: token_label,
@@ -738,11 +760,7 @@ defmodule FrontendExWeb.AddressTabsController do
         _ -> "-"
       end
 
-    parent_tx_hash =
-      case itx["transaction_hash"] do
-        v when is_binary(v) -> v
-        _ -> "-"
-      end
+    parent_tx_hash = normalize_id_or_dash(itx["transaction_hash"])
 
     method =
       case itx["value"] do
@@ -754,12 +772,7 @@ defmodule FrontendExWeb.AddressTabsController do
           "Call"
       end
 
-    block_number =
-      case itx["block_number"] do
-        v when is_integer(v) -> Integer.to_string(v)
-        v when is_binary(v) -> String.trim(v)
-        _ -> "-"
-      end
+    block_number = normalize_id_or_dash(itx["block_number"])
 
     age =
       case itx["timestamp"] do
@@ -767,19 +780,15 @@ defmodule FrontendExWeb.AddressTabsController do
         _ -> "-"
       end
 
-    from_hash =
-      case get_in(itx, ["from", "hash"]) do
-        v when is_binary(v) -> v
-        _ -> ""
-      end
+    from_hash = normalize_id_or_dash(get_in(itx, ["from", "hash"]))
 
     to_hash =
       cond do
         is_binary(get_in(itx, ["to", "hash"])) ->
-          get_in(itx, ["to", "hash"])
+          normalize_id_or_dash(get_in(itx, ["to", "hash"]))
 
         is_binary(get_in(itx, ["created_contract", "hash"])) ->
-          get_in(itx, ["created_contract", "hash"])
+          normalize_id_or_dash(get_in(itx, ["created_contract", "hash"]))
 
         true ->
           "-"
@@ -787,14 +796,30 @@ defmodule FrontendExWeb.AddressTabsController do
 
     amount = format_internal_amount(itx["value"])
 
+    parent_tx_path = if parent_tx_hash == "-", do: "#", else: "/tx/#{parent_tx_hash}"
+    block_path = if block_number == "-", do: "#", else: "/block/#{block_number}"
+    from_path = if from_hash == "-", do: "#", else: "/address/#{from_hash}"
+    to_path = if to_hash == "-", do: "#", else: "/address/#{to_hash}"
+
+    parent_tx_copy = if parent_tx_hash == "-", do: "", else: parent_tx_hash
+    from_copy = if from_hash == "-", do: "", else: from_hash
+    to_copy = if to_hash == "-", do: "", else: to_hash
+
     %{
       tx_type: tx_type,
       parent_tx_hash: parent_tx_hash,
+      parent_tx_path: parent_tx_path,
+      parent_tx_copy: parent_tx_copy,
       method: method,
       block_number: block_number,
+      block_path: block_path,
       age: age,
       from_hash: from_hash,
+      from_path: from_path,
+      from_copy: from_copy,
       to_hash: to_hash,
+      to_path: to_path,
+      to_copy: to_copy,
       amount: amount
     }
   end

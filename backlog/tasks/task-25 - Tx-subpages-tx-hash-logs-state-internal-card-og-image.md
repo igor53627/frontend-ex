@@ -1,9 +1,10 @@
 ---
 id: TASK-25
 title: 'Tx subpages: /tx/:hash/* (logs/state/internal/card/og-image)'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-02-09 15:05'
+updated_date: '2026-02-10 05:17'
 labels:
   - pages
   - tx
@@ -19,11 +20,11 @@ priority: medium
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 GET /tx/:hash/logs renders SSR (classic)
-- [ ] #2 GET /tx/:hash/state renders SSR (classic)
-- [ ] #3 GET /tx/:hash/internal renders SSR (classic)
-- [ ] #4 GET /tx/:hash/og-image.svg returns SVG (same as Rust)
-- [ ] #5 GET /tx/:hash/card renders share card (s53627)
+- [x] #1 GET /tx/:hash/logs renders SSR (classic)
+- [x] #2 GET /tx/:hash/state renders SSR (classic)
+- [x] #3 GET /tx/:hash/internal renders SSR (classic)
+- [x] #4 GET /tx/:hash/og-image.svg returns SVG (same as Rust)
+- [x] #5 GET /tx/:hash/card renders share card (s53627)
 <!-- AC:END -->
 
 ## Description
@@ -51,3 +52,9 @@ priority: medium
 - Internal tab supports `?advanced=true|false` (see `TxInternalQuery` in Rust).
 - Logs/state/internal are treated as immutable in Rust (5 min cache).
 - Testing: golden HTML snapshots for logs/state/internal + fixture-based SVG snapshot for OG image.
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Implemented `/tx/:hash/logs`, `/tx/:hash/state`, and `/tx/:hash/internal` SSR tab pages for the Classic skin, plus `/tx/:hash/card` share card HTML and `/tx/:hash/og-image.svg` SVG with Rust-matching headers. Added Blockscout fixtures, Rust golden snapshots, and parity tests to keep output byte-for-byte.
+<!-- SECTION:FINAL_SUMMARY:END -->

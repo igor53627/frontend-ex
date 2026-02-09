@@ -98,7 +98,7 @@ Important nuance:
 - 5-20s: serve stale and refresh in background (deduped per key)
 - >20s: fetch fresh before serving (coalesced per key)
 
-Note: Rust also has an "immutable" 300s TTL cache for tx/block-by-hash; we have not implemented that yet.
+Note: Rust uses a separate "immutable" 300s TTL cache for tx/block-by-hash. `frontend-ex` approximates this by using the standard cache with a per-call TTL override (e.g. tx-by-hash and tx tab API calls use 300s TTL).
 
 ## Static Assets
 
