@@ -32,6 +32,15 @@ defmodule FrontendExWeb.Router do
     plug FrontendExWeb.Plugs.TrimTrailingNewline
   end
 
+  # CSV exports: parity routes, but allow `Accept: text/csv`.
+  pipeline :fast_csv do
+    plug :accepts, ["html", "csv"]
+    plug FrontendExWeb.Plugs.FastLayout
+    plug :put_layout, false
+    plug :put_secure_browser_headers
+    plug FrontendExWeb.Plugs.TrimTrailingNewline
+  end
+
   pipeline :api do
     plug :accepts, ["json"]
   end
@@ -40,6 +49,12 @@ defmodule FrontendExWeb.Router do
     # Ops/debug routes: no SSR pipeline, no trailing-newline trimming.
     get "/health", OpsController, :health
     get "/stats", OpsController, :stats
+  end
+
+  scope "/", FrontendExWeb do
+    pipe_through :fast_csv
+
+    get "/nft-latest-mints.csv", NftController, :latest_mints_csv
   end
 
   scope "/", FrontendExWeb do
@@ -52,7 +67,6 @@ defmodule FrontendExWeb.Router do
     get "/tokens", TokensController, :index
     get "/nft-transfers", NftController, :transfers
     get "/nft-latest-mints", NftController, :latest_mints
-    get "/nft-latest-mints.csv", NftController, :latest_mints_csv
     get "/block/:id", BlockController, :show
     get "/block/:id/txs", BlockController, :txs
     get "/tx/:hash", TxController, :show

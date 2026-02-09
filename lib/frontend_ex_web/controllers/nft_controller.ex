@@ -259,6 +259,7 @@ defmodule FrontendExWeb.NftController do
       cursor_query
       |> String.split("&", trim: true)
       |> Enum.reject(&String.starts_with?(&1, "items_count="))
+      |> Enum.reject(&String.starts_with?(&1, "type="))
 
     query =
       case filtered_cursor_parts do
@@ -266,17 +267,9 @@ defmodule FrontendExWeb.NftController do
         parts -> query <> "&" <> Enum.join(parts, "&")
       end
 
-    # Add type filter if not already present.
-    has_type? =
-      String.split(query, "&", trim: true) |> Enum.any?(&String.starts_with?(&1, "type="))
-
-    query =
-      if has_type? do
-        query
-      else
-        encoded_types = URI.encode(token_types, &URI.char_unreserved?/1)
-        query <> "&type=" <> encoded_types
-      end
+    # Always enforce the NFT type filter (cursor must not override it).
+    encoded_types = URI.encode(token_types, &URI.char_unreserved?/1)
+    query = query <> "&type=" <> encoded_types
 
     "/api/v2/token-transfers?" <> query
   end
@@ -336,6 +329,12 @@ defmodule FrontendExWeb.NftController do
     rescue
       e ->
         {:error, {:transport, {:task_crashed, e}}}
+    catch
+      :exit, reason ->
+        {:error, {:transport, {:task_exit, reason}}}
+
+      kind, reason ->
+        {:error, {:transport, {kind, reason}}}
     end
   end
 
@@ -665,7 +664,7 @@ defmodule FrontendExWeb.NftController do
   defp do_export_collect(page_size, cursor_query, filter, acc_rev, count, pages_fetched) do
     path = token_transfers_path(page_size, cursor_query, @nft_types)
 
-    case Client.get_json_cached(path, :public) do
+    case safe_get_json_cached(path, :public) do
       {:ok, %{} = json} ->
         items =
           case json["items"] do
@@ -716,7 +715,12 @@ defmodule FrontendExWeb.NftController do
       {:ok, _other} ->
         acc_rev
 
-      {:error, _reason} ->
+      {:error, reason} ->
+        Logger.warning("nfts: export upstream request failed",
+          endpoint: "/api/v2/token-transfers",
+          reason: inspect(reason)
+        )
+
         acc_rev
     end
   end
