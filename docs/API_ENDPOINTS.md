@@ -95,6 +95,29 @@ Parity routes (pipeline `:fast_browser`):
     - `GET /api/v2/addresses/:address/transactions` (cursor passthrough via `?cursor=` UI param)
     - `GET /api/v2/addresses/:address/tokens`
 
+- `GET /address/:address/tokens` (classic skin)
+  - SSR HTML address "Token Holdings" tab page
+  - Upstream calls (Blockscout API v2):
+    - `GET /api/v2/stats`
+    - `GET /api/v2/addresses/:address`
+    - `GET /api/v2/addresses/:address/tokens`
+
+- `GET /address/:address/token-transfers` (classic skin)
+  - SSR HTML address "Token Transfers" tab page
+  - Upstream calls (Blockscout API v2):
+    - `GET /api/v2/stats`
+    - `GET /api/v2/addresses/:address`
+    - `GET /api/v2/addresses/:address/token-transfers`
+    - `GET /api/v2/addresses/:address/tokens` (header token holdings count)
+
+- `GET /address/:address/internal` (classic skin)
+  - SSR HTML address "Internal Transactions" tab page
+  - Upstream calls (Blockscout API v2):
+    - `GET /api/v2/stats`
+    - `GET /api/v2/addresses/:address`
+    - `GET /api/v2/addresses/:address/internal-transactions`
+    - `GET /api/v2/addresses/:address/tokens` (header token holdings count)
+
 - `GET /exportData`
   - SSR HTML page (no upstream calls)
 

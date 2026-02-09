@@ -1,10 +1,10 @@
 ---
 id: TASK-24
 title: 'Address tabs: /address/:address/* (tokens/transfers/internal)'
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-02-09 15:04'
-updated_date: '2026-02-09 21:20'
+updated_date: '2026-02-10 02:10'
 labels:
   - pages
   - address
@@ -29,9 +29,9 @@ The Classic address page has tabs that currently point to missing routes in `fro
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 GET /address/:address/tokens renders SSR (classic)
-- [ ] #2 GET /address/:address/token-transfers renders SSR (classic)
-- [ ] #3 GET /address/:address/internal renders SSR (classic)
+- [x] #1 GET /address/:address/tokens renders SSR (classic)
+- [x] #2 GET /address/:address/token-transfers renders SSR (classic)
+- [x] #3 GET /address/:address/internal renders SSR (classic)
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -49,3 +49,9 @@ The Classic address page has tabs that currently point to missing routes in `fro
 - `/api/v2/stats` (coin_price/gas_price header)
 - Keep SSR output byte-for-byte with Rust using golden fixtures.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Implemented Classic address tab SSR routes `/address/:address/tokens`, `/address/:address/token-transfers`, and `/address/:address/internal`, with fixtures + Rust golden HTML snapshots and byte-for-byte parity tests.
+<!-- SECTION:FINAL_SUMMARY:END -->

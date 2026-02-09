@@ -58,6 +58,9 @@ defmodule FrontendExWeb.Router do
     get "/tx/:hash/state", TxController, :state
     get "/tx/:hash/card", TxController, :card
     get "/address/:address", AddressController, :show
+    get "/address/:address/tokens", AddressTabsController, :tokens
+    get "/address/:address/token-transfers", AddressTabsController, :token_transfers
+    get "/address/:address/internal", AddressTabsController, :internal
     get "/token/:address", TokenController, :show
     get "/token/:address/holders", TokenController, :holders
     get "/exportData", ExportDataController, :index
