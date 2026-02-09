@@ -5,6 +5,7 @@ Operational runbooks will live in this directory.
 ## Index
 
 - `deploy.md` - Deploy/rollback `frontend-ex` on `aya` and restart Caddy (podman).
+- `cutover.md` - Switch Caddy routing from Rust `fast-frontend` to `frontend-ex` with rollback.
 
 ## Notes
 

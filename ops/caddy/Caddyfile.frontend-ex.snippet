@@ -10,6 +10,13 @@
 
 # ========== FRONTEND-EX ROUTES ==========
 
+# Home page
+@frontend_ex_root path /
+handle @frontend_ex_root {
+    reverse_proxy 127.0.0.1:5174
+    header X-Frontend "frontend-ex"
+}
+
 # frontend-ex static assets (parity CSS/JS under /static/**)
 handle /static/* {
     reverse_proxy 127.0.0.1:5174
@@ -40,4 +47,3 @@ handle /address/* {
     reverse_proxy 127.0.0.1:5174
     header X-Frontend "frontend-ex"
 }
-
