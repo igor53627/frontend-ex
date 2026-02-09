@@ -55,6 +55,11 @@ if [ "$SKIP_SYNC" = false ]; then
     --exclude deps/ \
     --exclude .git/ \
     --exclude .jj/ \
+    --exclude .mix/ \
+    --exclude .hex/ \
+    --exclude releases/ \
+    --exclude current \
+    --exclude frontend-ex.env \
     --exclude tmp/ \
     "$LOCAL_PATH/" "$SERVER:$REMOTE_PATH/"
 else
