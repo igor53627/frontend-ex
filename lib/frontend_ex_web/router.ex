@@ -32,6 +32,7 @@ defmodule FrontendExWeb.Router do
     get "/", HomeController, :index
     get "/block/:id", BlockController, :show
     get "/block/:id/txs", BlockController, :txs
+    get "/tx/:hash", TxController, :show
     get "/exportData", ExportDataController, :index
   end
 

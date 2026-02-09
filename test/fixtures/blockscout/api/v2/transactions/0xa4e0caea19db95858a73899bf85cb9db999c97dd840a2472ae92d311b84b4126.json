@@ -1,0 +1,72 @@
+{
+  "actions": [],
+  "base_fee_per_gas": "60707506582",
+  "block_number": 9824086,
+  "confirmation_duration": [
+    0,
+    12000
+  ],
+  "confirmations": 1,
+  "created_contract": null,
+  "decoded_input": null,
+  "exchange_rate": null,
+  "fee": {
+    "type": "actual",
+    "value": "2796233813166920"
+  },
+  "from": {
+    "ens_domain_name": null,
+    "hash": "0xdfb62410f6e7d6d654c85eb29e463b836ce6cedc",
+    "implementations": [],
+    "is_contract": false,
+    "is_scam": false,
+    "is_verified": false,
+    "metadata": null,
+    "name": null,
+    "private_tags": [],
+    "proxy_type": null,
+    "public_tags": [],
+    "reputation": "ok",
+    "watchlist_names": []
+  },
+  "gas_limit": "46060",
+  "gas_price": "60708506582",
+  "gas_used": "46060",
+  "has_error_in_internal_transactions": false,
+  "hash": "0xa4e0caea19db95858a73899bf85cb9db999c97dd840a2472ae92d311b84b4126",
+  "max_fee_per_gas": "130253279166",
+  "max_priority_fee_per_gas": "1000000",
+  "method": "0x008ef17e",
+  "nonce": 31828,
+  "position": 156,
+  "priority_fee": null,
+  "raw_input": "0x008ef17ec188f3f521c9722404025d462700000000026278dadae1cff0c367c11e6d9339977f6cfc675ffce857f97769c33df6332ea7b4ede0fdb4e5f8ccab1abfd7374f7deeb7e0636ca5df47b690a53dea3555e12a3ff2fb6e87ea7732dcbbbecfeaccdd5ffcc76eb4645aff7738003170f6e633334c43e66f8dab3c2ccce899d965591c3971654ff6bf7791ae2f1b65f73d20da4027a881b762e36da7ef66774e760c9a6abce91bffba8d0587dc5c76f7e90ade8e7d57a7779668035da0066ea8ef9d257d6171aaafd674def2ed663f595dfe8789875f61fe5455a47887ebc54ea20d74831a28e5cb2fb3b4fee92a299773ab34ebebf71caa5f1011e0b165f229cde936199745df126da007d440d55b931b0b3f9c9214ddaed1efe91c5d227d807b63aaa8e0fafe75af346f44a545354f7deebf80875535adfabd8bfdd22e619b731383ae2cdd9058c9fcf0ad51cdf26ef1235ab98740067a410d3ce121e9552833a5b168db4333b17d971f7d98cf657078c1fd25aff9bef52e8fd81040b4813e5003d50c3dcebf10587d34a9e3477101ff03d327cb5f2daa567ed8683df3b639bbf8e9af441be80735d05cb8e5cb156ed7a793fc7f5d95b3e19d3fc9b3ecd0bf66cee3c1b70f2b6ab61616106d6000d4c0eaf9d1c17b6dde865972ae8bfaf87edac4adc591ba6b434e2fdc7eac6ec385f55f6e106d6010d4404d7ec740a367b11fadd39ba66589f039fc3ed06856fe7631f3bff3ed460af7d6b7116d6008d4c0176b8ffeb29c25211a57cfffedea8b8e9629918d6b8496ca55fdbb97fcc6b8ecc3f2e6a9cf0316cc0f9dcc26e5cda5fcf8a0ebd1931f02d6df08ded9ff8fa562fafb157fcbcb9da75d0519187600100000ffff7ae1ee2c01",
+  "result": "success",
+  "revert_reason": null,
+  "status": "ok",
+  "timestamp": "2025-12-12T11:41:24+00:00",
+  "to": {
+    "ens_domain_name": null,
+    "hash": "0x00640f45fec08927a437ea023cfa13cb7354d926",
+    "implementations": [],
+    "is_contract": false,
+    "is_scam": false,
+    "is_verified": false,
+    "metadata": null,
+    "name": null,
+    "private_tags": [],
+    "proxy_type": null,
+    "public_tags": [],
+    "reputation": "ok",
+    "watchlist_names": []
+  },
+  "token_transfers": null,
+  "token_transfers_overflow": null,
+  "transaction_burnt_fee": null,
+  "transaction_tag": null,
+  "transaction_types": [
+    "contract_call"
+  ],
+  "type": 2,
+  "value": "0"
+}

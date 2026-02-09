@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transaction 0x1111111111111111111111111111111111111111111111111111111111111111 | Sepolia</title>
+    <link rel="icon" type="image/png" href="https://sepolia.53627.org/favicon/favicon-32x32.png">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style2.css">
+    <link rel="stylesheet" href="/static/css/style2-overrides.css">
+    
+<meta property="og:title" content="Transaction: 0 ETH [Pending]">
+<meta property="og:description" content="From 0xdfb6...cedc to 0x0064...d926 | Block Pending">
+<meta property="og:image" content="https://fast.53627.org/static/og-0x1111111111111111111111111111111111111111111111111111111111111111.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="0 ETH Transaction">
+<meta name="twitter:description" content="Pending | 0xdfb6...cedc to 0x0064...d926">
+<meta name="twitter:image" content="https://fast.53627.org/static/og-0x1111111111111111111111111111111111111111111111111111111111111111.png">
+
+    
+<style>
+.page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 24px 0 16px;
+    margin-top: -12px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+}
+.page-header-left {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+.page-nav {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.page-title {
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--text);
+    margin: 0;
+}
+
+.tx-tabbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 12px 0;
+}
+.tx-tabbar .tabs { margin: 0; }
+.tx-tabbar-actions { display: inline-flex; align-items: center; gap: 8px; }
+.btn.btn-sm { padding: 4px 8px; font-size: 11px; }
+.btn.btn-icon { width: 30px; height: 30px; padding: 0; justify-content: center; }
+
+.detail-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+}
+.detail-banner {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    color: var(--danger);
+    font-size: 13px;
+}
+.detail-banner::before { content: "["; margin-right: 4px; }
+.detail-banner::after { content: "]"; margin-left: 4px; }
+.detail-row {
+    display: flex;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+}
+.detail-row:last-child { border-bottom: none; }
+.detail-row:hover { background: #f8f9fa; }
+.detail-label {
+    min-width: 220px;
+    flex-shrink: 0;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.detail-label .help-icon {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 1px solid #dfe3e8;
+    background: #fff;
+    color: var(--text-muted);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    line-height: 1;
+    cursor: default;
+}
+.detail-value {
+    flex: 1;
+    color: var(--text);
+    word-break: break-all;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.detail-value .hash { font-family: 'SFMono-Regular', Consolas, monospace; font-size: 13px; }
+
+.addr-wrapper {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.addr-icon {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+.addr-contract-icon {
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+    border: 1px solid #dfe3e8;
+    color: var(--text-muted);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.verified-icon {
+    width: 16px;
+    height: 16px;
+    border-radius: 999px;
+    background: rgba(0, 161, 134, 0.12);
+    color: var(--success);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.verified-icon svg { width: 12px; height: 12px; }
+
+.gas-bar-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.gas-bar {
+    width: 100px;
+    height: 8px;
+    background: #e9ecef;
+    border-radius: 4px;
+    overflow: hidden;
+}
+.gas-bar-fill {
+    height: 100%;
+    background: var(--success);
+    border-radius: 4px;
+}
+
+.confirmations-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 8px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: #fff;
+    color: var(--text-secondary);
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.more-details summary { list-style: none; cursor: pointer; }
+.more-details summary::-webkit-details-marker { display: none; }
+.more-details summary.detail-row { border-bottom: none; }
+.more-details[open] summary.detail-row { border-bottom: 1px solid var(--border); }
+.more-details-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--link);
+    font-weight: 500;
+}
+.more-details-icon { width: 14px; height: 14px; fill: currentColor; }
+.more-details-less { display: none; }
+.more-details-icon--minus { display: none; }
+.more-details[open] .more-details-more { display: none; }
+.more-details[open] .more-details-less { display: inline; }
+.more-details[open] .more-details-icon--plus { display: none; }
+.more-details[open] .more-details-icon--minus { display: inline; }
+
+.action-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.action-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    background: #f8f9fa;
+    border: 1px solid var(--border);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: var(--text-muted);
+}
+.action-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+.action-value {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    font-size: 14px;
+    color: var(--text);
+}
+
+.tx-footnote {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-top: 12px;
+    color: var(--text-muted);
+    font-size: 12px;
+}
+.tx-footnote-icon {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    opacity: .8;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    margin-top: 2px;
+}
+
+@media (max-width: 980px) {
+    .page-header {
+        padding: 16px 0 12px;
+        margin-top: 0;
+        margin-bottom: 12px;
+        flex-wrap: wrap;
+    }
+    .page-title { font-size: 18px; }
+    .tx-tabbar {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    .tx-tabbar-actions { width: 100%; justify-content: flex-end; }
+    .detail-banner { padding: 10px 14px; font-size: 12px; }
+    .detail-row {
+        padding: 10px 14px;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+    .detail-label { width: 100%; min-width: 0; flex: none; font-size: 12px; white-space: normal; }
+    .detail-value {
+        min-width: 0;
+        width: 100%;
+        font-size: 12.5px;
+        display: flex;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 6px;
+        line-height: 1.5;
+        padding-left: 24px;
+        word-break: normal;
+        overflow-wrap: anywhere;
+    }
+    .detail-value > .hash {
+        display: inline-block;
+        max-width: 100%;
+        word-break: normal;
+        overflow-wrap: anywhere;
+    }
+    .detail-value .hash {
+        display: inline-block;
+        max-width: 100%;
+    }
+    .detail-value .hash-inline { width: 100%; min-width: 0; max-width: 100%; flex-wrap: nowrap; align-items: flex-start; }
+    .detail-value .hash-inline .hash {
+        flex: 1 1 auto;
+        min-width: 0;
+        max-width: 100%;
+        white-space: normal;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+    .detail-value .addr-wrapper { min-width: 0; flex: 1 1 auto; }
+    .detail-value .addr-wrapper .hash { min-width: 0; flex: 1 1 auto; }
+    .more-details summary.detail-row { gap: 4px; }
+    .more-details summary.detail-row .detail-value { padding-left: 0; }
+}
+</style>
+
+</head>
+<body>
+    <header class="header">
+        <div class="topbar">
+            <div class="container topbar-inner">
+                <div class="topbar-left">
+                    <span class="topbar-badge">Sepolia Testnet</span>
+                </div>
+                <div class="topbar-right">
+                    <form class="topbar-search" action="/search" method="get">
+                        <span class="topbar-search-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <circle cx="11" cy="11" r="7"></circle>
+                                <line x1="20" y1="20" x2="16.65" y2="16.65"></line>
+                            </svg>
+                        </span>
+                        <input type="text" name="q" class="topbar-search-input" placeholder="Search by Address / Txn Hash / Block / Token" aria-label="Search by Address / Txn Hash / Block / Token">
+                        <span class="topbar-search-shortcut" aria-hidden="true"><kbd>/</kbd></span>
+                    </form>
+                    <button class="topbar-icon-btn" type="button" aria-label="Knowledge Base" title="Knowledge Base">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M4 5h6a3 3 0 0 1 3 3v11H7a3 3 0 0 0-3 3V5z"></path>
+                            <path d="M20 5h-6a3 3 0 0 0-3 3v11h6a3 3 0 0 1 3 3V5z"></path>
+                        </svg>
+                    </button>
+                    <button class="topbar-icon-btn" type="button" aria-label="Theme" title="Theme">
+                        <svg viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="4"></circle>
+                            <path d="M12 2v3"></path>
+                            <path d="M12 19v3"></path>
+                            <path d="M4.2 4.2l2.1 2.1"></path>
+                            <path d="M17.7 17.7l2.1 2.1"></path>
+                            <path d="M2 12h3"></path>
+                            <path d="M19 12h3"></path>
+                            <path d="M4.2 19.8l2.1-2.1"></path>
+                            <path d="M17.7 6.3l2.1-2.1"></path>
+                        </svg>
+                    </button>
+                    <button class="topbar-icon-btn" type="button" aria-label="Network" title="Network">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 2l4.5 8-4.5 4.5L7.5 10 12 2z"></path>
+                            <path d="M12 15l4.5-4.5-4.5 12-4.5-12L12 15z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="header-main">
+            <div class="container header-top">
+                <a href="/" class="logo">
+                    <svg class="logo-mark" viewBox="0 0 32 32" aria-hidden="true">
+                        <circle cx="16" cy="16" r="16" fill="#1f2a44"></circle>
+                        <rect x="8.5" y="9" width="4" height="14" fill="#ffffff"></rect>
+                        <rect x="14" y="7" width="4" height="18" fill="#ffffff"></rect>
+                        <rect x="19.5" y="11" width="4" height="12" fill="#ffffff"></rect>
+                    </svg>
+                    <span class="logo-title">Sepolia Explorer</span>
+                </a>
+
+                <nav class="nav" aria-label="Primary">
+                    <a href="/" class="nav-link ">Home</a>
+
+                    <div class="nav-dropdown">
+                        <button class="nav-link nav-dropdown-toggle  " type="button" aria-haspopup="true" aria-expanded="false">
+                            Blockchain
+                            <svg class="nav-caret" viewBox="0 0 12 12" aria-hidden="true">
+                                <path d="M3 4.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                            </svg>
+                        </button>
+                        <div class="nav-menu">
+                            <div class="nav-menu-inner">
+                                <a href="/txs" class="nav-menu-item">Transactions</a>
+                                <a href="/blocks" class="nav-menu-item">View Blocks</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="nav-dropdown">
+                        <button class="nav-link nav-dropdown-toggle " type="button" aria-haspopup="true" aria-expanded="false">
+                            Tokens
+                            <svg class="nav-caret" viewBox="0 0 12 12" aria-hidden="true">
+                                <path d="M3 4.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                            </svg>
+                        </button>
+                        <div class="nav-menu">
+                            <div class="nav-menu-inner">
+                                <a href="/tokens" class="nav-menu-item">Tokens</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="nav-dropdown">
+                        <button class="nav-link nav-dropdown-toggle " type="button" aria-haspopup="true" aria-expanded="false">
+                            NFTs
+                            <svg class="nav-caret" viewBox="0 0 12 12" aria-hidden="true">
+                                <path d="M3 4.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                            </svg>
+                        </button>
+                        <div class="nav-menu">
+                            <div class="nav-menu-inner">
+                                <a href="/nft-latest-mints" class="nav-menu-item">NFT Latest Mints</a>
+                                <a href="/nft-transfers" class="nav-menu-item">NFT Transfers</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="nav-dropdown">
+                        <button class="nav-link nav-dropdown-toggle" type="button" aria-haspopup="true" aria-expanded="false">
+                            More
+                            <svg class="nav-caret" viewBox="0 0 12 12" aria-hidden="true">
+                                <path d="M3 4.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                            </svg>
+                        </button>
+                        <div class="nav-menu nav-menu-right">
+                            <div class="nav-menu-inner">
+                                <a href="/api-docs" class="nav-menu-item">APIs</a>
+                            </div>
+                        </div>
+                    </div>
+                </nav>
+
+                <span class="topbar-badge mobile-badge">Sepolia Testnet</span>
+
+                <button class="mobile-menu-btn" type="button" aria-label="Open menu" title="Menu">
+                    <svg viewBox="0 0 24 24">
+                        <line x1="4" y1="7" x2="20" y2="7"></line>
+                        <line x1="4" y1="12" x2="20" y2="12"></line>
+                        <line x1="4" y1="17" x2="20" y2="17"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="container">
+            
+<div class="page-header">
+    <div class="page-header-left">
+        <h1 class="page-title">Transaction Details</h1>
+        <div class="page-nav">
+            <button class="btn btn-icon" type="button" aria-label="Previous transaction" disabled>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+            </button>
+            <button class="btn btn-icon" type="button" aria-label="Next transaction" disabled>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="tx-tabbar">
+    <div class="tabs">
+        <a href="/tx/0x1111111111111111111111111111111111111111111111111111111111111111" class="tab active">Overview</a>
+        <a href="/tx/0x1111111111111111111111111111111111111111111111111111111111111111/internal" class="tab">Internal Txns</a>
+        <a href="/tx/0x1111111111111111111111111111111111111111111111111111111111111111/logs" class="tab">Logs</a>
+        <a href="/tx/0x1111111111111111111111111111111111111111111111111111111111111111/state" class="tab">State</a>
+        <a href="#" class="tab disabled" aria-disabled="true" tabindex="-1">Blobs</a>
+    </div>
+    <div class="tx-tabbar-actions">
+        <button class="btn btn-sm" type="button" aria-label="API" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 9l-3 3 3 3M16 9l3 3-3 3M14 7l-4 10"/></svg>
+            API
+            <svg class="btn-caret" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5H7z"/></svg>
+        </button>
+        <button class="btn btn-icon" type="button" aria-label="More actions" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 9h12M6 12h12M6 15h12"/></svg>
+        </button>
+    </div>
+</div>
+
+<div class="action-card">
+    <span class="action-icon" aria-hidden="true">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+    </span>
+    <div>
+        <div class="action-label">Transaction Action</div>
+        <div class="action-value">
+            
+                    <span class="fw-medium">0x008ef17e</span>
+                        
+                
+        </div>
+    </div>
+</div>
+
+<div class="detail-card">
+    <div class="detail-banner">
+        This is a Sepolia Testnet transaction only
+    </div>
+    <div class="detail-row">
+        <div class="detail-label">
+            <span class="help-icon">?</span>
+            Transaction Hash:
+        </div>
+        <div class="detail-value">
+            <span class="hash-inline">
+                <span class="hash">0x1111111111111111111111111111111111111111111111111111111111111111</span>
+                <button class="copy-btn" data-copy="0x1111111111111111111111111111111111111111111111111111111111111111" title="Copy">
+                    <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+                </button>
+            </span>
+        </div>
+    </div>
+    
+    <div class="detail-row">
+        <div class="detail-label">
+            <span class="help-icon">?</span>
+            Status:
+        </div>
+        <div class="detail-value">
+            
+                    <span class="badge badge-warning">Pending</span>
+                
+        </div>
+    </div>
+    
+    
+    
+    
+    
+    
+    
+    <div class="detail-row">
+        <div class="detail-label">
+            <span class="help-icon">?</span>
+            From:
+        </div>
+        <div class="detail-value">
+            <span class="hash-inline">
+                <span class="addr-wrapper">
+                    
+                        <span class="addr-icon"></span>
+                    
+                    <a href="/address/0xdfb62410f6e7d6d654c85eb29e463b836ce6cedc" class="hash">0xdFb62410f6E7D6d654c85EB29E463b836ce6cEDc</a>
+                </span>
+                <button class="copy-btn" data-copy="0xdFb62410f6E7D6d654c85EB29E463b836ce6cEDc" title="Copy">
+                    <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+                </button>
+                
+            </span>
+        </div>
+    </div>
+    
+    <div class="detail-row">
+        <div class="detail-label">
+            <span class="help-icon">?</span>
+            To:
+        </div>
+        <div class="detail-value">
+            
+                <span class="hash-inline">
+                    <span class="addr-wrapper">
+                        
+                            <span class="addr-contract-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M8 2h8l4 4v16H8z"></path>
+                                    <path d="M16 2v4h4"></path>
+                                </svg>
+                            </span>
+                        
+                        <a href="/address/0x00640f45fec08927a437ea023cfa13cb7354d926" class="hash">0x00640f45FEC08927A437EA023CfA13Cb7354d926</a>
+                    </span>
+                    <button class="copy-btn" data-copy="0x00640f45FEC08927A437EA023CfA13Cb7354d926" title="Copy">
+                        <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+                    </button>
+                    
+                        <span class="verified-icon" title="Verified">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                        </span>
+                    
+                </span>
+            
+        </div>
+    </div>
+    
+    <div class="detail-row">
+        <div class="detail-label">
+            <span class="help-icon">?</span>
+            Value:
+        </div>
+        <div class="detail-value">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="color: #6c757d;">
+                <path d="M12 2L5 12l7 4 7-4-7-10zm0 20l7-10-7 4-7-4 7 10z"/>
+            </svg>
+            <span class="fw-medium">0 ETH</span>
+        </div>
+    </div>
+    
+    
+    
+    
+    
+    <div class="detail-row">
+        <div class="detail-label">
+            <span class="help-icon">?</span>
+            Gas Price:
+        </div>
+        <div class="detail-value">
+            <span>1 Gwei</span>
+            
+                <span class="text-muted">(0.000000001 ETH)</span>
+            
+        </div>
+    </div>
+    
+
+    
+    <details class="more-details">
+        <summary class="detail-row">
+            <div class="detail-label">More Details:</div>
+            <div class="detail-value">
+                <span class="more-details-toggle">
+                    <svg class="more-details-icon more-details-icon--plus" viewBox="0 0 24 24">
+                        <path d="M11 5h2v14h-2z"></path>
+                        <path d="M5 11h14v2H5z"></path>
+                    </svg>
+                    <svg class="more-details-icon more-details-icon--minus" viewBox="0 0 24 24">
+                        <path d="M5 11h14v2H5z"></path>
+                    </svg>
+                    <span class="more-details-more">Click to show more</span>
+                    <span class="more-details-less">Click to show less</span>
+                </span>
+            </div>
+        </summary>
+
+        
+        <div class="detail-row">
+            <div class="detail-label">
+                <span class="help-icon">?</span>
+                Gas Limit & Usage by Txn:
+            </div>
+            <div class="detail-value">
+                <div class="gas-bar-container">
+                    <span>21000</span>
+                    
+                        <span class="text-muted">(N/A)</span>
+                    
+                </div>
+            </div>
+        </div>
+        
+
+        
+
+        
+        <div class="detail-row">
+            <div class="detail-label">
+                <span class="help-icon">?</span>
+                Input Data:
+            </div>
+            <div class="detail-value">
+                <span class="badge badge-secondary" style="font-family: monospace;">0x008ef17e</span>
+                <span class="text-muted" style="font-size: 12px;">Method ID</span>
+            </div>
+        </div>
+        
+    </details>
+    
+</div>
+
+<div class="tx-footnote">
+    <svg class="tx-footnote-icon" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10"></circle>
+        <path d="M12 16v-4"></path>
+        <path d="M12 8h.01"></path>
+    </svg>
+    <span>
+        A transaction is a cryptographically signed instruction that changes the blockchain state. Block explorers track the details of all transactions in the network. Learn more about transactions in our <a href="#" class="link">Knowledge Base</a>.
+    </span>
+</div>
+
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container footer-inner">
+            <div class="footer-left">
+                <div class="footer-text">
+                    Powered by <a href="https://ethereum.org">Ethereum</a>
+                </div>
+                <div class="footer-text">
+                    Sepolia Testnet Explorer
+                </div>
+            </div>
+            <div class="footer-links">
+                <a href="/terms">Terms</a>
+                <span class="footer-divider">|</span>
+                <a href="/privacy">Privacy</a>
+            </div>
+        </div>
+    </footer>
+
+    
+    <script>
+    document.querySelectorAll('.copy-btn[data-copy]').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            navigator.clipboard.writeText(this.dataset.copy).catch(function(err) {
+                console.error('Copy failed:', err);
+            });
+        });
+    });
+
+    // Dropdown menu hover handling
+    document.querySelectorAll('.nav-dropdown').forEach(function(dropdown) {
+        var menu = dropdown.querySelector('.nav-menu-inner');
+        var timeout;
+        
+        function showMenu() {
+            clearTimeout(timeout);
+            menu.classList.add('is-open');
+        }
+        
+        function hideMenu(e) {
+            var related = e.relatedTarget;
+            if (related && dropdown.contains(related)) {
+                return;
+            }
+            menu.classList.remove('is-open');
+        }
+        
+        dropdown.addEventListener('mouseenter', showMenu);
+        dropdown.addEventListener('mouseleave', hideMenu);
+        
+        var menuWrapper = dropdown.querySelector('.nav-menu');
+        if (menuWrapper) {
+            menuWrapper.addEventListener('mouseenter', showMenu);
+        }
+    });
+    </script>
+</body>
+</html>

@@ -45,6 +45,7 @@ defmodule FrontendEx.MixProject do
       {:phoenix_live_reload, "~> 1.2", only: :dev},
       {:phoenix_live_view, "~> 1.1.0"},
       {:lazy_html, ">= 0.1.0", only: :test},
+      {:keccak_ex, "~> 0.4.2"},
       {:req, "~> 0.5.0"},
       {:telemetry_metrics, "~> 1.0"},
       {:telemetry_poller, "~> 1.0"},

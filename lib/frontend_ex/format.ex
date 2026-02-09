@@ -3,9 +3,12 @@ defmodule FrontendEx.Format do
 
   alias FrontendEx.Clock
 
+  import Bitwise
+
   @wei_per_eth 1_000_000_000_000_000_000
   @wei_lt_0_000001_eth 1_000_000_000_000
   @wei_lt_0_001_eth 1_000_000_000_000_000
+  @wei_per_gwei 1_000_000_000
 
   @spec format_wei_to_eth(binary()) :: binary()
   def format_wei_to_eth(wei_str) when is_binary(wei_str) do
@@ -27,6 +30,66 @@ defmodule FrontendEx.Format do
     end
   end
 
+  @spec format_wei_to_eth_exact(binary()) :: binary()
+  def format_wei_to_eth_exact(wei_str) when is_binary(wei_str) do
+    wei_str = String.trim(wei_str)
+
+    case Integer.parse(wei_str) do
+      {wei, ""} when is_integer(wei) and wei >= 0 ->
+        eth_int = div(wei, @wei_per_eth)
+        eth_frac = rem(wei, @wei_per_eth)
+
+        if eth_frac == 0 do
+          Integer.to_string(eth_int)
+        else
+          frac =
+            eth_frac
+            |> Integer.to_string()
+            |> String.pad_leading(18, "0")
+            |> String.trim_trailing("0")
+
+          "#{eth_int}.#{frac}"
+        end
+
+      _ ->
+        "0"
+    end
+  end
+
+  @spec format_wei_to_gwei(binary()) :: binary()
+  def format_wei_to_gwei(wei_str) when is_binary(wei_str) do
+    wei_str = String.trim(wei_str)
+
+    case Integer.parse(wei_str) do
+      {wei, ""} when is_integer(wei) and wei >= 0 ->
+        if wei == 0 do
+          "0"
+        else
+          gwei_int = div(wei, @wei_per_gwei)
+          gwei_frac = rem(wei, @wei_per_gwei)
+
+          if gwei_frac == 0 do
+            Integer.to_string(gwei_int)
+          else
+            frac =
+              gwei_frac
+              |> Integer.to_string()
+              |> String.pad_leading(9, "0")
+              |> String.trim_trailing("0")
+
+            if frac == "" do
+              Integer.to_string(gwei_int)
+            else
+              "#{gwei_int}.#{frac}"
+            end
+          end
+        end
+
+      _ ->
+        "0"
+    end
+  end
+
   defp format_eth_rounded(wei, decimals) when is_integer(wei) and wei >= 0 and decimals >= 0 do
     pow10 = Integer.pow(10, decimals)
 
@@ -42,6 +105,112 @@ defmodule FrontendEx.Format do
     else
       frac = frac_part |> Integer.to_string() |> String.pad_leading(decimals, "0")
       "#{int_part}.#{frac}"
+    end
+  end
+
+  @spec format_method_name(binary()) :: binary()
+  def format_method_name(method) when is_binary(method) do
+    trimmed = String.trim(method)
+
+    cond do
+      trimmed == "" ->
+        "-"
+
+      String.starts_with?(trimmed, "0x") ->
+        trimmed
+
+      true ->
+        spaced =
+          trimmed
+          |> String.graphemes()
+          |> Enum.reduce({[], false, false}, fn ch, {acc, prev_lower, prev_digit} ->
+            cond do
+              ch == "_" or ch == "-" ->
+                acc =
+                  case acc do
+                    [" " | _] -> acc
+                    _ -> [" " | acc]
+                  end
+
+                {acc, false, false}
+
+              true ->
+                is_upper = ch >= "A" and ch <= "Z"
+                is_lower = ch >= "a" and ch <= "z"
+                is_digit = ch >= "0" and ch <= "9"
+
+                acc =
+                  cond do
+                    is_upper and (prev_lower or prev_digit) -> [ch, " " | acc]
+                    is_digit and prev_lower -> [ch, " " | acc]
+                    true -> [ch | acc]
+                  end
+
+                {acc, is_lower, is_digit}
+            end
+          end)
+          |> then(fn {acc, _pl, _pd} -> acc |> Enum.reverse() |> Enum.join("") end)
+
+        spaced
+        |> String.split(~r/\s+/, trim: true)
+        |> Enum.map(fn word ->
+          is_all_caps =
+            word
+            |> String.to_charlist()
+            |> Enum.all?(fn c -> not (c >= ?a and c <= ?z) end)
+
+          if is_all_caps do
+            word
+          else
+            [first | rest] = String.graphemes(word)
+            String.upcase(first) <> String.downcase(Enum.join(rest, ""))
+          end
+        end)
+        |> Enum.join(" ")
+    end
+  end
+
+  @spec checksum_eth_address(binary()) :: binary()
+  def checksum_eth_address(addr) when is_binary(addr) do
+    trimmed = String.trim(addr)
+
+    hex =
+      cond do
+        String.starts_with?(trimmed, "0x") -> String.slice(trimmed, 2..-1//1)
+        String.starts_with?(trimmed, "0X") -> String.slice(trimmed, 2..-1//1)
+        true -> nil
+      end
+
+    cond do
+      is_nil(hex) ->
+        trimmed
+
+      String.length(hex) != 40 ->
+        trimmed
+
+      not String.match?(hex, ~r/\A[0-9A-Fa-f]{40}\z/) ->
+        trimmed
+
+      true ->
+        lower = String.downcase(hex)
+        hash = KeccakEx.hash_256(lower)
+
+        checksummed =
+          lower
+          |> String.graphemes()
+          |> Enum.with_index()
+          |> Enum.map(fn {ch, i} ->
+            if ch >= "0" and ch <= "9" do
+              ch
+            else
+              byte = :binary.at(hash, div(i, 2))
+              nibble = if rem(i, 2) == 0, do: (byte >>> 4), else: (byte &&& 0x0F)
+              if nibble >= 8, do: String.upcase(ch), else: ch
+            end
+          end)
+          |> Enum.join("")
+
+        "0x" <> checksummed
     end
   end
 
@@ -74,6 +243,17 @@ defmodule FrontendEx.Format do
 
       [int_part] ->
         format_number_with_commas(int_part)
+    end
+  end
+
+  @spec truncate_hash(binary()) :: binary()
+  def truncate_hash(s) when is_binary(s) do
+    if byte_size(s) > 12 do
+      prefix = binary_part(s, 0, 6)
+      suffix = binary_part(s, byte_size(s) - 4, 4)
+      prefix <> "..." <> suffix
+    else
+      s
     end
   end
 
@@ -157,6 +337,19 @@ defmodule FrontendEx.Format do
     case DateTime.from_iso8601(timestamp) do
       {:ok, dt, _offset} ->
         Calendar.strftime(dt, "%b-%d-%Y %I:%M:%S %p +UTC")
+
+      _ ->
+        timestamp
+    end
+  end
+
+  @spec format_readable_date_classic(binary()) :: binary()
+  def format_readable_date_classic(timestamp) when is_binary(timestamp) do
+    timestamp = String.trim(timestamp)
+
+    case DateTime.from_iso8601(timestamp) do
+      {:ok, dt, _offset} ->
+        Calendar.strftime(dt, "%b-%d-%Y %I:%M:%S %p UTC")
 
       _ ->
         timestamp

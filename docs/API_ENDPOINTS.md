@@ -28,6 +28,15 @@ Parity routes (pipeline `:fast_browser`):
     - `GET /api/v2/blocks/:id`
     - `GET /api/v2/blocks/:id/transactions`
 
+- `GET /tx/:hash`
+  - SSR HTML transaction details page
+  - Upstream calls (Blockscout API v2):
+    - `GET /api/v2/stats`
+    - `GET /api/v2/transactions/:hash`
+    - `GET /api/v2/transactions/:hash/logs`
+    - `GET /api/v2/blocks?limit=1` (SWR; confirmations)
+    - `GET /api/v2/addresses/:address` (from/to flags; `to` is best-effort)
+
 - `GET /exportData`
   - SSR HTML page (no upstream calls)
 

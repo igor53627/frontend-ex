@@ -1,0 +1,330 @@
+
+<div class="page-header">
+    <div class="page-header-left">
+        <h1 class="page-title">Transaction Details</h1>
+        <div class="page-nav">
+            <button class="btn btn-icon" type="button" aria-label="Previous transaction" disabled>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+            </button>
+            <button class="btn btn-icon" type="button" aria-label="Next transaction" disabled>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="tx-tabbar">
+    <div class="tabs">
+        <a href="/tx/<%= @tx.hash %>" class="tab active">Overview</a>
+        <a href="/tx/<%= @tx.hash %>/internal" class="tab">Internal Txns</a>
+        <a href="/tx/<%= @tx.hash %>/logs" class="tab">Logs<%= if @logs_count > 0 do %> (<%= @logs_count %>)<% end %></a>
+        <a href="/tx/<%= @tx.hash %>/state" class="tab">State</a>
+        <a href="#" class="tab disabled" aria-disabled="true" tabindex="-1">Blobs</a>
+    </div>
+    <div class="tx-tabbar-actions">
+        <button class="btn btn-sm" type="button" aria-label="API" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 9l-3 3 3 3M16 9l3 3-3 3M14 7l-4 10"/></svg>
+            API
+            <svg class="btn-caret" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5H7z"/></svg>
+        </button>
+        <button class="btn btn-icon" type="button" aria-label="More actions" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 9h12M6 12h12M6 15h12"/></svg>
+        </button>
+    </div>
+</div>
+
+<div class="action-card">
+    <span class="action-icon" aria-hidden="true">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+    </span>
+    <div>
+        <div class="action-label">Transaction Action</div>
+        <div class="action-value">
+            <%= case @tx.tx_type do %>
+                <% 3 -> %>
+                    <span class="fw-medium">Commit <a class="link" href="#" aria-disabled="true" tabindex="-1">EIP-4844 Blob</a></span>
+                <% _ -> %>
+                    <%= case @tx.method do %>
+                        <% m when is_binary(m) -> %><span class="fw-medium"><%= m %></span>
+                        <% _ -> %><span class="text-muted">-</span>
+                    <% end %>
+                <% end %>
+        </div>
+    </div>
+</div>
+
+<div class="detail-card">
+    <div class="detail-banner">
+        This is a Sepolia Testnet transaction only
+    </div>
+    <div class="detail-row">
+        <div class="detail-label">
+            <span class="help-icon">?</span>
+            Transaction Hash:
+        </div>
+        <div class="detail-value">
+            <span class="hash-inline">
+                <span class="hash"><%= @tx.hash %></span>
+                <button class="copy-btn" data-copy="<%= @tx.hash %>" title="Copy">
+                    <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+                </button>
+            </span>
+        </div>
+    </div>
+    
+    <div class="detail-row">
+        <div class="detail-label">
+            <span class="help-icon">?</span>
+            Status:
+        </div>
+        <div class="detail-value">
+            <%= case @tx.status do %>
+                <% "ok" -> %>
+                    <span class="badge badge-success">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                        Success
+                    </span>
+                <% "error" -> %>
+                    <span class="badge badge-danger">Failed</span>
+                <% nil -> %>
+                    <span class="badge badge-warning">Pending</span>
+                <% s -> %>
+                    <span class="badge badge-secondary"><%= s %></span>
+            <% end %>
+        </div>
+    </div>
+    
+    <%= if @tx.block_number do %>
+    <div class="detail-row">
+        <div class="detail-label">
+            <span class="help-icon">?</span>
+            Block:
+        </div>
+        <div class="detail-value">
+            <a href="/block/<%= @tx.block_number %>"><%= @tx.block_number %></a>
+            <%= case @tx.confirmations do %>
+            <% 1 -> %>
+                <span class="confirmations-badge">1 Block Confirmation</span>
+            <% conf when is_integer(conf) -> %>
+                <span class="confirmations-badge"><%= conf %> Block Confirmations</span>
+            <% _ -> %>
+            <% end %>
+        </div>
+    </div>
+    <% end %>
+    
+    <%= if @timestamp_relative do %>
+    <div class="detail-row">
+        <div class="detail-label">
+            <span class="help-icon">?</span>
+            Timestamp:
+        </div>
+        <div class="detail-value">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--text-muted);"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <%= @timestamp_relative %>
+            <%= if @timestamp_readable do %>
+                <span class="text-muted">(<%= @timestamp_readable %>)</span>
+            <% end %>
+        </div>
+    </div>
+    <% end %>
+    
+<%= if is_nil(@tx.block_number) and is_nil(@timestamp_relative), do: "    \n    \n", else: "" %>    <div class="detail-row">
+        <div class="detail-label">
+            <span class="help-icon">?</span>
+            From:
+        </div>
+        <div class="detail-value">
+            <span class="hash-inline">
+                <span class="addr-wrapper">
+                    <%= if @from_is_contract_like do %>
+                        <span class="addr-contract-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M8 2h8l4 4v16H8z"></path>
+                                <path d="M16 2v4h4"></path>
+                            </svg>
+                        </span>
+                    <% else %>
+                        <span class="addr-icon"></span>
+                    <% end %>
+                    <a href="/address/<%= @tx.from.hash %>" class="hash"><%= FrontendEx.Format.checksum_eth_address(@tx.from.hash) %></a>
+                </span>
+                <button class="copy-btn" data-copy="<%= FrontendEx.Format.checksum_eth_address(@tx.from.hash) %>" title="Copy">
+                    <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+                </button>
+                <%= if @from_is_verified do %>
+                    <span class="verified-icon" title="Verified">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </span>
+                <% end %>
+            </span>
+        </div>
+    </div>
+    
+    <div class="detail-row">
+        <div class="detail-label">
+            <span class="help-icon">?</span>
+            To:
+        </div>
+        <div class="detail-value">
+            <%= if @tx.to do %>
+                <span class="hash-inline">
+                    <span class="addr-wrapper">
+                        <%= if @to_is_contract_like do %>
+                            <span class="addr-contract-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M8 2h8l4 4v16H8z"></path>
+                                    <path d="M16 2v4h4"></path>
+                                </svg>
+                            </span>
+                        <% else %>
+                            <span class="addr-icon"></span>
+                        <% end %>
+                        <a href="/address/<%= @tx.to.hash %>" class="hash"><%= FrontendEx.Format.checksum_eth_address(@tx.to.hash) %></a>
+                    </span>
+                    <button class="copy-btn" data-copy="<%= FrontendEx.Format.checksum_eth_address(@tx.to.hash) %>" title="Copy">
+                        <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+                    </button>
+                    <%= if @to_is_verified do %>
+                        <span class="verified-icon" title="Verified">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                        </span>
+                    <% end %>
+                </span>
+            <% else %>
+                <span class="text-muted">[Contract Creation]</span>
+            <% end %>
+        </div>
+    </div>
+    
+    <div class="detail-row">
+        <div class="detail-label">
+            <span class="help-icon">?</span>
+            Value:
+        </div>
+        <div class="detail-value">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="color: #6c757d;">
+                <path d="M12 2L5 12l7 4 7-4-7-10zm0 20l7-10-7 4-7-4 7 10z"/>
+            </svg>
+            <span class="fw-medium"><%= FrontendEx.Format.format_wei_to_eth_exact(@tx.value) %> ETH</span>
+        </div>
+    </div>
+    
+    <%= if @fee_eth do %>
+    <div class="detail-row">
+        <div class="detail-label">
+            <span class="help-icon">?</span>
+            Transaction Fee:
+        </div>
+        <div class="detail-value">
+            <span><%= @fee_eth %> ETH</span>
+        </div>
+    </div>
+    <% end %>
+    
+    <%= if @gas_price_gwei do %>
+<%= if is_nil(@fee_eth), do: "    \n", else: "" %>    <div class="detail-row">
+        <div class="detail-label">
+            <span class="help-icon">?</span>
+            Gas Price:
+        </div>
+        <div class="detail-value">
+            <span><%= @gas_price_gwei %> Gwei</span>
+            <%= if @gas_price_eth do %>
+                <span class="text-muted">(<%= @gas_price_eth %> ETH)</span>
+            <% end %>
+        </div>
+    </div>
+    <% end %>
+
+    <%= if @gas_display || @base_fee_gwei || @max_fee_gwei || @max_priority_fee_gwei || @method_id do %>
+    <details class="more-details">
+        <summary class="detail-row">
+            <div class="detail-label">More Details:</div>
+            <div class="detail-value">
+                <span class="more-details-toggle">
+                    <svg class="more-details-icon more-details-icon--plus" viewBox="0 0 24 24">
+                        <path d="M11 5h2v14h-2z"></path>
+                        <path d="M5 11h14v2H5z"></path>
+                    </svg>
+                    <svg class="more-details-icon more-details-icon--minus" viewBox="0 0 24 24">
+                        <path d="M5 11h14v2H5z"></path>
+                    </svg>
+                    <span class="more-details-more">Click to show more</span>
+                    <span class="more-details-less">Click to show less</span>
+                </span>
+            </div>
+        </summary>
+
+        <%= if @gas_display do %>
+        <div class="detail-row">
+            <div class="detail-label">
+                <span class="help-icon">?</span>
+                Gas Limit & Usage by Txn:
+            </div>
+            <div class="detail-value">
+                <div class="gas-bar-container">
+                    <span><%= @gas_display %></span>
+                    <%= if @gas_percentage do %>
+                        <div class="gas-bar">
+                            <div class="gas-bar-fill" style="width: <%= @gas_percentage %>%;"></div>
+                        </div>
+                        <span class="text-muted">(<%= @gas_percentage %>%)</span>
+                    <% else %>
+                        <span class="text-muted">(N/A)</span>
+                    <% end %>
+                </div>
+            </div>
+        </div>
+        <% end %>
+
+        <%= if @base_fee_gwei || @max_fee_gwei || @max_priority_fee_gwei do %>
+        <div class="detail-row">
+            <div class="detail-label">
+                <span class="help-icon">?</span>
+                Gas Fees:
+            </div>
+            <div class="detail-value">
+                <%= if @base_fee_gwei do %>
+                    <span>Base: <strong><%= @base_fee_gwei %></strong> Gwei</span>
+                <% end %>
+                <%= if @max_fee_gwei do %>
+                    <span style="margin-left: 16px;">Max: <strong><%= @max_fee_gwei %></strong> Gwei</span>
+                <% end %>
+                <%= if @max_priority_fee_gwei do %>
+                    <span style="margin-left: 16px;">Max Priority: <strong><%= @max_priority_fee_gwei %></strong> Gwei</span>
+                <% end %>
+            </div>
+        </div>
+        <% end %>
+
+        <%= if @method_id do %>
+        <div class="detail-row">
+            <div class="detail-label">
+                <span class="help-icon">?</span>
+                Input Data:
+            </div>
+            <div class="detail-value">
+                <span class="badge badge-secondary" style="font-family: monospace;"><%= @method_id %></span>
+                <span class="text-muted" style="font-size: 12px;">Method ID</span>
+            </div>
+        </div>
+        <% end %>
+    </details>
+    <% end %>
+</div>
+
+<div class="tx-footnote">
+    <svg class="tx-footnote-icon" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10"></circle>
+        <path d="M12 16v-4"></path>
+        <path d="M12 8h.01"></path>
+    </svg>
+    <span>
+        A transaction is a cryptographically signed instruction that changes the blockchain state. Block explorers track the details of all transactions in the network. Learn more about transactions in our <a href="#" class="link">Knowledge Base</a>.
+    </span>
+</div>

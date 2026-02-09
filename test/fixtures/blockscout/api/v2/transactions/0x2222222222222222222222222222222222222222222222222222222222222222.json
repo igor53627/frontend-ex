@@ -1,0 +1,43 @@
+{
+  "actions": [],
+  "base_fee_per_gas": "60707506582",
+  "block_number": 9824086,
+  "confirmations": 1,
+  "created_contract": null,
+  "decoded_input": null,
+  "exchange_rate": null,
+  "fee": {
+    "type": "actual",
+    "value": "2796233813166920"
+  },
+  "from": {
+    "hash": "0xdfb62410f6e7d6d654c85eb29e463b836ce6cedc"
+  },
+  "gas_limit": "46060",
+  "gas_price": "60708506582",
+  "gas_used": "46060",
+  "hash": "0x2222222222222222222222222222222222222222222222222222222222222222",
+  "max_fee_per_gas": "130253279166",
+  "max_priority_fee_per_gas": "1000000",
+  "method": "0x008ef17e",
+  "nonce": 2,
+  "position": 1,
+  "priority_fee": null,
+  "raw_input": "0x008ef17e",
+  "result": "reverted",
+  "revert_reason": null,
+  "status": "error",
+  "timestamp": "2025-12-12T11:41:24+00:00",
+  "to": {
+    "hash": "0x00640f45fec08927a437ea023cfa13cb7354d926"
+  },
+  "token_transfers": null,
+  "token_transfers_overflow": null,
+  "transaction_burnt_fee": null,
+  "transaction_tag": null,
+  "transaction_types": [
+    "contract_call"
+  ],
+  "type": 2,
+  "value": "0"
+}
