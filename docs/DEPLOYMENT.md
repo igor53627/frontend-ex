@@ -36,6 +36,20 @@ MIX_ENV=prod mix compile
 MIX_ENV=prod mix release --overwrite
 ```
 
+On `aya`, if you don't have Elixir/Erlang installed on the host, you can build using `podman`
+instead (recommended):
+
+```bash
+podman run --rm \
+  -v /mnt/sepolia/frontend-ex:/app \
+  -w /app \
+  -e MIX_ENV=prod \
+  -e MIX_HOME=/app/.mix \
+  -e HEX_HOME=/app/.hex \
+  docker.io/library/elixir:1.16.3-otp-26 \
+  sh -lc 'mix local.hex --force && mix local.rebar --force && mix deps.get --only prod && mix compile && mix release --overwrite'
+```
+
 Run the release:
 
 ```bash

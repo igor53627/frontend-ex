@@ -16,6 +16,8 @@ SERVER="${FX_DEPLOY_SERVER:-aya}"
 REMOTE_PATH="${FX_DEPLOY_PATH:-/mnt/sepolia/frontend-ex}"
 SERVICE_NAME="${FX_SERVICE_NAME:-frontend-ex}"
 KEEP_RELEASES="${FX_KEEP_RELEASES:-5}"
+# Podman on Ubuntu often requires fully-qualified image names.
+BUILD_IMAGE="${FX_BUILD_IMAGE:-docker.io/library/elixir:1.16.3-otp-26}"
 
 LOCAL_PATH="$(cd "$(dirname "$0")" && pwd)"
 
@@ -61,7 +63,31 @@ fi
 
 if [ "$SKIP_BUILD" = false ]; then
   log "Building release on server..."
-  build_cmd="cd \"$REMOTE_PATH\" && MIX_ENV=prod mix deps.get --only prod && MIX_ENV=prod mix compile && MIX_ENV=prod mix release --overwrite"
+  build_cmd="set -euo pipefail
+cd \"$REMOTE_PATH\"
+
+if command -v mix >/dev/null 2>&1; then
+  MIX_ENV=prod mix local.hex --force
+  MIX_ENV=prod mix local.rebar --force
+  MIX_ENV=prod mix deps.get --only prod
+  MIX_ENV=prod mix compile
+  MIX_ENV=prod mix release --overwrite
+else
+  if ! command -v podman >/dev/null 2>&1; then
+    echo \"ERROR: neither mix nor podman found on server\" >&2
+    exit 1
+  fi
+
+  # Build in a container so the host doesn't need Elixir/Erlang installed.
+  podman run --rm \
+    -v \"$REMOTE_PATH:/app\" \
+    -w /app \
+    -e MIX_ENV=prod \
+    -e MIX_HOME=/app/.mix \
+    -e HEX_HOME=/app/.hex \
+    \"$BUILD_IMAGE\" \
+    sh -lc 'mix local.hex --force && mix local.rebar --force && mix deps.get --only prod && mix compile && mix release --overwrite'
+fi"
   run "ssh \"$SERVER\" \"$build_cmd\""
 
   log "Promoting release (versioned dir + current symlink)..."
@@ -98,4 +124,3 @@ else
 fi
 
 log "[OK] Deploy complete."
-

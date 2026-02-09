@@ -21,6 +21,11 @@ FX_SERVICE_NAME=frontend-ex \
 ./deploy.sh
 ```
 
+Notes:
+
+- `deploy.sh` builds the release on `aya`. If `mix` isn't installed on the host, it will use
+  `podman` with `FX_BUILD_IMAGE` (default: `docker.io/library/elixir:1.16.3-otp-26`).
+
 Verify:
 
 ```bash
@@ -50,4 +55,3 @@ ssh aya "cd /mnt/sepolia/frontend-ex && ln -sfn releases/<release_id> current &&
 ```bash
 ssh aya "podman restart blockscout-proxy_caddy_1"
 ```
-
