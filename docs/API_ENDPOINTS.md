@@ -30,12 +30,20 @@ Parity routes (pipeline `:fast_browser`):
 
 - `GET /tx/:hash`
   - SSR HTML transaction details page
+  - Input validation:
+    - Invalid hashes (not `0x` + 64 hex chars) return `404 Transaction not found` without upstream calls.
   - Upstream calls (Blockscout API v2):
     - `GET /api/v2/stats`
     - `GET /api/v2/transactions/:hash`
     - `GET /api/v2/transactions/:hash/logs`
     - `GET /api/v2/blocks?limit=1` (SWR; confirmations)
     - `GET /api/v2/addresses/:address` (from/to flags; `to` is best-effort)
+
+- `GET /tx/:hash/internal`
+- `GET /tx/:hash/logs`
+- `GET /tx/:hash/state`
+- `GET /tx/:hash/card`
+  - Placeholder routes for tabs/links; currently `302` redirect to `GET /tx/:hash`.
 
 - `GET /address/:address`
   - SSR HTML address page

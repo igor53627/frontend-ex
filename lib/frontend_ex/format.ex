@@ -193,24 +193,47 @@ defmodule FrontendEx.Format do
 
       true ->
         lower = String.downcase(hex)
-        hash = KeccakEx.hash_256(lower)
+        hash = keccak256(lower)
 
-        checksummed =
-          lower
-          |> String.graphemes()
-          |> Enum.with_index()
-          |> Enum.map(fn {ch, i} ->
-            if ch >= "0" and ch <= "9" do
-              ch
-            else
-              byte = :binary.at(hash, div(i, 2))
-              nibble = if rem(i, 2) == 0, do: (byte >>> 4), else: (byte &&& 0x0F)
-              if nibble >= 8, do: String.upcase(ch), else: ch
-            end
-          end)
-          |> Enum.join("")
+        if is_nil(hash) do
+          trimmed
+        else
+          checksummed =
+            lower
+            |> String.graphemes()
+            |> Enum.with_index()
+            |> Enum.map(fn {ch, i} ->
+              if ch >= "0" and ch <= "9" do
+                ch
+              else
+                byte = :binary.at(hash, div(i, 2))
+                nibble = if rem(i, 2) == 0, do: byte >>> 4, else: byte &&& 0x0F
+                if nibble >= 8, do: String.upcase(ch), else: ch
+              end
+            end)
+            |> Enum.join("")
 
-        "0x" <> checksummed
+          "0x" <> checksummed
+        end
+    end
+  end
+
+  defp keccak256(data) when is_binary(data) do
+    case KeccakEx.hash_256(data) do
+      <<_::binary-size(32)>> = bin ->
+        bin
+
+      hash when is_binary(hash) ->
+        hash = String.trim(hash)
+        hash = if String.starts_with?(hash, "0x"), do: String.slice(hash, 2..-1//1), else: hash
+
+        case Base.decode16(hash, case: :mixed) do
+          {:ok, bin} when byte_size(bin) == 32 -> bin
+          _ -> nil
+        end
+
+      _ ->
+        nil
     end
   end
 
