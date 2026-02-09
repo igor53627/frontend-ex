@@ -46,27 +46,48 @@ defmodule FrontendEx.FormatTest do
     end
 
     test "covers secs/mins/hrs/days boundaries", %{now: now} do
-      assert Format.format_blocks_time_ago(DateTime.add(now, -59, :second) |> DateTime.to_iso8601()) ==
+      assert Format.format_blocks_time_ago(
+               DateTime.add(now, -59, :second)
+               |> DateTime.to_iso8601()
+             ) ==
                "59 secs ago"
 
-      assert Format.format_blocks_time_ago(DateTime.add(now, -60, :second) |> DateTime.to_iso8601()) ==
+      assert Format.format_blocks_time_ago(
+               DateTime.add(now, -60, :second)
+               |> DateTime.to_iso8601()
+             ) ==
                "1 mins ago"
 
-      assert Format.format_blocks_time_ago(DateTime.add(now, -3599, :second) |> DateTime.to_iso8601()) ==
+      assert Format.format_blocks_time_ago(
+               DateTime.add(now, -3599, :second)
+               |> DateTime.to_iso8601()
+             ) ==
                "59 mins ago"
 
-      assert Format.format_blocks_time_ago(DateTime.add(now, -3600, :second) |> DateTime.to_iso8601()) ==
+      assert Format.format_blocks_time_ago(
+               DateTime.add(now, -3600, :second)
+               |> DateTime.to_iso8601()
+             ) ==
                "1 hrs ago"
 
-      assert Format.format_blocks_time_ago(DateTime.add(now, -86399, :second) |> DateTime.to_iso8601()) ==
+      assert Format.format_blocks_time_ago(
+               DateTime.add(now, -86399, :second)
+               |> DateTime.to_iso8601()
+             ) ==
                "23 hrs ago"
 
-      assert Format.format_blocks_time_ago(DateTime.add(now, -86400, :second) |> DateTime.to_iso8601()) ==
+      assert Format.format_blocks_time_ago(
+               DateTime.add(now, -86400, :second)
+               |> DateTime.to_iso8601()
+             ) ==
                "1 days ago"
     end
 
     test "clamps future timestamps to 0 secs ago", %{now: now} do
-      assert Format.format_blocks_time_ago(DateTime.add(now, 10, :second) |> DateTime.to_iso8601()) ==
+      assert Format.format_blocks_time_ago(
+               DateTime.add(now, 10, :second)
+               |> DateTime.to_iso8601()
+             ) ==
                "0 secs ago"
     end
 

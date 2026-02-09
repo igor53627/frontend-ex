@@ -265,6 +265,80 @@ defmodule FrontendEx.Format do
     end
   end
 
+  defp format_int_with_commas_str(int_part) when is_binary(int_part) do
+    s = String.trim(int_part)
+
+    if s == "" do
+      "0"
+    else
+      s
+      |> String.graphemes()
+      |> Enum.reverse()
+      |> Enum.chunk_every(3)
+      |> Enum.map(&Enum.reverse/1)
+      |> Enum.reverse()
+      |> Enum.map(&Enum.join/1)
+      |> Enum.join(",")
+    end
+  end
+
+  @spec format_decimal_with_commas(binary()) :: binary()
+  def format_decimal_with_commas(value) when is_binary(value) do
+    s = String.trim(value)
+
+    case String.split(s, ".", parts: 2) do
+      [int_part, frac_part] ->
+        int_part = format_int_with_commas_str(int_part)
+
+        if frac_part == "" do
+          int_part
+        else
+          int_part <> "." <> frac_part
+        end
+
+      [int_part] ->
+        format_int_with_commas_str(int_part)
+    end
+  end
+
+  @spec unit_to_decimal_value(binary(), non_neg_integer()) :: binary()
+  def unit_to_decimal_value(raw, decimals)
+      when is_binary(raw) and is_integer(decimals) and decimals >= 0 do
+    s =
+      raw
+      |> String.trim()
+      |> String.trim_leading("0")
+
+    cond do
+      s == "" ->
+        "0"
+
+      decimals == 0 ->
+        s
+
+      String.length(s) <= decimals ->
+        padded = String.pad_leading(s, decimals, "0")
+        frac = String.trim_trailing(padded, "0")
+
+        if frac == "" do
+          "0"
+        else
+          "0." <> frac
+        end
+
+      true ->
+        split_at = String.length(s) - decimals
+        {int_part, frac_part} = String.split_at(s, split_at)
+        frac = String.trim_trailing(frac_part, "0")
+
+        if frac == "" do
+          int_part
+        else
+          int_part <> "." <> frac
+        end
+    end
+  end
+
   @spec format_price_with_commas(binary()) :: binary()
   def format_price_with_commas(s) when is_binary(s) do
     case String.split(s, ".", parts: 2) do

@@ -41,6 +41,20 @@ Parity routes (pipeline `:fast_browser`):
     - `GET /api/v2/stats`
     - `GET /api/v2/tokens?limit=50`
 
+- `GET /token/:address`
+  - SSR HTML token page (overview + transfers)
+  - Upstream calls (Blockscout API v2):
+    - `GET /api/v2/stats`
+    - `GET /api/v2/tokens/:address`
+    - `GET /api/v2/tokens/:address/transfers` (cursor passthrough via `?cursor=` UI param)
+
+- `GET /token/:address/holders`
+  - SSR HTML token holders page
+  - Upstream calls (Blockscout API v2):
+    - `GET /api/v2/stats`
+    - `GET /api/v2/tokens/:address`
+    - `GET /api/v2/tokens/:address/holders` (cursor passthrough via `?cursor=` UI param)
+
 - `GET /block/:id`
   - SSR HTML block details page
   - Upstream calls (Blockscout API v2):
@@ -133,6 +147,13 @@ UI transport:
 
 - The UI carries cursor state as a single `cursor=` query parameter.
 - `cursor` value is a *percent-encoded* query string, so it can be embedded safely without breaking query parsing.
+
+Exception (parity with Rust):
+
+- Token pages currently render `next_page_params` as a raw query string (not percent-encoded) inside the `cursor=` href.
+  - Example: `cursor=index=50&amp;items_count=50`
+  - This means the browser treats `items_count` as a separate query param.
+  - The server reads `cursor` and passes it through as a partial query string (e.g. `index=50`), matching the Rust behavior.
 
 Encoding:
 

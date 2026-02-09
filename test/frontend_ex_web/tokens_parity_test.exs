@@ -64,4 +64,3 @@ defmodule FrontendExWeb.TokensParityTest do
     end
   end
 end
-

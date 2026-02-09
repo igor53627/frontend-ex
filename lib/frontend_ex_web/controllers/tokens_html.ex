@@ -16,4 +16,3 @@ defmodule FrontendExWeb.TokensHTML do
 
   def first_letter_or_q(_), do: "?"
 end
-

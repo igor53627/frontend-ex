@@ -84,7 +84,11 @@ defmodule FrontendExWeb.TokensController do
           json
 
         {:ok, {:error, reason}} ->
-          Logger.warning("tokens: upstream request failed", endpoint: label, reason: inspect(reason))
+          Logger.warning("tokens: upstream request failed",
+            endpoint: label,
+            reason: inspect(reason)
+          )
+
           nil
 
         {:ok, other} ->
@@ -96,7 +100,11 @@ defmodule FrontendExWeb.TokensController do
           nil
 
         {:exit, reason} ->
-          Logger.warning("tokens: upstream task crashed", endpoint: label, reason: inspect(reason))
+          Logger.warning("tokens: upstream task crashed",
+            endpoint: label,
+            reason: inspect(reason)
+          )
+
           nil
 
         nil ->
@@ -167,4 +175,3 @@ defmodule FrontendExWeb.TokensController do
   defp string_or_nil(v) when is_integer(v), do: Integer.to_string(v)
   defp string_or_nil(_), do: nil
 end
-

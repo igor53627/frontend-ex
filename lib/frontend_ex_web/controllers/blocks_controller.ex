@@ -105,7 +105,11 @@ defmodule FrontendExWeb.BlocksController do
           nil
 
         {:exit, reason} ->
-          Logger.warning("blocks: upstream task crashed", endpoint: label, reason: inspect(reason))
+          Logger.warning("blocks: upstream task crashed",
+            endpoint: label,
+            reason: inspect(reason)
+          )
+
           nil
 
         nil ->
