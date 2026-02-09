@@ -27,3 +27,6 @@ config :frontend_ex,
   blockscout_request_adapter: FrontendEx.Blockscout.RequestAdapter.Fixture,
   blockscout_fixture_dir: Path.expand("../test/fixtures/blockscout", __DIR__),
   blockscout_fixture_on_missing: :raise
+
+# Do not open a metrics server in tests (avoids port conflicts in parallel runs).
+config :frontend_ex, :metrics, enabled: false

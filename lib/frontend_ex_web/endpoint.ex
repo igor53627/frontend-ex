@@ -4,6 +4,16 @@ defmodule FrontendExWeb.Endpoint do
   # Parity routes intentionally avoid sessions/CSRF. Keep the endpoint lean to
   # reduce overhead and avoid cookie parsing/signing on every request.
 
+  @session_options [
+    store: :cookie,
+    key: "_frontend_ex_key",
+    signing_salt: "EF6QTIu+",
+    same_site: "Lax"
+  ]
+
+  # Needed for LiveDashboard (and any future LiveView-based pages).
+  socket "/live", Phoenix.LiveView.Socket, websocket: [connect_info: [session: @session_options]]
+
   # Serve at "/" the static files from "priv/static" directory.
   #
   # When code reloading is disabled (e.g., in production),

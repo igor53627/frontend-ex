@@ -195,6 +195,13 @@ Ops/debug routes (no router pipeline):
 - `GET /stats`
   - `200 OK` JSON with cache sizes/config (used for debugging and scraping).
 
+Monitoring UI routes (local-only):
+
+- `GET /_dashboard` (and `/_dashboard/*` assets/pages)
+  - Phoenix LiveDashboard for ad-hoc BEAM/Phoenix inspection.
+  - Intended access: SSH port-forward to the Phoenix listener on `aya` (see `docs/DEPLOYMENT.md`).
+  - Requests that appear to come from a reverse proxy (`X-Forwarded-*`/`Forwarded`) return `404`.
+
 The intended full route list is the same as `fast-frontend` (see `backlog/docs/doc-1 - fast-frontend-inventory.md`).
 
 ## Upstream HTTP (Blockscout API v2)

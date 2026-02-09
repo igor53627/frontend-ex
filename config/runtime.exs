@@ -111,6 +111,46 @@ config :frontend_ex,
   base_url: base_url,
   ff_skin: ff_skin
 
+metrics_enabled =
+  case System.get_env("FF_METRICS_ENABLED") do
+    nil -> true
+    "" -> true
+    "true" -> true
+    "TRUE" -> true
+    "1" -> true
+    "false" -> false
+    "FALSE" -> false
+    "0" -> false
+    other -> raise "invalid FF_METRICS_ENABLED value: #{inspect(other)} (expected true/false)"
+  end
+
+metrics_port =
+  case System.get_env("FF_METRICS_PORT") do
+    nil ->
+      9568
+
+    v ->
+      v = String.trim(v)
+
+      if v == "" do
+        9568
+      else
+        case Integer.parse(v) do
+          {port, ""} when port > 0 and port < 65_536 ->
+            port
+
+          _ ->
+            raise "invalid FF_METRICS_PORT value: #{inspect(v)} (expected integer 1..65535)"
+        end
+      end
+  end
+
+config :frontend_ex, :metrics,
+  enabled: metrics_enabled,
+  port: metrics_port,
+  # Never bind metrics publicly by default.
+  ip: {127, 0, 0, 1}
+
 if config_env() == :prod do
   # The secret key base is used to sign/encrypt cookies and other secrets.
   # A default value is used in config/dev.exs and config/test.exs but you

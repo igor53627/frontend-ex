@@ -107,6 +107,31 @@ inside the main `:80 { ... }` block, then restart Caddy:
 ssh aya "podman restart blockscout-proxy_caddy_1"
 ```
 
+## Monitoring (Aya)
+
+`frontend-ex` exposes Prometheus metrics (via `:telemetry`) on:
+
+- `http://127.0.0.1:9568/metrics` (configurable with `FF_METRICS_ENABLED` and `FF_METRICS_PORT`)
+
+To ingest into Influx/Grafana on `aya`, add a Prometheus input to the telegraf config:
+
+- File: `/mnt/sepolia/blockscout-proxy/telegraf.conf`
+- Container: `blockscout-proxy_telegraf_1` (podman, host network)
+
+### LiveDashboard (Aya)
+
+`frontend-ex` mounts Phoenix LiveDashboard at `/_dashboard`.
+
+It is intentionally reachable only via direct access to the Phoenix listener (no `X-Forwarded-*` headers),
+so it is not exposed through the public Caddy proxy.
+
+Access via SSH port forward:
+
+```bash
+ssh -L 4000:127.0.0.1:5174 aya
+open http://localhost:4000/_dashboard
+```
+
 ## Rollback
 
 1. Roll back the app release:

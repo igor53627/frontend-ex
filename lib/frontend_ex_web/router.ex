@@ -1,6 +1,8 @@
 defmodule FrontendExWeb.Router do
   use FrontendExWeb, :router
 
+  import Phoenix.LiveDashboard.Router
+
   # Sessions/CSRF are intentionally avoided for parity SSR routes (see :fast_browser),
   # but we keep a working :browser pipeline for future non-parity pages.
   @session_options [
@@ -63,10 +65,20 @@ defmodule FrontendExWeb.Router do
     plug :accepts, ["json"]
   end
 
+  pipeline :dashboard do
+    plug FrontendExWeb.Plugs.DashboardLocalOnly
+  end
+
   scope "/", FrontendExWeb do
     # Ops/debug routes: no SSR pipeline, no trailing-newline trimming.
     get "/health", OpsController, :health
     get "/stats", OpsController, :stats
+  end
+
+  scope "/", FrontendExWeb do
+    pipe_through [:browser, :dashboard]
+
+    live_dashboard "/_dashboard", metrics: FrontendExWeb.Telemetry
   end
 
   scope "/", FrontendExWeb do

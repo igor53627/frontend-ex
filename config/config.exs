@@ -33,6 +33,13 @@ config :phoenix, :json_library, Jason
 # whitespace on lines that contain only EEx tags (Askama does not trim).
 config :phoenix_template, :trim_on_html_eex_engine, false
 
+# Prometheus metrics exporter (scraped by telegraf on aya). The exporter runs
+# its own HTTP server on localhost and does not impact parity SSR routes.
+config :frontend_ex, :metrics,
+  enabled: true,
+  port: 9568,
+  ip: {127, 0, 0, 1}
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{config_env()}.exs"
