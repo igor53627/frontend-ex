@@ -1,19 +1,8 @@
 defmodule FrontendExWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :frontend_ex
 
-  # The session will be stored in the cookie and signed,
-  # this means its contents can be read but not tampered with.
-  # Set :encryption_salt if you would also like to encrypt it.
-  @session_options [
-    store: :cookie,
-    key: "_frontend_ex_key",
-    signing_salt: "EF6QTIu+",
-    same_site: "Lax"
-  ]
-
-  # socket "/live", Phoenix.LiveView.Socket,
-  #   websocket: [connect_info: [session: @session_options]],
-  #   longpoll: [connect_info: [session: @session_options]]
+  # Parity routes intentionally avoid sessions/CSRF. Keep the endpoint lean to
+  # reduce overhead and avoid cookie parsing/signing on every request.
 
   # Serve at "/" the static files from "priv/static" directory.
   #
@@ -45,6 +34,5 @@ defmodule FrontendExWeb.Endpoint do
 
   plug Plug.MethodOverride
   plug Plug.Head
-  plug Plug.Session, @session_options
   plug FrontendExWeb.Router
 end

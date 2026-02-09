@@ -1,8 +1,18 @@
 defmodule FrontendExWeb.Router do
   use FrontendExWeb, :router
 
+  # Sessions/CSRF are intentionally avoided for parity SSR routes (see :fast_browser),
+  # but we keep a working :browser pipeline for future non-parity pages.
+  @session_options [
+    store: :cookie,
+    key: "_frontend_ex_key",
+    signing_salt: "EF6QTIu+",
+    same_site: "Lax"
+  ]
+
   pipeline :browser do
     plug :accepts, ["html"]
+    plug Plug.Session, @session_options
     plug :fetch_session
     plug :fetch_live_flash
     plug :put_root_layout, html: {FrontendExWeb.Layouts, :root}
