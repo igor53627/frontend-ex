@@ -1,0 +1,73 @@
+
+<div class="page-header">
+    <h1 class="page-title">Block #<%= @block_height %> Transactions</h1>
+    <div class="block-nav">
+        <a href="/block/<%= @block_height - 1 %>/txs" class="block-nav-btn" title="Previous Block">&lt;</a>
+        <a href="/block/<%= @block_height + 1 %>/txs" class="block-nav-btn" title="Next Block">&gt;</a>
+    </div>
+</div>
+
+<div class="testnet-banner">
+    This is a Sepolia Testnet block only
+</div>
+
+<div class="tabs">
+    <a href="/block/<%= @block_height %>" class="tab">Overview</a>
+    <a href="/block/<%= @block_height %>/txs" class="tab active">Transactions</a>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <span>A total of <%= @tx_count %> transactions found</span>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Txn Hash</th>
+                <th>Method</th>
+                <th>From</th>
+                <th></th>
+                <th>To</th>
+                <th>Value</th>
+                <th>Fee</th>
+            </tr>
+        </thead>
+        <tbody>
+            <%= for tx <- @transactions do %>
+            <tr>
+                <td>
+                    <a href="/tx/<%= tx.hash %>" class="hash hash--truncate"><%= tx.hash %></a>
+                </td>
+                <td>
+                    <%= if tx.method do %>
+                        <span class="badge badge-secondary"><%= tx.method %></span>
+                    <% else %>
+                        <%= if String.match?(tx.value, ~r/[1-9]/) do %>
+                            <span class="badge badge-secondary">Transfer</span>
+                        <% else %>
+                            <span class="text-muted">-</span>
+                        <% end %>
+                    <% end %>
+                </td>
+                <td>
+                    <a href="/address/<%= tx.from.hash %>" class="hash hash--truncate hash--sm"><%= tx.from.hash %></a>
+                </td>
+                <td>
+                    <span class="badge badge-warning">OUT</span>
+                </td>
+                <td>
+                    <%= if tx.to do %>
+                        <a href="/address/<%= tx.to.hash %>" class="hash hash--truncate hash--sm"><%= tx.to.hash %></a>
+                    <% else %>
+                        <span class="text-muted">Contract Creation</span>
+                    <% end %>
+                </td>
+                <td><%= FrontendEx.Format.format_wei_to_eth(tx.value) %> ETH</td>
+                <td class="text-muted">
+                    <%= if tx.fee do %><%= FrontendEx.Format.format_wei_to_eth(tx.fee.value) %><% else %>-<% end %>
+                </td>
+            </tr>
+            <% end %>
+        </tbody>
+    </table>
+</div>

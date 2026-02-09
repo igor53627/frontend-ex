@@ -13,6 +13,21 @@ Parity routes (pipeline `:fast_browser`):
     - `GET /api/v2/blocks?limit=6` (SWR)
     - `GET /api/v2/transactions?items_count=6` (SWR)
 
+- `GET /block/:id`
+  - SSR HTML block details page
+  - Upstream calls (Blockscout API v2):
+    - `GET /api/v2/stats`
+    - `GET /api/v2/blocks/:id`
+    - `GET /api/v2/blocks/:id/transactions` (preview)
+    - `GET /api/v2/blocks/:height-1` (fee recipient delta; best-effort)
+
+- `GET /block/:id/txs`
+  - SSR HTML block transactions page
+  - Upstream calls (Blockscout API v2):
+    - `GET /api/v2/stats`
+    - `GET /api/v2/blocks/:id`
+    - `GET /api/v2/blocks/:id/transactions`
+
 - `GET /exportData`
   - SSR HTML page (no upstream calls)
 

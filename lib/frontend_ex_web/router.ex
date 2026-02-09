@@ -30,6 +30,8 @@ defmodule FrontendExWeb.Router do
     pipe_through :fast_browser
 
     get "/", HomeController, :index
+    get "/block/:id", BlockController, :show
+    get "/block/:id/txs", BlockController, :txs
     get "/exportData", ExportDataController, :index
   end
 

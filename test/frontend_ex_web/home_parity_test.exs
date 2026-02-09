@@ -1,5 +1,6 @@
 defmodule FrontendExWeb.HomeParityTest do
-  use FrontendExWeb.ConnCase, async: true
+  # Parity tests mutate global Application env (skin, URLs), so they must be serial.
+  use FrontendExWeb.ConnCase, async: false
 
   alias FrontendEx.TestSupport.Golden
 

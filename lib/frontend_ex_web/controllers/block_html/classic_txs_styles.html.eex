@@ -1,0 +1,75 @@
+
+<style>
+.page-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+.page-title {
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--text);
+    margin: 0;
+}
+.block-nav {
+    display: flex;
+    gap: 4px;
+}
+.block-nav-btn {
+    width: 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8f9fa;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text-secondary);
+    font-size: 12px;
+    line-height: 1;
+    text-decoration: none;
+}
+.block-nav-btn:hover { background: #e9ecef; color: var(--text); }
+
+.card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.card-header { padding: 12px 16px; background: #f8f9fa; border-bottom: 1px solid var(--border); font-weight: 500; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 10px 16px; text-align: left; border-bottom: 1px solid var(--border); font-size: 14px; vertical-align: middle; }
+th { background: #f8f9fa; color: var(--text-muted); font-weight: 500; }
+tr:hover { background: #fdfdfe; }
+
+.hash {
+    font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    color: var(--link);
+    font-size: 13px;
+    text-decoration: none;
+}
+.hash:hover { text-decoration: underline; }
+.hash--truncate {
+    max-width: 160px;
+    display: inline-block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.hash--sm { max-width: 120px; }
+
+.text-muted { color: var(--text-muted); }
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.1rem 0.45rem;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1.4;
+    border: 1px solid transparent;
+}
+.badge-secondary { background-color: #f1f3f5; color: #495057; border-color: #dee2e6; }
+.badge-warning { background-color: #fff3cd; color: #856404; border-color: #ffeeba; }
+.badge-success { background-color: #d1e7dd; color: #0f5132; border-color: #badbcc; }
+.text-uppercase { text-transform: uppercase; }
+</style>

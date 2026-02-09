@@ -136,5 +136,30 @@ defmodule FrontendEx.Format do
         timestamp
     end
   end
-end
 
+  @spec format_readable_date(binary()) :: binary()
+  def format_readable_date(timestamp) when is_binary(timestamp) do
+    timestamp = String.trim(timestamp)
+
+    case DateTime.from_iso8601(timestamp) do
+      {:ok, dt, _offset} ->
+        Calendar.strftime(dt, "%b %d, %Y %H:%M:%S UTC")
+
+      _ ->
+        timestamp
+    end
+  end
+
+  @spec format_readable_date_classic_plus_utc(binary()) :: binary()
+  def format_readable_date_classic_plus_utc(timestamp) when is_binary(timestamp) do
+    timestamp = String.trim(timestamp)
+
+    case DateTime.from_iso8601(timestamp) do
+      {:ok, dt, _offset} ->
+        Calendar.strftime(dt, "%b-%d-%Y %I:%M:%S %p +UTC")
+
+      _ ->
+        timestamp
+    end
+  end
+end
