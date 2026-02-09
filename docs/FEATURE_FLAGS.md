@@ -31,7 +31,8 @@ This project is configured primarily via environment variables (read in `config/
 
 - `BLOCKSCOUT_WS_URL`
   - WebSocket URL for live updates (home page).
-  - Not wired yet in `frontend-ex` (tracked by backlog tasks); will be used before falling back to a derived URL from `BLOCKSCOUT_URL`.
+  - If unset, `frontend-ex` derives:
+    - `wss://<BLOCKSCOUT_URL host>/socket/v2/websocket?vsn=2.0.0`
 
 ## Misc
 
@@ -51,4 +52,3 @@ This project is configured primarily via environment variables (read in `config/
 
 - `SECRET_KEY_BASE`
   - Required in `MIX_ENV=prod` for releases.
-

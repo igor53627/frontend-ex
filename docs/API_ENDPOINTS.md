@@ -6,6 +6,13 @@ This document describes the HTTP surface exposed by `frontend-ex` and the upstre
 
 Parity routes (pipeline `:fast_browser`):
 
+- `GET /`
+  - SSR HTML home page
+  - Upstream calls (Blockscout API v2):
+    - `GET /api/v2/stats`
+    - `GET /api/v2/blocks?limit=6` (SWR)
+    - `GET /api/v2/transactions?items_count=6` (SWR)
+
 - `GET /exportData`
   - SSR HTML page (no upstream calls)
 
@@ -16,8 +23,7 @@ Static assets (served by `Plug.Static`, not the router):
 
 Non-parity routes (pipeline `:browser`):
 
-- `GET /`
-  - Placeholder Phoenix page (will be replaced by migrated home page)
+- (none yet)
 
 The intended full route list is the same as `fast-frontend` (see `backlog/docs/doc-1 - fast-frontend-inventory.md`).
 

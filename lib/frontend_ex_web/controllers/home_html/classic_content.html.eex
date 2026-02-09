@@ -1,0 +1,134 @@
+
+<div class="hero">
+    <div class="hero-inner">
+        <h1 class="hero-title">Sepolia Testnet Explorer <span>| Search anything</span></h1>
+        <form class="search-box" action="/search" method="get">
+            <select class="search-dropdown">
+                <option>All Filters</option>
+            </select>
+            <input type="text" name="q" class="search-input" placeholder="Search by Address / Txn Hash / Block / Token">
+            <button type="submit" class="search-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+            </button>
+        </form>
+        <div class="stats-strip">
+            <div class="stat-item">
+                <span class="stat-label">Transactions</span>
+                <span class="stat-value"><%= if @stats, do: (@stats.total_transactions || "-"), else: "-" %></span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Base Fee</span>
+                <span class="stat-value">&lt; 1 Wei</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Latest Block</span>
+                <span class="stat-value"><%= if @blocks != [], do: hd(@blocks).height_formatted, else: "-" %></span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Overview Cards -->
+<div class="overview-row">
+    <div class="overview-card">
+        <div class="overview-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+            </svg>
+        </div>
+        <div class="overview-content">
+            <div class="overview-label">Total Blocks</div>
+            <div class="overview-value" id="total-blocks"><%= if @stats, do: (@stats.total_blocks || "-"), else: "-" %></div>
+        </div>
+    </div>
+    <div class="overview-card">
+        <div class="overview-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+            </svg>
+        </div>
+        <div class="overview-content">
+            <div class="overview-label">Total Transactions</div>
+            <div class="overview-value" id="total-txs"><%= if @stats, do: (@stats.total_transactions || "-"), else: "-" %></div>
+            <div class="overview-sub"><%= if @stats && is_number(@stats.average_block_time), do: ((:io_lib.format("~.1f", [@stats.average_block_time]) |> IO.iodata_to_binary()) <> "s avg block time"), else: "" %></div>
+        </div>
+    </div>
+    <div class="overview-card">
+        <div class="overview-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M22 10H2"/>
+            </svg>
+        </div>
+        <div class="overview-content">
+            <div class="overview-label">Wallet Addresses</div>
+            <div class="overview-value" id="total-addresses"><%= if @stats, do: (@stats.total_addresses || "-"), else: "-" %></div>
+        </div>
+    </div>
+</div>
+
+<!-- Latest Blocks & Transactions -->
+<div class="main-grid">
+    <!-- Blocks -->
+    <div class="card list-card">
+        <div class="card-header">
+            <span>Latest Blocks</span>
+            <a href="/blocks">View all blocks &rarr;</a>
+        </div>
+        <div id="blocks-list">
+            <%= for block <- @blocks do %>
+            <div class="block-item">
+                <div class="block-icon">Bk</div>
+                <div class="block-info">
+                    <a href="/block/<%= block.height %>" class="block-num"><%= block.height_formatted %></a>
+                    <div class="block-time" data-timestamp="<%= block.timestamp_raw %>"><%= block.timestamp %></div>
+                </div>
+                <div class="block-meta">
+                    <div class="block-miner">
+                        Miner <%= if block.miner do %><a href="/address/<%= block.miner.hash %>"><%= block.miner.display %></a><% else %>-<% end %>
+                    </div>
+                    <div class="block-txns">
+                        <a href="/block/<%= block.height %>/txs"><%= block.tx_count || 0 %> txns</a> in 12 secs
+                    </div>
+                    <div class="block-reward">0 ETH</div>
+                </div>
+            </div>
+            <% end %>
+        </div>
+        <a href="/blocks" class="view-all-btn">View all blocks</a>
+    </div>
+
+    <!-- Transactions -->
+    <div class="card list-card">
+        <div class="card-header">
+            <span>Latest Transactions</span>
+            <a href="/txs">View all transactions &rarr;</a>
+        </div>
+        <div class="new-txs-banner" id="new-txs-banner" style="display:none;" onclick="showNewTxs()">
+            <span id="new-txs-count">0</span> more transactions have come in. Click to load.
+        </div>
+        <div id="txs-list">
+            <%= for tx <- @transactions do %>
+            <div class="tx-item">
+                <div class="tx-icon">TX</div>
+                <div class="tx-info">
+                    <div class="tx-hash-row">
+                        <a href="/tx/<%= tx.hash %>" class="hash tx-hash"><%= tx.hash %></a>
+                        <span class="tx-time" data-timestamp="<%= tx.timestamp_raw || "" %>"><%= tx.timestamp || "" %></span>
+                    </div>
+                    <div class="tx-addrs">
+                        From <a href="/address/<%= tx.from.hash %>"><%= tx.from.display %></a>
+                        To <%= if tx.to do %><a href="/address/<%= tx.to.hash %>"><%= tx.to.display %></a><% else %><span style="color: #6c757d;">Contract Create</span><% end %>
+                    </div>
+                </div>
+                <div class="tx-meta">
+                    <div class="tx-value"><%= tx.value %> ETH</div>
+                    <div class="tx-value-label">Value</div>
+                </div>
+            </div>
+            <% end %>
+        </div>
+        <a href="/txs" class="view-all-btn">View all transactions</a>
+    </div>
+</div>

@@ -1,0 +1,1196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sepolia Testnet Explorer</title>
+    <link rel="icon" type="image/png" href="https://sepolia.53627.org/favicon/favicon-32x32.png">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style2.css">
+    <link rel="stylesheet" href="/static/css/style2-overrides.css">
+    
+    
+<style>
+/* Hero Section */
+.hero {
+    background: linear-gradient(135deg, #21325b 0%, #0d1f3c 100%);
+    padding: 32px 20px 24px;
+    margin: -20px -20px 24px -20px;
+}
+.hero-inner {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+.hero-title {
+    color: white;
+    font-size: 22px;
+    font-weight: 500;
+    margin-bottom: 16px;
+}
+.hero-title span { color: #adb5bd; font-weight: 400; }
+.search-box {
+    display: flex;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.20);
+    max-width: 880px;
+    height: 48px;
+    align-items: stretch;
+}
+.search-dropdown {
+    background: #f8f9fa;
+    border: none;
+    padding: 0 16px;
+    font-size: 13px;
+    color: var(--text);
+    cursor: pointer;
+    border-right: 1px solid #dde2e8;
+    min-width: 140px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+}
+.search-input {
+    flex: 1;
+    border: none;
+    padding: 0 16px;
+    font-size: 13px;
+    outline: none;
+    height: 48px;
+    display: flex;
+    align-items: center;
+}
+.search-input::placeholder { color: #adb5bd; }
+.search-btn {
+    background: #0784c3;
+    border: none;
+    padding: 0 18px;
+    cursor: pointer;
+    color: white;
+    height: 48px;
+    display: flex;
+    align-items: center;
+}
+.search-btn:hover { background: #066a9c; }
+.search-btn svg { width: 18px; height: 18px; vertical-align: middle; }
+
+/* Stats Strip */
+.stats-strip {
+    display: flex;
+    gap: 24px;
+    color: rgba(255,255,255,0.9);
+    margin-top: 16px;
+    font-size: 12px;
+    align-items: center;
+}
+.stats-strip .stat-item { display: flex; align-items: baseline; gap: 6px; }
+.stats-strip .stat-label { color: rgba(255,255,255,0.6); }
+.stats-strip .stat-value { font-weight: 500; }
+
+/* Main Grid */
+.main-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 0;
+    align-items: stretch;
+}
+.card.list-card {
+    display: flex;
+    flex-direction: column;
+}
+.card.list-card > .card-header { flex-shrink: 0; }
+.card.list-card > #blocks-list,
+.card.list-card > #txs-list { flex: 1 1 auto; }
+.card.list-card > .view-all-btn { flex-shrink: 0; }
+
+/* Overview Cards */
+.overview-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin-bottom: 24px;
+}
+.overview-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 20px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+.overview-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8f9fa;
+    color: #6c757d;
+    flex-shrink: 0;
+}
+.overview-icon svg { width: 20px; height: 20px; }
+.overview-content { flex: 1; }
+.overview-label { font-size: 12px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+.overview-value { font-size: 18px; font-weight: 600; color: var(--text); }
+.overview-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+/* Block/Tx Cards */
+.list-card .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.list-card .card-header a {
+    font-size: 12px;
+    color: var(--link);
+}
+
+/* Block Row */
+.block-item {
+    display: flex;
+    align-items: center;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    gap: 16px;
+    min-height: 72px;
+}
+.block-item:last-child { border-bottom: none; }
+.block-icon {
+    width: 44px;
+    height: 44px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6c757d;
+    font-size: 11px;
+    font-weight: 500;
+    flex-shrink: 0;
+    line-height: 1;
+}
+.block-info { flex: 1; min-width: 0; padding-top: 1px; }
+.block-num {
+    font-weight: 500;
+    color: var(--link);
+    font-size: 14px;
+}
+.block-time {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+.block-meta {
+    text-align: right;
+    font-size: 13px;
+    min-width: 180px;
+}
+.block-miner {
+    color: var(--text-secondary);
+    font-size: 12px;
+}
+.block-miner a { color: var(--link); }
+.block-txns {
+    font-size: 12px;
+    color: var(--text);
+    margin-top: 2px;
+}
+.block-reward {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+/* Transaction Row */
+.tx-item {
+    display: flex;
+    align-items: center;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    gap: 16px;
+    min-height: 72px;
+}
+.tx-item:last-child { border-bottom: none; }
+.tx-icon {
+    width: 44px;
+    height: 44px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6c757d;
+    font-size: 11px;
+    font-weight: 500;
+    flex-shrink: 0;
+    line-height: 1;
+}
+.tx-info { flex: 1; min-width: 0; padding-top: 1px; }
+.tx-hash-row {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    margin-bottom: 2px;
+}
+.tx-hash {
+    color: var(--link);
+    font-size: 13px;
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.tx-time {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+.tx-addrs {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+.tx-addrs a { color: var(--link); }
+.tx-meta {
+    text-align: right;
+    font-size: 13px;
+    min-width: 180px;
+}
+.tx-value {
+    font-weight: 500;
+    color: var(--text);
+    font-size: 13px;
+}
+.tx-value-label {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+/* View All Button */
+.view-all-btn {
+    display: block;
+    text-align: center;
+    padding: 10px 16px;
+    background: #f8f9fa;
+    color: var(--link);
+    font-size: 12px;
+    font-weight: 500;
+    border-top: 1px solid var(--border);
+    line-height: 1.4;
+}
+.view-all-btn:hover { background: #e9ecef; }
+
+/* New Txs Banner */
+.new-txs-banner {
+    background: #e8f4fd;
+    color: #0784c3;
+    padding: 12px 16px;
+    font-size: 13px;
+    cursor: pointer;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+}
+.new-txs-banner:hover { background: #d0e9f9; }
+
+@media (max-width: 1024px) {
+    .main-grid { grid-template-columns: 1fr; }
+    .overview-row { grid-template-columns: 1fr; }
+    .stats-strip { flex-wrap: wrap; gap: 16px; }
+}
+@media (max-width: 980px) {
+    .topbar { display: none; }
+    .topbar-search { display: none; }
+    .hero {
+        background: transparent;
+        padding: 12px 0 16px;
+        margin: 0 0 16px;
+    }
+    .hero-inner {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 12px;
+        box-shadow: 0 0.5rem 1.2rem rgba(189,197,209,.2);
+    }
+    .hero-title {
+        color: var(--text);
+        font-size: 14px;
+        font-weight: 500;
+        margin-bottom: 10px;
+    }
+    .hero-title span { display: none; }
+    .search-box {
+        display: flex;
+        max-width: none;
+        height: 36px;
+        border-radius: 8px;
+        box-shadow: none;
+        border: 1px solid var(--border);
+    }
+    .search-dropdown { display: none; }
+    .search-input {
+        height: 36px;
+        font-size: 12px;
+        padding: 0 12px;
+    }
+    .search-btn {
+        height: 36px;
+        padding: 0 12px;
+    }
+    .stats-strip {
+        background: transparent;
+        border: 0;
+        border-radius: 0;
+        padding: 10px 0 0;
+        margin-top: 12px;
+        color: var(--text);
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0;
+        box-shadow: none;
+        border-top: 1px solid var(--border);
+    }
+    .stats-strip .stat-item {
+        width: 100%;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-top: 1px solid var(--border);
+        align-items: center;
+    }
+    .stats-strip .stat-item:first-child {
+        border-top: 0;
+        padding-top: 0;
+    }
+    .stats-strip .stat-label {
+        color: var(--text-muted);
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+    }
+    .stats-strip .stat-value {
+        font-weight: 600;
+        font-size: 12px;
+    }
+    .overview-row { display: none; }
+    .main-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    .list-card .card-header { padding: 12px 16px; }
+    .list-card .card-header a { display: none; }
+    .mobile-badge { display: inline-flex; margin-left: auto; }
+    .mobile-menu-btn { margin-left: 8px; }
+    .block-item,
+    .tx-item {
+        padding: 10px 14px;
+        gap: 8px;
+        align-items: flex-start;
+    }
+    .block-icon,
+    .tx-icon {
+        width: 26px;
+        height: 26px;
+        font-size: 8.5px;
+        border-radius: 6px;
+    }
+    .block-info,
+    .tx-info {
+        flex: 1 1 auto;
+        min-width: 0;
+        width: auto;
+    }
+    .block-item { flex-wrap: wrap; }
+    .block-meta {
+        width: auto;
+        min-width: 0;
+        text-align: left;
+        margin-top: 6px;
+        margin-left: 34px;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        column-gap: 12px;
+        row-gap: 2px;
+    }
+    .block-miner { grid-column: 1; }
+    .block-txns { grid-column: 1; }
+    .block-reward {
+        grid-column: 2;
+        grid-row: 1 / span 2;
+        text-align: right;
+        align-self: start;
+    }
+    .tx-item { flex-wrap: nowrap; }
+    .tx-meta {
+        min-width: 72px;
+        text-align: right;
+        margin-top: 2px;
+        margin-left: 8px;
+        align-self: flex-start;
+    }
+    .tx-value { font-size: 12px; }
+    .tx-value-label { font-size: 10px; }
+    .tx-hash { max-width: 120px; }
+}
+</style>
+
+</head>
+<body>
+    <header class="header">
+        <div class="topbar">
+            <div class="container topbar-inner">
+                <div class="topbar-left">
+                    <span class="topbar-badge">Sepolia Testnet</span>
+                </div>
+                <div class="topbar-right">
+                    <form class="topbar-search" action="/search" method="get">
+                        <span class="topbar-search-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <circle cx="11" cy="11" r="7"></circle>
+                                <line x1="20" y1="20" x2="16.65" y2="16.65"></line>
+                            </svg>
+                        </span>
+                        <input type="text" name="q" class="topbar-search-input" placeholder="Search by Address / Txn Hash / Block / Token" aria-label="Search by Address / Txn Hash / Block / Token">
+                        <span class="topbar-search-shortcut" aria-hidden="true"><kbd>/</kbd></span>
+                    </form>
+                    <button class="topbar-icon-btn" type="button" aria-label="Knowledge Base" title="Knowledge Base">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M4 5h6a3 3 0 0 1 3 3v11H7a3 3 0 0 0-3 3V5z"></path>
+                            <path d="M20 5h-6a3 3 0 0 0-3 3v11h6a3 3 0 0 1 3 3V5z"></path>
+                        </svg>
+                    </button>
+                    <button class="topbar-icon-btn" type="button" aria-label="Theme" title="Theme">
+                        <svg viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="4"></circle>
+                            <path d="M12 2v3"></path>
+                            <path d="M12 19v3"></path>
+                            <path d="M4.2 4.2l2.1 2.1"></path>
+                            <path d="M17.7 17.7l2.1 2.1"></path>
+                            <path d="M2 12h3"></path>
+                            <path d="M19 12h3"></path>
+                            <path d="M4.2 19.8l2.1-2.1"></path>
+                            <path d="M17.7 6.3l2.1-2.1"></path>
+                        </svg>
+                    </button>
+                    <button class="topbar-icon-btn" type="button" aria-label="Network" title="Network">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 2l4.5 8-4.5 4.5L7.5 10 12 2z"></path>
+                            <path d="M12 15l4.5-4.5-4.5 12-4.5-12L12 15z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="header-main">
+            <div class="container header-top">
+                <a href="/" class="logo">
+                    <svg class="logo-mark" viewBox="0 0 32 32" aria-hidden="true">
+                        <circle cx="16" cy="16" r="16" fill="#1f2a44"></circle>
+                        <rect x="8.5" y="9" width="4" height="14" fill="#ffffff"></rect>
+                        <rect x="14" y="7" width="4" height="18" fill="#ffffff"></rect>
+                        <rect x="19.5" y="11" width="4" height="12" fill="#ffffff"></rect>
+                    </svg>
+                    <span class="logo-title">Sepolia Explorer</span>
+                </a>
+
+                <nav class="nav" aria-label="Primary">
+                    <a href="/" class="nav-link active">Home</a>
+
+                    <div class="nav-dropdown">
+                        <button class="nav-link nav-dropdown-toggle  " type="button" aria-haspopup="true" aria-expanded="false">
+                            Blockchain
+                            <svg class="nav-caret" viewBox="0 0 12 12" aria-hidden="true">
+                                <path d="M3 4.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                            </svg>
+                        </button>
+                        <div class="nav-menu">
+                            <div class="nav-menu-inner">
+                                <a href="/txs" class="nav-menu-item">Transactions</a>
+                                <a href="/blocks" class="nav-menu-item">View Blocks</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="nav-dropdown">
+                        <button class="nav-link nav-dropdown-toggle " type="button" aria-haspopup="true" aria-expanded="false">
+                            Tokens
+                            <svg class="nav-caret" viewBox="0 0 12 12" aria-hidden="true">
+                                <path d="M3 4.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                            </svg>
+                        </button>
+                        <div class="nav-menu">
+                            <div class="nav-menu-inner">
+                                <a href="/tokens" class="nav-menu-item">Tokens</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="nav-dropdown">
+                        <button class="nav-link nav-dropdown-toggle " type="button" aria-haspopup="true" aria-expanded="false">
+                            NFTs
+                            <svg class="nav-caret" viewBox="0 0 12 12" aria-hidden="true">
+                                <path d="M3 4.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                            </svg>
+                        </button>
+                        <div class="nav-menu">
+                            <div class="nav-menu-inner">
+                                <a href="/nft-latest-mints" class="nav-menu-item">NFT Latest Mints</a>
+                                <a href="/nft-transfers" class="nav-menu-item">NFT Transfers</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="nav-dropdown">
+                        <button class="nav-link nav-dropdown-toggle" type="button" aria-haspopup="true" aria-expanded="false">
+                            More
+                            <svg class="nav-caret" viewBox="0 0 12 12" aria-hidden="true">
+                                <path d="M3 4.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                            </svg>
+                        </button>
+                        <div class="nav-menu nav-menu-right">
+                            <div class="nav-menu-inner">
+                                <a href="/api-docs" class="nav-menu-item">APIs</a>
+                            </div>
+                        </div>
+                    </div>
+                </nav>
+
+                <span class="topbar-badge mobile-badge">Sepolia Testnet</span>
+
+                <button class="mobile-menu-btn" type="button" aria-label="Open menu" title="Menu">
+                    <svg viewBox="0 0 24 24">
+                        <line x1="4" y1="7" x2="20" y2="7"></line>
+                        <line x1="4" y1="12" x2="20" y2="12"></line>
+                        <line x1="4" y1="17" x2="20" y2="17"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="container">
+            
+<div class="hero">
+    <div class="hero-inner">
+        <h1 class="hero-title">Sepolia Testnet Explorer <span>| Search anything</span></h1>
+        <form class="search-box" action="/search" method="get">
+            <select class="search-dropdown">
+                <option>All Filters</option>
+            </select>
+            <input type="text" name="q" class="search-input" placeholder="Search by Address / Txn Hash / Block / Token">
+            <button type="submit" class="search-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+            </button>
+        </form>
+        <div class="stats-strip">
+            <div class="stat-item">
+                <span class="stat-label">Transactions</span>
+                <span class="stat-value">816,515,393</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Base Fee</span>
+                <span class="stat-value">&lt; 1 Wei</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Latest Block</span>
+                <span class="stat-value">9829594</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Overview Cards -->
+<div class="overview-row">
+    <div class="overview-card">
+        <div class="overview-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+            </svg>
+        </div>
+        <div class="overview-content">
+            <div class="overview-label">Total Blocks</div>
+            <div class="overview-value" id="total-blocks">9,829,593</div>
+        </div>
+    </div>
+    <div class="overview-card">
+        <div class="overview-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+            </svg>
+        </div>
+        <div class="overview-content">
+            <div class="overview-label">Total Transactions</div>
+            <div class="overview-value" id="total-txs">816,515,393</div>
+            <div class="overview-sub">12.0s avg block time</div>
+        </div>
+    </div>
+    <div class="overview-card">
+        <div class="overview-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M22 10H2"/>
+            </svg>
+        </div>
+        <div class="overview-content">
+            <div class="overview-label">Wallet Addresses</div>
+            <div class="overview-value" id="total-addresses">52,257,297</div>
+        </div>
+    </div>
+</div>
+
+<!-- Latest Blocks & Transactions -->
+<div class="main-grid">
+    <!-- Blocks -->
+    <div class="card list-card">
+        <div class="card-header">
+            <span>Latest Blocks</span>
+            <a href="/blocks">View all blocks &rarr;</a>
+        </div>
+        <div id="blocks-list">
+            
+            <div class="block-item">
+                <div class="block-icon">Bk</div>
+                <div class="block-info">
+                    <a href="/block/9829594" class="block-num">9829594</a>
+                    <div class="block-time" data-timestamp="2025-12-13T06:09:12+00:00">1 mth ago</div>
+                </div>
+                <div class="block-meta">
+                    <div class="block-miner">
+                        Miner <a href="/address/0xf24a01ae29dec4629dfb4170647c4ed4efc392cd">0xf2...92cd</a>
+                    </div>
+                    <div class="block-txns">
+                        <a href="/block/9829594/txs">60 txns</a> in 12 secs
+                    </div>
+                    <div class="block-reward">0 ETH</div>
+                </div>
+            </div>
+            
+            <div class="block-item">
+                <div class="block-icon">Bk</div>
+                <div class="block-info">
+                    <a href="/block/9829593" class="block-num">9829593</a>
+                    <div class="block-time" data-timestamp="2025-12-13T06:09:00+00:00">1 mth ago</div>
+                </div>
+                <div class="block-meta">
+                    <div class="block-miner">
+                        Miner <a href="/address/0x13cb6ae34a13a0977f4d7101ebc24b87bb23f0d5">0x13...f0d5</a>
+                    </div>
+                    <div class="block-txns">
+                        <a href="/block/9829593/txs">97 txns</a> in 12 secs
+                    </div>
+                    <div class="block-reward">0 ETH</div>
+                </div>
+            </div>
+            
+            <div class="block-item">
+                <div class="block-icon">Bk</div>
+                <div class="block-info">
+                    <a href="/block/9829592" class="block-num">9829592</a>
+                    <div class="block-time" data-timestamp="2025-12-13T06:08:48+00:00">1 mth ago</div>
+                </div>
+                <div class="block-meta">
+                    <div class="block-miner">
+                        Miner <a href="/address/0x1268ad189526ac0b386faf06effc46779c340ee6">0x12...0ee6</a>
+                    </div>
+                    <div class="block-txns">
+                        <a href="/block/9829592/txs">38 txns</a> in 12 secs
+                    </div>
+                    <div class="block-reward">0 ETH</div>
+                </div>
+            </div>
+            
+            <div class="block-item">
+                <div class="block-icon">Bk</div>
+                <div class="block-info">
+                    <a href="/block/9829591" class="block-num">9829591</a>
+                    <div class="block-time" data-timestamp="2025-12-13T06:08:36+00:00">1 mth ago</div>
+                </div>
+                <div class="block-meta">
+                    <div class="block-miner">
+                        Miner <a href="/address/0x6a7aa9b882d50bb7bc5da1a244719c99f12f06a3">0x6a...06a3</a>
+                    </div>
+                    <div class="block-txns">
+                        <a href="/block/9829591/txs">87 txns</a> in 12 secs
+                    </div>
+                    <div class="block-reward">0 ETH</div>
+                </div>
+            </div>
+            
+            <div class="block-item">
+                <div class="block-icon">Bk</div>
+                <div class="block-info">
+                    <a href="/block/9829590" class="block-num">9829590</a>
+                    <div class="block-time" data-timestamp="2025-12-13T06:08:24+00:00">1 mth ago</div>
+                </div>
+                <div class="block-meta">
+                    <div class="block-miner">
+                        Miner <a href="/address/0x9a6034c84cd431409ac1a35278c7da36ffda53e5">0x9a...53e5</a>
+                    </div>
+                    <div class="block-txns">
+                        <a href="/block/9829590/txs">50 txns</a> in 12 secs
+                    </div>
+                    <div class="block-reward">0 ETH</div>
+                </div>
+            </div>
+            
+            <div class="block-item">
+                <div class="block-icon">Bk</div>
+                <div class="block-info">
+                    <a href="/block/9829589" class="block-num">9829589</a>
+                    <div class="block-time" data-timestamp="2025-12-13T06:08:12+00:00">1 mth ago</div>
+                </div>
+                <div class="block-meta">
+                    <div class="block-miner">
+                        Miner <a href="/address/0x13cb6ae34a13a0977f4d7101ebc24b87bb23f0d5">0x13...f0d5</a>
+                    </div>
+                    <div class="block-txns">
+                        <a href="/block/9829589/txs">92 txns</a> in 12 secs
+                    </div>
+                    <div class="block-reward">0 ETH</div>
+                </div>
+            </div>
+            
+        </div>
+        <a href="/blocks" class="view-all-btn">View all blocks</a>
+    </div>
+
+    <!-- Transactions -->
+    <div class="card list-card">
+        <div class="card-header">
+            <span>Latest Transactions</span>
+            <a href="/txs">View all transactions &rarr;</a>
+        </div>
+        <div class="new-txs-banner" id="new-txs-banner" style="display:none;" onclick="showNewTxs()">
+            <span id="new-txs-count">0</span> more transactions have come in. Click to load.
+        </div>
+        <div id="txs-list">
+            
+            <div class="tx-item">
+                <div class="tx-icon">TX</div>
+                <div class="tx-info">
+                    <div class="tx-hash-row">
+                        <a href="/tx/0x235e3a97c9c5ab062056010a9c74f358af33b06dba2c9336bdfe8470fbe13b50" class="hash tx-hash">0x235e3a97c9c5ab062056010a9c74f358af33b06dba2c9336bdfe8470fbe13b50</a>
+                        <span class="tx-time" data-timestamp="2025-12-13T06:09:12+00:00">1 mth ago</span>
+                    </div>
+                    <div class="tx-addrs">
+                        From <a href="/address/0xafe07fe37a2b37bb0b3e3bf04beb04b799910bd3">0xaf...0bd3</a>
+                        To <a href="/address/0xca11bde05977b3631167028862be2a173976ca11">0xca...ca11</a>
+                    </div>
+                </div>
+                <div class="tx-meta">
+                    <div class="tx-value">0 ETH</div>
+                    <div class="tx-value-label">Value</div>
+                </div>
+            </div>
+            
+            <div class="tx-item">
+                <div class="tx-icon">TX</div>
+                <div class="tx-info">
+                    <div class="tx-hash-row">
+                        <a href="/tx/0xb468a8dd161d1c8d5720a9156380a082413fb51de94750cb6c7ac67d30081500" class="hash tx-hash">0xb468a8dd161d1c8d5720a9156380a082413fb51de94750cb6c7ac67d30081500</a>
+                        <span class="tx-time" data-timestamp="2025-12-13T06:09:12+00:00">1 mth ago</span>
+                    </div>
+                    <div class="tx-addrs">
+                        From <a href="/address/0x55a07f9f7ed7f110c2ddd8f2f5d8677dc94af4e2">0x55...f4e2</a>
+                        To <a href="/address/0xea30c4b8b44078bbf8a6ef5b9f1ec1626c7848d9">0xea...48d9</a>
+                    </div>
+                </div>
+                <div class="tx-meta">
+                    <div class="tx-value">0 ETH</div>
+                    <div class="tx-value-label">Value</div>
+                </div>
+            </div>
+            
+            <div class="tx-item">
+                <div class="tx-icon">TX</div>
+                <div class="tx-info">
+                    <div class="tx-hash-row">
+                        <a href="/tx/0xe64d35787f6909bc619edf6871dc3e9d87d734010352b9f2c896f528087e8f3d" class="hash tx-hash">0xe64d35787f6909bc619edf6871dc3e9d87d734010352b9f2c896f528087e8f3d</a>
+                        <span class="tx-time" data-timestamp="2025-12-13T06:09:12+00:00">1 mth ago</span>
+                    </div>
+                    <div class="tx-addrs">
+                        From <a href="/address/0x55a07f9f7ed7f110c2ddd8f2f5d8677dc94af4e2">0x55...f4e2</a>
+                        To <a href="/address/0xea30c4b8b44078bbf8a6ef5b9f1ec1626c7848d9">0xea...48d9</a>
+                    </div>
+                </div>
+                <div class="tx-meta">
+                    <div class="tx-value">0 ETH</div>
+                    <div class="tx-value-label">Value</div>
+                </div>
+            </div>
+            
+            <div class="tx-item">
+                <div class="tx-icon">TX</div>
+                <div class="tx-info">
+                    <div class="tx-hash-row">
+                        <a href="/tx/0x864b01e1b7e2ab6fd3f16f3fb88cd7a98c14f20ba1911719748f7acb804e09fc" class="hash tx-hash">0x864b01e1b7e2ab6fd3f16f3fb88cd7a98c14f20ba1911719748f7acb804e09fc</a>
+                        <span class="tx-time" data-timestamp="2025-12-13T06:09:12+00:00">1 mth ago</span>
+                    </div>
+                    <div class="tx-addrs">
+                        From <a href="/address/0xc326dd4fc2b88157cb3fe2542507e75d54b0a875">0xc3...a875</a>
+                        To <a href="/address/0x73b668d8374ddb42c9e2f46fd5b754ac215495bc">0x73...95bc</a>
+                    </div>
+                </div>
+                <div class="tx-meta">
+                    <div class="tx-value">0 ETH</div>
+                    <div class="tx-value-label">Value</div>
+                </div>
+            </div>
+            
+            <div class="tx-item">
+                <div class="tx-icon">TX</div>
+                <div class="tx-info">
+                    <div class="tx-hash-row">
+                        <a href="/tx/0x4f91e571d6a0771e546d077b83a6e17be48b33d711d09c45cb555e8b1bfaa87d" class="hash tx-hash">0x4f91e571d6a0771e546d077b83a6e17be48b33d711d09c45cb555e8b1bfaa87d</a>
+                        <span class="tx-time" data-timestamp="2025-12-13T06:09:12+00:00">1 mth ago</span>
+                    </div>
+                    <div class="tx-addrs">
+                        From <a href="/address/0xa257e029d89846c878d05adaa3c33ea54b505f86">0xa2...5f86</a>
+                        To <a href="/address/0x73b668d8374ddb42c9e2f46fd5b754ac215495bc">0x73...95bc</a>
+                    </div>
+                </div>
+                <div class="tx-meta">
+                    <div class="tx-value">0 ETH</div>
+                    <div class="tx-value-label">Value</div>
+                </div>
+            </div>
+            
+        </div>
+        <a href="/txs" class="view-all-btn">View all transactions</a>
+    </div>
+</div>
+
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container footer-inner">
+            <div class="footer-left">
+                <div class="footer-text">
+                    Powered by <a href="https://ethereum.org">Ethereum</a>
+                </div>
+                <div class="footer-text">
+                    Sepolia Testnet Explorer
+                </div>
+            </div>
+            <div class="footer-links">
+                <a href="/terms">Terms</a>
+                <span class="footer-divider">|</span>
+                <a href="/privacy">Privacy</a>
+            </div>
+        </div>
+    </footer>
+
+    
+<script>
+let pendingTxCount = 0;
+async function showNewTxs() {
+    const txsList = document.getElementById('txs-list');
+    const banner = document.getElementById('new-txs-banner');
+    if (!txsList) return;
+    
+    try {
+        const resp = await fetch('http://127.0.0.1:4901/api/v2/transactions?limit=10');
+        const data = await resp.json();
+        if (data.items) {
+            txsList.innerHTML = '';
+            data.items.forEach(tx => {
+                const row = createTxRow(tx);
+                txsList.appendChild(row);
+            });
+        }
+    } catch (e) {
+        console.error('Failed to fetch transactions:', e);
+    }
+    
+    pendingTxCount = 0;
+    banner.style.display = 'none';
+}
+
+function truncateAddr(addr) {
+    if (!addr) return '';
+    return addr.slice(0, 6) + '...' + addr.slice(-4);
+}
+
+function updateCounter(id, increment) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const text = el.textContent.replace(/,/g, '');
+    const num = parseInt(text, 10);
+    if (!isNaN(num)) {
+        el.textContent = (num + increment).toLocaleString();
+    }
+}
+
+function formatRelativeTime(timestamp) {
+    const dt = new Date(timestamp);
+    const now = new Date();
+    const diffMs = now - dt;
+    const secs = Math.floor(diffMs / 1000);
+    if (secs < 60) return secs + 's ago';
+    const mins = Math.floor(secs / 60);
+    if (mins < 60) return mins + 'm ago';
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return hours + 'h ago';
+    return Math.floor(hours / 24) + 'd ago';
+}
+
+function formatWeiToEth(wei) {
+    try {
+        const w = BigInt(wei);
+        if (w === 0n) return '0';
+        const WEI_PER_ETH = 1000000000000000000n;
+        const decimals = w < 1000000000000n ? 8 : w < 1000000000000000n ? 6 : 4;
+        const intPart = w / WEI_PER_ETH;
+        const fracPart = w % WEI_PER_ETH;
+        const scale = 10n ** BigInt(18 - decimals);
+        const fracBase = 10n ** BigInt(decimals);
+        let frac = fracPart / scale;
+        const remainder = fracPart % scale;
+        if (remainder * 2n >= scale) frac += 1n;
+        let carryInt = intPart;
+        if (frac >= fracBase) {
+            carryInt += 1n;
+            frac -= fracBase;
+        }
+        const fracStr = frac.toString().padStart(decimals, '0');
+        return carryInt.toString() + '.' + fracStr;
+    } catch (e) {
+        return '0';
+    }
+}
+
+function createBlockRow(block) {
+    const height = block.height || block.block_number;
+    const txCount = block.tx_count || block.transaction_count || 0;
+    const miner = block.miner?.hash || '';
+    const timestamp = block.timestamp;
+    
+    const div = document.createElement('div');
+    div.className = 'block-item';
+    div.style.animation = 'fadeIn 0.3s ease-out';
+    div.innerHTML = `
+        <div class="block-icon">Bk</div>
+        <div class="block-info">
+            <a href="/block/${height}" class="block-num">${height}</a>
+            <div class="block-time"${timestamp ? ` data-timestamp="${timestamp}"` : ''}>${timestamp ? formatRelativeTime(timestamp) : '-'}</div>
+        </div>
+        <div class="block-meta">
+            <div class="block-miner">
+                Miner ${miner ? `<a href="/address/${miner}">${truncateAddr(miner)}</a>` : '-'}
+            </div>
+            <div class="block-txns">
+                <a href="/block/${height}/transactions">${txCount} txns</a> in 12 secs
+            </div>
+            <div class="block-reward">0 ETH</div>
+        </div>
+    `;
+    return div;
+}
+
+function createTxRow(tx) {
+    const hash = tx.hash;
+    const from = tx.from?.hash || '';
+    const to = tx.to?.hash;
+    const value = formatWeiToEth(tx.value || '0');
+    const timestamp = tx.timestamp;
+    
+    const div = document.createElement('div');
+    div.className = 'tx-item';
+    div.style.animation = 'fadeIn 0.3s ease-out';
+    div.innerHTML = `
+        <div class="tx-icon">TX</div>
+        <div class="tx-info">
+            <div class="tx-hash-row">
+                <a href="/tx/${hash}" class="hash tx-hash">${hash}</a>
+                <span class="tx-time"${timestamp ? ` data-timestamp="${timestamp}"` : ''}>${timestamp ? formatRelativeTime(timestamp) : ''}</span>
+            </div>
+            <div class="tx-addrs">
+                From <a href="/address/${from}">${truncateAddr(from)}</a>
+                To ${to ? `<a href="/address/${to}">${truncateAddr(to)}</a>` : '<span style="color: #6c757d;">Contract Create</span>'}
+            </div>
+        </div>
+        <div class="tx-meta">
+            <div class="tx-value">${value} ETH</div>
+            <div class="tx-value-label">Value</div>
+        </div>
+    `;
+    return div;
+}
+
+(function() {
+    const WS_URL = 'wss://sepolia.53627.org/socket/v2/websocket?vsn=2.0.0';
+    const MAX_BLOCKS = 6;
+    let ws = null;
+    let heartbeatInterval = null;
+    var reconnectAttempts = 0;
+    var MAX_RECONNECT_ATTEMPTS = 10;
+    var BASE_DELAY = 1000;
+
+    function getReconnectDelay() {
+        return Math.min(BASE_DELAY * Math.pow(2, reconnectAttempts), 30000);
+    }
+
+    function handleMessage(msg) {
+        if (!Array.isArray(msg) || msg.length < 5) return;
+        const [, , topic, eventName, payload] = msg;
+        
+        if (eventName === 'new_block' && topic === 'blocks:new_block') {
+            const blocksList = document.getElementById('blocks-list');
+            if (blocksList && payload.block) {
+                const newRow = createBlockRow(payload.block);
+                blocksList.insertBefore(newRow, blocksList.firstChild);
+                while (blocksList.children.length > MAX_BLOCKS) {
+                    blocksList.removeChild(blocksList.lastChild);
+                }
+                
+                const txCount = payload.block.tx_count || payload.block.transactions_count || 0;
+                pendingTxCount += txCount;
+                
+                const banner = document.getElementById('new-txs-banner');
+                const countEl = document.getElementById('new-txs-count');
+                if (banner && countEl && pendingTxCount > 0) {
+                    countEl.textContent = pendingTxCount;
+                    banner.style.display = 'block';
+                }
+                
+                updateCounter('total-blocks', 1);
+                updateCounter('total-txs', txCount);
+            }
+        }
+    }
+
+    function connectWebSocket() {
+        // Use CompressedWebSocket if available, else fallback to native
+        const WSClass = window.CompressedWebSocket || WebSocket;
+        ws = new WSClass(WS_URL);
+        
+        if (WSClass === WebSocket) {
+            // Native WebSocket
+            ws.onopen = function() {
+                reconnectAttempts = 0;
+                console.log('WebSocket connected to', WS_URL);
+                ws.send(JSON.stringify([null, "1", "blocks:new_block", "phx_join", {}]));
+                ws.send(JSON.stringify([null, "2", "transactions:new_transaction", "phx_join", {}]));
+                heartbeatInterval = setInterval(function() {
+                    ws.send(JSON.stringify([null, null, "phoenix", "heartbeat", {}]));
+                }, 30000);
+            };
+            ws.onmessage = function(event) {
+                try {
+                    handleMessage(JSON.parse(event.data));
+                } catch (e) {
+                    console.error('WS parse error:', e);
+                }
+            };
+        } else {
+            // CompressedWebSocket - handles decompression internally
+            ws.onopen = function() {
+                reconnectAttempts = 0;
+                console.log('CompressedWebSocket connected to', WS_URL, 'compression:', ws.compressionEnabled);
+                ws.send([null, "1", "blocks:new_block", "phx_join", {}]);
+                ws.send([null, "2", "transactions:new_transaction", "phx_join", {}]);
+                heartbeatInterval = setInterval(function() {
+                    ws.send([null, null, "phoenix", "heartbeat", {}]);
+                }, 30000);
+            };
+            ws.onmessage = function(msg) {
+                handleMessage(msg);
+            };
+        }
+
+        ws.onclose = function() {
+            console.log('WebSocket closed');
+            if (heartbeatInterval) clearInterval(heartbeatInterval);
+            if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+                var delay = getReconnectDelay();
+                console.log('Reconnecting in ' + delay + 'ms (attempt ' + (reconnectAttempts + 1) + ')');
+                reconnectAttempts++;
+                setTimeout(connectWebSocket, delay);
+            } else {
+                console.log('Max reconnection attempts reached');
+            }
+        };
+
+        ws.onerror = function(e) {
+            console.error('WebSocket error:', e);
+        };
+    }
+
+    const style = document.createElement('style');
+    style.textContent = '@keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }';
+    document.head.appendChild(style);
+
+    // Sync Total Blocks with latest block height on page load
+    const blocksList = document.getElementById('blocks-list');
+    if (blocksList && blocksList.firstElementChild) {
+        const firstBlockLink = blocksList.querySelector('.block-num');
+        if (firstBlockLink) {
+            const latestHeight = parseInt(firstBlockLink.textContent.replace(/,/g, ''), 10);
+            const totalBlocksEl = document.getElementById('total-blocks');
+            if (totalBlocksEl && !isNaN(latestHeight)) {
+                totalBlocksEl.textContent = latestHeight.toLocaleString();
+            }
+        }
+    }
+
+    setInterval(function() {
+        document.querySelectorAll('[data-timestamp]').forEach(function(el) {
+            const ts = el.getAttribute('data-timestamp');
+            if (ts) {
+                el.textContent = formatRelativeTime(ts);
+            }
+        });
+    }, 1000);
+
+    // Load ws-zstd.js after render, then connect
+    const script = document.createElement('script');
+    script.src = '/static/js/ws-zstd.js';
+    script.async = true;
+    script.onload = connectWebSocket;
+    script.onerror = connectWebSocket; // Fallback to native WebSocket
+    document.head.appendChild(script);
+})();
+</script>
+
+    <script>
+    document.querySelectorAll('.copy-btn[data-copy]').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            navigator.clipboard.writeText(this.dataset.copy).catch(function(err) {
+                console.error('Copy failed:', err);
+            });
+        });
+    });
+
+    // Dropdown menu hover handling
+    document.querySelectorAll('.nav-dropdown').forEach(function(dropdown) {
+        var menu = dropdown.querySelector('.nav-menu-inner');
+        var timeout;
+        
+        function showMenu() {
+            clearTimeout(timeout);
+            menu.classList.add('is-open');
+        }
+        
+        function hideMenu(e) {
+            var related = e.relatedTarget;
+            if (related && dropdown.contains(related)) {
+                return;
+            }
+            menu.classList.remove('is-open');
+        }
+        
+        dropdown.addEventListener('mouseenter', showMenu);
+        dropdown.addEventListener('mouseleave', hideMenu);
+        
+        var menuWrapper = dropdown.querySelector('.nav-menu');
+        if (menuWrapper) {
+            menuWrapper.addEventListener('mouseenter', showMenu);
+        }
+    });
+    </script>
+</body>
+</html>

@@ -29,13 +29,12 @@ defmodule FrontendExWeb.Router do
   scope "/", FrontendExWeb do
     pipe_through :fast_browser
 
+    get "/", HomeController, :index
     get "/exportData", ExportDataController, :index
   end
 
   scope "/", FrontendExWeb do
     pipe_through :browser
-
-    get "/", PageController, :home
   end
 
   # Other scopes may use custom stacks.

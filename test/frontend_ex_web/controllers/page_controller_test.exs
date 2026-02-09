@@ -1,8 +1,8 @@
-defmodule FrontendExWeb.PageControllerTest do
+defmodule FrontendExWeb.HomeControllerTest do
   use FrontendExWeb.ConnCase
 
   test "GET /", %{conn: conn} do
     conn = get(conn, ~p"/")
-    assert html_response(conn, 200) =~ "Peace of mind from prototype to production"
+    assert html_response(conn, 200) =~ "Sepolia explorer"
   end
 end

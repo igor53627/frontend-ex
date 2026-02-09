@@ -24,7 +24,8 @@ Browser
   - Trims the final trailing newline via `FrontendExWeb.Plugs.TrimTrailingNewline` to match Askama output.
 
 - `:browser`
-  - Standard Phoenix pipeline (currently used only for the default `/` page).
+  - Standard Phoenix pipeline (currently unused).
+  - Reserved for future non-parity pages (e.g. LiveView/admin/debug) where sessions/CSRF are acceptable.
 
 ## Skins
 

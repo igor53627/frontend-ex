@@ -1,2 +1,41 @@
-{"ok":true}
-
+{
+  "average_block_time": 12000.0,
+  "coin_price": "3088.44",
+  "coin_price_change_percentage": null,
+  "gas_price_updated_at": null,
+  "gas_prices": {
+    "average": {
+      "base_fee": null,
+      "fiat_price": null,
+      "price": 0.00100001,
+      "priority_fee": null,
+      "time": null
+    },
+    "fast": {
+      "base_fee": null,
+      "fiat_price": null,
+      "price": 0.00100001,
+      "priority_fee": null,
+      "time": null
+    },
+    "slow": {
+      "base_fee": null,
+      "fiat_price": null,
+      "price": 0.00100001,
+      "priority_fee": null,
+      "time": null
+    }
+  },
+  "gas_prices_update_in": 0,
+  "gas_used_today": "0",
+  "market_cap": null,
+  "network_utilization_percentage": 0.0,
+  "static_gas_price": null,
+  "total_addresses": "52257297",
+  "total_blocks": "9829593",
+  "total_gas_used": "0",
+  "total_token_transfers": "740515114",
+  "total_transactions": "816515393",
+  "transactions_today": null,
+  "tvl": null
+}
