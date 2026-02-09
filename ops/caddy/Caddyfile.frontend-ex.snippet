@@ -1,0 +1,43 @@
+# frontend-ex route snippet for /mnt/sepolia/blockscout-proxy/Caddyfile on aya.
+#
+# Notes:
+# - frontend-ex currently serves only a subset of fast routes.
+# - Keep fallback routing to Blockscout UI for unported pages (e.g. /txs, /blocks).
+#
+# Upstream:
+# - frontend-ex release should listen on 127.0.0.1:5174 (see systemd env example).
+#
+
+# ========== FRONTEND-EX ROUTES ==========
+
+# frontend-ex static assets (parity CSS/JS under /static/**)
+handle /static/* {
+    reverse_proxy 127.0.0.1:5174
+    header Cache-Control "public, max-age=31536000, immutable"
+    header X-Frontend "frontend-ex"
+}
+
+# Export page (no upstream calls)
+handle /exportData* {
+    reverse_proxy 127.0.0.1:5174
+    header X-Frontend "frontend-ex"
+}
+
+# Block details and txs subpage
+handle /block/* {
+    reverse_proxy 127.0.0.1:5174
+    header X-Frontend "frontend-ex"
+}
+
+# Transaction details
+handle /tx/* {
+    reverse_proxy 127.0.0.1:5174
+    header X-Frontend "frontend-ex"
+}
+
+# Address details
+handle /address/* {
+    reverse_proxy 127.0.0.1:5174
+    header X-Frontend "frontend-ex"
+}
+

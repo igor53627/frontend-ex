@@ -1,9 +1,10 @@
 ---
 id: TASK-16
 title: 'Deployment: mix release + aya (podman) + Caddy routing'
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-02-08 13:38'
+updated_date: '2026-02-09 10:15'
 labels:
   - deploy
   - ops

@@ -1,0 +1,19 @@
+[Unit]
+Description=frontend-ex (Phoenix SSR)
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/mnt/sepolia/frontend-ex/current
+EnvironmentFile=/mnt/sepolia/frontend-ex/frontend-ex.env
+ExecStart=/mnt/sepolia/frontend-ex/current/bin/frontend_ex start
+Restart=always
+RestartSec=2
+TimeoutStopSec=10
+KillSignal=SIGTERM
+SyslogIdentifier=frontend-ex
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
+
