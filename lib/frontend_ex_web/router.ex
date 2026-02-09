@@ -37,9 +37,16 @@ defmodule FrontendExWeb.Router do
   end
 
   scope "/", FrontendExWeb do
+    # Ops/debug routes: no SSR pipeline, no trailing-newline trimming.
+    get "/health", OpsController, :health
+    get "/stats", OpsController, :stats
+  end
+
+  scope "/", FrontendExWeb do
     pipe_through :fast_browser
 
     get "/", HomeController, :index
+    get "/search", SearchController, :index
     get "/block/:id", BlockController, :show
     get "/block/:id/txs", BlockController, :txs
     get "/tx/:hash", TxController, :show

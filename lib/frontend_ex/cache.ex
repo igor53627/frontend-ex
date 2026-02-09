@@ -58,6 +58,9 @@ defmodule FrontendEx.Cache do
   @spec clear(GenServer.server()) :: :ok
   def clear(server), do: GenServer.call(server, :clear)
 
+  @spec stats(GenServer.server()) :: %{entries: non_neg_integer(), inflight: non_neg_integer()}
+  def stats(server), do: GenServer.call(server, :stats)
+
   @spec get_or_fetch(
           GenServer.server(),
           key(),
@@ -126,6 +129,20 @@ defmodule FrontendEx.Cache do
     end)
 
     {:reply, :ok, %{state | inflight: %{}}}
+  end
+
+  def handle_call(:stats, _from, state) do
+    entries = :ets.info(state.table, :size) || 0
+    inflight = map_size(state.inflight)
+
+    max_entries =
+      case state.max_entries do
+        :infinity -> nil
+        n when is_integer(n) and n > 0 -> n
+        _ -> nil
+      end
+
+    {:reply, %{entries: entries, inflight: inflight, max_entries: max_entries}, state}
   end
 
   def handle_call({:get_or_fetch, key, ttl_ms, fun}, from, state) do

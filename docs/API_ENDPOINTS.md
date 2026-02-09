@@ -13,6 +13,15 @@ Parity routes (pipeline `:fast_browser`):
     - `GET /api/v2/blocks?limit=6` (SWR)
     - `GET /api/v2/transactions?items_count=6` (SWR)
 
+- `GET /search?q=<q>`
+  - Redirect helper used by the Classic search form.
+  - Behavior:
+    - empty `q` -> `302 /`
+    - `0x` + 40 hex -> `302 /address/<q>`
+    - `0x` + 64 hex -> `302 /tx/<q>`
+    - all digits -> `302 /block/<q>`
+    - otherwise -> `302 <BLOCKSCOUT_URL>/search?q=<q>`
+
 - `GET /block/:id`
   - SSR HTML block details page
   - Upstream calls (Blockscout API v2):
@@ -64,6 +73,14 @@ Static assets (served by `Plug.Static`, not the router):
 Non-parity routes (pipeline `:browser`):
 
 - (none yet)
+
+Ops/debug routes (no router pipeline):
+
+- `GET /health`
+  - `200 OK` with body `OK` (text/plain).
+
+- `GET /stats`
+  - `200 OK` JSON with cache sizes/config (used for debugging and scraping).
 
 The intended full route list is the same as `fast-frontend` (see `backlog/docs/doc-1 - fast-frontend-inventory.md`).
 

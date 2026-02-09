@@ -95,6 +95,9 @@ defmodule FrontendEx.Cache.SWR do
   @spec clear(GenServer.server()) :: :ok
   def clear(server), do: GenServer.call(server, :clear)
 
+  @spec stats(GenServer.server()) :: %{entries: non_neg_integer(), inflight: non_neg_integer()}
+  def stats(server), do: GenServer.call(server, :stats)
+
   @impl true
   def init(opts) do
     table = :ets.new(__MODULE__, [:set, :private, read_concurrency: true])
@@ -137,6 +140,27 @@ defmodule FrontendEx.Cache.SWR do
     end)
 
     {:reply, :ok, %{state | inflight: %{}, refresh_inflight: %{}, refresh_waiters: %{}}}
+  end
+
+  def handle_call(:stats, _from, state) do
+    entries = :ets.info(state.table, :size) || 0
+    inflight = map_size(state.inflight)
+    refresh_inflight = map_size(state.refresh_inflight)
+
+    max_entries =
+      case state.max_entries do
+        :infinity -> nil
+        n when is_integer(n) and n > 0 -> n
+        _ -> nil
+      end
+
+    {:reply,
+     %{
+       entries: entries,
+       inflight: inflight,
+       refresh_inflight: refresh_inflight,
+       max_entries: max_entries
+     }, state}
   end
 
   def handle_call({:await_refresh, key}, from, state) do
