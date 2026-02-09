@@ -28,6 +28,13 @@ Parity routes (pipeline `:fast_browser`):
     - `GET /api/v2/stats`
     - `GET /api/v2/blocks?limit=50`
 
+- `GET /txs`
+  - SSR HTML transactions list page
+  - Supports cursor-based pagination via the `cursor=` UI param (see "Cursor Pagination" section below).
+  - Upstream calls (Blockscout API v2):
+    - `GET /api/v2/stats`
+    - `GET /api/v2/transactions?items_count=<ps>` (plus cursor params from `next_page_params`)
+
 - `GET /block/:id`
   - SSR HTML block details page
   - Upstream calls (Blockscout API v2):

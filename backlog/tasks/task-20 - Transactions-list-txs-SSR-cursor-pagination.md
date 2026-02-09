@@ -1,9 +1,10 @@
 ---
 id: TASK-20
 title: 'Transactions list: /txs (SSR + cursor pagination)'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-02-09 15:04'
+updated_date: '2026-02-09 21:46'
 labels:
   - pages
   - tx
@@ -20,9 +21,9 @@ priority: high
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 GET /txs renders SSR for both skins (or FF_SKIN=classic at minimum)
-- [ ] #2 Cursor pagination uses next_page_params (no fake page numbers)
-- [ ] #3 Golden HTML snapshot matches Rust
+- [x] #1 GET /txs renders SSR for both skins (or FF_SKIN=classic at minimum)
+- [x] #2 Cursor pagination uses next_page_params (no fake page numbers)
+- [x] #3 Golden HTML snapshot matches Rust
 <!-- AC:END -->
 
 ## Description
@@ -40,3 +41,9 @@ priority: high
 - `cursor`: encoded cursor params derived from `next_page_params`
 - Pull `coin_price`, `gas_price`, and `total_transactions` from `/api/v2/stats` (used in header).
 - Testing: add fixtures + golden snapshot test for `/txs` for both skins (or at least `FF_SKIN=classic`).
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Implemented `/txs` SSR for both skins (Classic + 53627), including `ps` page size normalization, cursor passthrough, and `next_page_params` encoding for cursor pagination. Added fixtures, Rust golden HTML snapshots, parity tests, and a controller test asserting cursor encoding.
+<!-- SECTION:FINAL_SUMMARY:END -->
