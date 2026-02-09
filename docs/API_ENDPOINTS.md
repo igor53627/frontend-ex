@@ -35,6 +35,12 @@ Parity routes (pipeline `:fast_browser`):
     - `GET /api/v2/stats`
     - `GET /api/v2/transactions?items_count=<ps>` (plus cursor params from `next_page_params`)
 
+- `GET /tokens`
+  - SSR HTML tokens list page
+  - Upstream calls (Blockscout API v2):
+    - `GET /api/v2/stats`
+    - `GET /api/v2/tokens?limit=50`
+
 - `GET /block/:id`
   - SSR HTML block details page
   - Upstream calls (Blockscout API v2):

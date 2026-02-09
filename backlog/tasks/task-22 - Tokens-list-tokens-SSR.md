@@ -1,9 +1,10 @@
 ---
 id: TASK-22
 title: 'Tokens list: /tokens (SSR)'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-02-09 15:04'
+updated_date: '2026-02-09 22:26'
 labels:
   - pages
   - tokens
@@ -19,8 +20,8 @@ priority: high
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 GET /tokens renders SSR
-- [ ] #2 HTML snapshot matches Rust (fixtures)
+- [x] #1 GET /tokens renders SSR
+- [x] #2 HTML snapshot matches Rust (fixtures)
 <!-- AC:END -->
 
 ## Description
@@ -35,3 +36,9 @@ Implement the missing `/tokens` page (SSR) to match `fast-frontend` output and f
 - Blockscout API: `/api/v2/tokens?limit=50` and `/api/v2/stats` (coin_price/gas_price header).
 - Ensure token row formatting/parity (name/symbol/icon, links to `/token/<address>`).
 - Testing: add fixtures + golden snapshot test for `/tokens`.
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Implemented `/tokens` SSR for both skins with `GET /api/v2/tokens?limit=50` + `GET /api/v2/stats` and byte-for-byte HTML parity tests against Rust goldens.
+<!-- SECTION:FINAL_SUMMARY:END -->

@@ -49,6 +49,7 @@ defmodule FrontendExWeb.Router do
     get "/search", SearchController, :index
     get "/blocks", BlocksController, :index
     get "/txs", TxsController, :index
+    get "/tokens", TokensController, :index
     get "/block/:id", BlockController, :show
     get "/block/:id/txs", BlockController, :txs
     get "/tx/:hash", TxController, :show
