@@ -2,8 +2,11 @@
 
 Operational runbooks will live in this directory.
 
-Current status:
+## Index
+
+- `deploy.md` - Deploy/rollback `frontend-ex` on `aya` and restart Caddy (podman).
+
+## Notes
 
 - Service is in migration; only a subset of routes are implemented.
 - Deployment/cutover steps are tracked in backlog tasks.
-

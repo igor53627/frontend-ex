@@ -10,6 +10,8 @@ This repo is intentionally "un-Phoenix-y" in parity-critical paths: we prefer pl
 - `docs/ARCHITECTURE.md`
 - `docs/DEPLOYMENT.md`
 - `docs/API_ENDPOINTS.md`
+- `docs/RUNBOOKS/README.md`
+- `docs/ADR/`
 
 ## Local Development
 
