@@ -7,17 +7,25 @@ defmodule FrontendExWeb.Plugs.TrimTrailingNewline do
 
   def call(conn, _opts) do
     register_before_send(conn, fn conn ->
-      body = conn.resp_body
+      content_type = conn |> get_resp_header("content-type") |> List.first()
 
-      cond do
-        is_binary(body) ->
-          %{conn | resp_body: trim_binary_trailing_newlines(body)}
+      # Only trim SSR HTML responses. Other responses (e.g. CSV exports) must
+      # preserve trailing newlines for parity with Rust.
+      if is_binary(content_type) and not String.starts_with?(content_type, "text/html") do
+        conn
+      else
+        body = conn.resp_body
 
-        is_list(body) ->
-          %{conn | resp_body: trim_iodata_trailing_newlines(body)}
+        cond do
+          is_binary(body) ->
+            %{conn | resp_body: trim_binary_trailing_newlines(body)}
 
-        true ->
-          conn
+          is_list(body) ->
+            %{conn | resp_body: trim_iodata_trailing_newlines(body)}
+
+          true ->
+            conn
+        end
       end
     end)
   end

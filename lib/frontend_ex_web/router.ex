@@ -50,6 +50,9 @@ defmodule FrontendExWeb.Router do
     get "/blocks", BlocksController, :index
     get "/txs", TxsController, :index
     get "/tokens", TokensController, :index
+    get "/nft-transfers", NftController, :transfers
+    get "/nft-latest-mints", NftController, :latest_mints
+    get "/nft-latest-mints.csv", NftController, :latest_mints_csv
     get "/block/:id", BlockController, :show
     get "/block/:id/txs", BlockController, :txs
     get "/tx/:hash", TxController, :show

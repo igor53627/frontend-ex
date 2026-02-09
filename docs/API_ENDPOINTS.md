@@ -41,6 +41,26 @@ Parity routes (pipeline `:fast_browser`):
     - `GET /api/v2/stats`
     - `GET /api/v2/tokens?limit=50`
 
+- `GET /nft-transfers`
+  - SSR HTML NFT transfers page
+  - Upstream calls (Blockscout API v2):
+    - `GET /api/v2/stats`
+    - `GET /api/v2/token-transfers?items_count=<ps>&type=ERC-721,ERC-1155` (cursor-based pagination)
+
+- `GET /nft-latest-mints`
+  - SSR HTML NFT latest mints page (filters mint events from token transfers)
+  - Upstream calls (Blockscout API v2):
+    - `GET /api/v2/stats`
+    - `GET /api/v2/token-transfers?items_count=<ps>&type=ERC-721,ERC-1155` (cursor-based pagination)
+
+- `GET /nft-latest-mints.csv`
+  - CSV export (attachment `nft-latest-mints.csv`)
+  - Query params (parity with Rust):
+    - `mode=date` with `start_date=YYYY-MM-DD` and `end_date=YYYY-MM-DD` (default)
+    - `mode=block` with `start_block=<u64>` and `end_block=<u64>`
+  - Upstream calls (Blockscout API v2):
+    - `GET /api/v2/token-transfers?items_count=<ps>&type=ERC-721,ERC-1155` (paged up to 50 requests, up to 1000 rows)
+
 - `GET /token/:address`
   - SSR HTML token page (overview + transfers)
   - Upstream calls (Blockscout API v2):

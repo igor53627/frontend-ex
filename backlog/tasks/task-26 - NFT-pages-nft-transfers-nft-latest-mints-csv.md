@@ -1,7 +1,7 @@
 ---
 id: TASK-26
 title: 'NFT pages: /nft-transfers + /nft-latest-mints (+ csv)'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-02-09 15:05'
 labels:
@@ -21,8 +21,9 @@ priority: high
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 - [ ] #1 GET /nft-transfers renders SSR with cursor pagination
-- [ ] #2 GET /nft-latest-mints renders SSR with cursor pagination
-- [ ] #3 GET /nft-latest-mints.csv exports CSV matching Rust
+- [x] #1 GET /nft-transfers renders SSR with cursor pagination
+- [x] #2 GET /nft-latest-mints renders SSR with cursor pagination
+- [x] #3 GET /nft-latest-mints.csv exports CSV matching Rust
 <!-- AC:END -->
 
 ## Description
@@ -46,3 +47,13 @@ Port the NFT endpoints from `fast-frontend` so the Classic nav item “NFT Trans
 - Cursor pagination must use `next_page_params` (no page numbers).
 - CSV export must match Rust for columns, ordering, and filtering options (see `NftMintsExportQuery` in Rust).
 - Testing: golden snapshots for HTML pages and fixture-based CSV snapshot for export.
+
+## Final Summary
+
+- Implemented SSR routes:
+  - `GET /nft-transfers`
+  - `GET /nft-latest-mints`
+  - `GET /nft-latest-mints.csv`
+- Added Blockscout API fixtures for `/api/v2/token-transfers` with the NFT type filter and pagination cursor.
+- Generated Rust goldens and added byte-for-byte parity tests for both skins (HTML) and CSV export.
+- Updated `docs/API_ENDPOINTS.md` with the new routes and upstream calls.
