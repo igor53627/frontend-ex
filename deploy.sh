@@ -115,7 +115,7 @@ mkdir -p releases
 keep=$KEEP_RELEASES
 if [ \"\$keep\" -gt 0 ]; then
   # Releases are named by timestamp (YYYYmmddHHMMSS). Sort by name, not mtime,
-  # because `rsync -a` can preserve directory mtimes and break `ls -t` ordering.
+  # because rsync -a can preserve directory mtimes and break ls -t ordering.
   old_releases=\$(ls -1 releases 2>/dev/null | sort -r | tail -n +\$((keep + 1)) || true)
   if [ -n \"\$old_releases\" ]; then
     echo \"\$old_releases\" | while read -r rel; do

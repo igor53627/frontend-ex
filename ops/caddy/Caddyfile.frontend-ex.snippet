@@ -1,49 +1,186 @@
 # frontend-ex route snippet for /mnt/sepolia/blockscout-proxy/Caddyfile on aya.
 #
-# Notes:
-# - frontend-ex currently serves only a subset of fast routes.
-# - Keep fallback routing to Blockscout UI for unported pages (e.g. /txs, /blocks).
-#
 # Upstream:
-# - frontend-ex release should listen on 127.0.0.1:5174 (see systemd env example).
+# - frontend-ex release listens on 127.0.0.1:5174 (see ops/systemd/frontend-ex.env.example).
+#
+# Important:
+# - frontend-ex enables `force_ssl` in production and relies on `X-Forwarded-Proto` from the edge.
+# - Caddy's reverse_proxy sets `X-Forwarded-Proto` based on its own scheme (http), which can cause
+#   HTTPS redirect loops behind Cloudflare.
+# - Preserve the incoming header explicitly with:
+#     header_up X-Forwarded-Proto {http.request.header.X-Forwarded-Proto}
+#
+# Placement:
+# - Put these handle blocks ABOVE any fast-frontend (Rust) fallback handles so they take precedence.
 #
 
 # ========== FRONTEND-EX ROUTES ==========
 
 # Home page
-@frontend_ex_root path /
-handle @frontend_ex_root {
-    reverse_proxy 127.0.0.1:5174
+handle / {
+    reverse_proxy 127.0.0.1:5174 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-Proto {http.request.header.X-Forwarded-Proto}
+    }
+    header Cache-Control "public, no-cache, no-store, must-revalidate"
     header X-Frontend "frontend-ex"
 }
 
-# frontend-ex static assets (parity CSS/JS under /static/**)
+# Static assets (parity CSS/JS under /static/**)
 handle /static/* {
-    reverse_proxy 127.0.0.1:5174
+    reverse_proxy 127.0.0.1:5174 {
+        header_up Host {host}
+        header_up X-Forwarded-Proto {http.request.header.X-Forwarded-Proto}
+    }
     header Cache-Control "public, max-age=31536000, immutable"
     header X-Frontend "frontend-ex"
 }
 
 # Export page (no upstream calls)
 handle /exportData* {
-    reverse_proxy 127.0.0.1:5174
+    reverse_proxy 127.0.0.1:5174 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-Proto {http.request.header.X-Forwarded-Proto}
+    }
     header X-Frontend "frontend-ex"
 }
 
-# Block details and txs subpage
-handle /block/* {
-    reverse_proxy 127.0.0.1:5174
+# Ops routes
+handle /health {
+    reverse_proxy 127.0.0.1:5174 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-Proto {http.request.header.X-Forwarded-Proto}
+    }
     header X-Frontend "frontend-ex"
 }
 
-# Transaction details
+handle /stats {
+    reverse_proxy 127.0.0.1:5174 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-Proto {http.request.header.X-Forwarded-Proto}
+    }
+    header X-Frontend "frontend-ex"
+}
+
+# Tx share assets: keep upstream Cache-Control (og-image is max-age=300 in app)
+handle /tx/*/og-image.svg {
+    reverse_proxy 127.0.0.1:5174 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-Proto {http.request.header.X-Forwarded-Proto}
+    }
+    header X-Frontend "frontend-ex"
+}
+
+# Transaction pages
 handle /tx/* {
-    reverse_proxy 127.0.0.1:5174
+    reverse_proxy 127.0.0.1:5174 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-Proto {http.request.header.X-Forwarded-Proto}
+    }
+    header Cache-Control "public, max-age=60, stale-while-revalidate=3600"
     header X-Frontend "frontend-ex"
 }
 
-# Address details
+# Block pages
+handle /block/* {
+    reverse_proxy 127.0.0.1:5174 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-Proto {http.request.header.X-Forwarded-Proto}
+    }
+    header Cache-Control "public, max-age=300, stale-while-revalidate=86400"
+    header X-Frontend "frontend-ex"
+}
+
+# Address pages
 handle /address/* {
-    reverse_proxy 127.0.0.1:5174
+    reverse_proxy 127.0.0.1:5174 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-Proto {http.request.header.X-Forwarded-Proto}
+    }
+    header Cache-Control "public, no-cache, no-store, must-revalidate"
+    header X-Frontend "frontend-ex"
+}
+
+# Lists/search
+handle /blocks {
+    reverse_proxy 127.0.0.1:5174 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-Proto {http.request.header.X-Forwarded-Proto}
+    }
+    header Cache-Control "public, no-cache, no-store, must-revalidate"
+    header X-Frontend "frontend-ex"
+}
+
+handle /txs {
+    reverse_proxy 127.0.0.1:5174 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-Proto {http.request.header.X-Forwarded-Proto}
+    }
+    header Cache-Control "public, no-cache, no-store, must-revalidate"
+    header X-Frontend "frontend-ex"
+}
+
+handle /search {
+    reverse_proxy 127.0.0.1:5174 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-Proto {http.request.header.X-Forwarded-Proto}
+    }
+    header X-Frontend "frontend-ex"
+}
+
+handle /tokens {
+    reverse_proxy 127.0.0.1:5174 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-Proto {http.request.header.X-Forwarded-Proto}
+    }
+    header Cache-Control "public, max-age=30, stale-while-revalidate=300"
+    header X-Frontend "frontend-ex"
+}
+
+handle /token/* {
+    reverse_proxy 127.0.0.1:5174 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-Proto {http.request.header.X-Forwarded-Proto}
+    }
+    header X-Frontend "frontend-ex"
+}
+
+handle /nft-transfers {
+    reverse_proxy 127.0.0.1:5174 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-Proto {http.request.header.X-Forwarded-Proto}
+    }
+    header X-Frontend "frontend-ex"
+}
+
+handle /nft-latest-mints.csv {
+    reverse_proxy 127.0.0.1:5174 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-Proto {http.request.header.X-Forwarded-Proto}
+    }
+    header X-Frontend "frontend-ex"
+}
+
+handle /nft-latest-mints {
+    reverse_proxy 127.0.0.1:5174 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-Proto {http.request.header.X-Forwarded-Proto}
+    }
     header X-Frontend "frontend-ex"
 }

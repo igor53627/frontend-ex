@@ -36,6 +36,10 @@ ssh aya "curl -fsS http://127.0.0.1:5174/address/<address> >/dev/null && echo OK
 
 - `/mnt/sepolia/blockscout-proxy/Caddyfile`
 
+Important: `frontend-ex` enables `force_ssl` in `MIX_ENV=prod` and relies on `X-Forwarded-Proto` when it
+is behind an edge proxy (e.g. Cloudflare). Make sure Caddy preserves the incoming header to avoid an HTTPS
+redirect loop (symptom: `301` to the same `https://...` URL).
+
 2. Restart Caddy:
 
 ```bash
@@ -45,6 +49,7 @@ ssh aya "podman restart blockscout-proxy_caddy_1"
 3. Verify external traffic is served by `frontend-ex`:
 
 - Check response headers for `X-Frontend: frontend-ex`
+- Confirm `curl -I https://sepolia.53627.org/` returns `200` (not a redirect loop)
 - Spot-check `/`, `/tx/<hash>`, `/address/<address>`
 
 ## Rollback
