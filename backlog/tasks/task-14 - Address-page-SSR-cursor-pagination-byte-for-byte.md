@@ -1,10 +1,10 @@
 ---
 id: TASK-14
 title: Address page (SSR + cursor pagination + byte-for-byte)
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-02-08 13:38'
-updated_date: '2026-02-08 13:38'
+updated_date: '2026-02-09 09:52'
 labels:
   - pages
   - address
@@ -21,7 +21,7 @@ priority: high
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Address page renders SSR
-- [ ] #2 Tx list uses cursor pagination
-- [ ] #3 HTML snapshot matches Rust byte-for-byte (fixtures)
+- [x] #1 Address page renders SSR
+- [x] #2 Tx list uses cursor pagination
+- [x] #3 HTML snapshot matches Rust byte-for-byte (fixtures)
 <!-- AC:END -->

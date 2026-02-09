@@ -1,0 +1,15 @@
+
+<style>
+.token-holdings-select {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--link);
+    text-decoration: none;
+}
+.token-holdings-caret {
+    width: 16px;
+    height: 16px;
+    fill: currentColor;
+}
+</style>

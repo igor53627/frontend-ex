@@ -37,6 +37,14 @@ Parity routes (pipeline `:fast_browser`):
     - `GET /api/v2/blocks?limit=1` (SWR; confirmations)
     - `GET /api/v2/addresses/:address` (from/to flags; `to` is best-effort)
 
+- `GET /address/:address`
+  - SSR HTML address page
+  - Upstream calls (Blockscout API v2):
+    - `GET /api/v2/stats`
+    - `GET /api/v2/addresses/:address`
+    - `GET /api/v2/addresses/:address/transactions` (cursor passthrough via `?cursor=` UI param)
+    - `GET /api/v2/addresses/:address/tokens`
+
 - `GET /exportData`
   - SSR HTML page (no upstream calls)
 

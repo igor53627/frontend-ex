@@ -1,0 +1,315 @@
+defmodule FrontendExWeb.AddressController do
+  use FrontendExWeb, :controller
+
+  alias FrontendEx.Blockscout.Client
+  alias FrontendEx.Format
+  alias FrontendExWeb.AddressHTML
+  alias FrontendExWeb.BlockHTML
+
+  @txs_preview_limit 25
+  @token_holdings_preview_limit 10
+
+  def show(conn, %{"address" => address} = params) when is_binary(address) do
+    skin = FrontendExWeb.Skin.current()
+
+    safe_empty = {:safe, ""}
+
+    explorer_url = Application.get_env(:frontend_ex, :blockscout_url, "https://sepolia.53627.org")
+
+    cursor_query =
+      case Map.get(params, "cursor") do
+        v when is_binary(v) -> String.trim(v)
+        _ -> ""
+      end
+
+    stats_task = Task.async(fn -> Client.get_json_cached("/api/v2/stats", :public) end)
+    addr_task = Task.async(fn -> Client.get_json_cached("/api/v2/addresses/#{address}", :public) end)
+
+    txs_task =
+      Task.async(fn ->
+        Client.get_json_cached(address_txs_path(address, cursor_query), :public)
+      end)
+
+    tokens_task =
+      Task.async(fn ->
+        Client.get_json_cached("/api/v2/addresses/#{address}/tokens", :public)
+      end)
+
+    stats_json = await_ok(stats_task)
+    addr_json = await_ok(addr_task)
+    txs_json = await_ok(txs_task)
+    tokens_json = await_ok(tokens_task)
+
+    if is_nil(addr_json) do
+      conn
+      |> put_resp_content_type("text/plain")
+      |> send_resp(404, "Address not found")
+    else
+      {coin_price, gas_price} = derive_coin_gas(stats_json)
+
+      address_info = parse_address(addr_json)
+
+      transactions =
+        txs_json
+        |> parse_transactions(address_info.hash)
+        |> Enum.take(@txs_preview_limit)
+
+      {all_token_balances, token_holdings_count} = parse_token_balances(tokens_json)
+      token_balances = Enum.take(all_token_balances, @token_holdings_preview_limit)
+
+      balance_display = format_balance_display(address_info.coin_balance)
+      balance_usd_display = derive_balance_usd_display(address_info.coin_balance, coin_price)
+
+      token_holdings_display =
+        if token_holdings_count == 0 do
+          "N/A"
+        else
+          ">$0.00 (#{token_holdings_count} Tokens)"
+        end
+
+      tx_count_display = format_tx_count_display(address_info.transactions_count)
+
+      base_assigns = %{
+        page_title: "",
+        explorer_url: explorer_url,
+        head_meta: safe_empty,
+        styles: safe_empty,
+        scripts: safe_empty,
+        topbar: safe_empty,
+        nav_home: "",
+        nav_blocks: "",
+        nav_txs: "",
+        nav_tokens: "",
+        nav_nfts: "",
+        address: address_info,
+        transactions: transactions,
+        token_balances: token_balances,
+        balance_display: balance_display,
+        balance_usd_display: balance_usd_display,
+        token_holdings_display: token_holdings_display,
+        tx_count_display: tx_count_display,
+        coin_price: coin_price,
+        gas_price: gas_price
+      }
+
+      case skin do
+        :classic ->
+          styles = AddressHTML.classic_styles(base_assigns)
+
+          render(conn, :classic_content, %{
+            base_assigns
+            | page_title: "Address #{address_info.hash} | Sepolia",
+              styles: styles
+          })
+
+        :s53627 ->
+          topbar = BlockHTML.s53627_topbar(base_assigns)
+
+          render(conn, :s53627_content, %{
+            base_assigns
+            | page_title: "Address #{address_info.hash} | Explorer",
+              topbar: topbar
+          })
+      end
+    end
+  end
+
+  defp address_txs_path(address, ""), do: "/api/v2/addresses/#{address}/transactions"
+
+  defp address_txs_path(address, cursor_query) when is_binary(cursor_query) do
+    "/api/v2/addresses/#{address}/transactions?" <> cursor_query
+  end
+
+  defp await_ok(task) do
+    case Task.await(task, 10_000) do
+      {:ok, json} -> json
+      {:error, _} -> nil
+    end
+  catch
+    :exit, _ -> nil
+  end
+
+  defp derive_coin_gas(nil), do: {nil, nil}
+
+  defp derive_coin_gas(%{} = stats_json) do
+    coin_price =
+      case stats_json["coin_price"] do
+        v when is_binary(v) -> Format.format_price_with_commas(v)
+        _ -> nil
+      end
+
+    gas_price =
+      case get_in(stats_json, ["gas_prices", "average", "price"]) do
+        v when is_number(v) ->
+          :io_lib.format("~.1f", [v]) |> IO.iodata_to_binary()
+
+        _ ->
+          nil
+      end
+
+    {coin_price, gas_price}
+  end
+
+  defp parse_address(%{} = json) do
+    hash = to_string(json["hash"] || "")
+
+    %{
+      hash: hash,
+      is_contract: json["is_contract"],
+      is_verified: json["is_verified"],
+      coin_balance: normalize_opt_string(json["coin_balance"]),
+      transactions_count: parse_u64(json["transactions_count"])
+    }
+  end
+
+  defp parse_address(_), do: %{hash: "", is_contract: nil, is_verified: nil, coin_balance: nil, transactions_count: nil}
+
+  defp parse_transactions(nil, _addr_hash), do: []
+
+  defp parse_transactions(%{} = txs_json, addr_hash) when is_binary(addr_hash) do
+    items =
+      case txs_json["items"] do
+        list when is_list(list) -> list
+        _ -> []
+      end
+
+    items
+    |> Enum.map(&display_tx(&1, addr_hash))
+  end
+
+  defp display_tx(%{} = tx, addr_hash) when is_binary(addr_hash) do
+    hash = to_string(tx["hash"] || "")
+
+    from_hash =
+      case get_in(tx, ["from", "hash"]) do
+        v when is_binary(v) -> v
+        _ -> ""
+      end
+
+    to_hash =
+      case get_in(tx, ["to", "hash"]) do
+        v when is_binary(v) -> v
+        _ -> nil
+      end
+
+    value = to_string(tx["value"] || "0")
+    has_value = String.match?(value, ~r/[1-9]/)
+
+    fee =
+      case get_in(tx, ["fee", "value"]) do
+        v when is_binary(v) -> Format.format_wei_to_eth(v)
+        _ -> nil
+      end
+
+    method =
+      case tx["method"] do
+        v when is_binary(v) -> Format.format_method_name(v)
+        _ -> nil
+      end
+
+    block_number = parse_u64(tx["block_number"])
+
+    age =
+      case tx["timestamp"] do
+        v when is_binary(v) -> Format.format_relative_time(v)
+        _ -> "-"
+      end
+
+    value_eth = Format.format_wei_to_eth(value) <> " ETH"
+
+    %{
+      hash: hash,
+      method: method,
+      block_number: block_number,
+      age: age,
+      from_hash: from_hash,
+      to_hash: to_hash,
+      amount: value_eth,
+      fee: fee,
+      is_out: String.downcase(from_hash) == String.downcase(addr_hash),
+      value_eth: value_eth,
+      has_value: has_value
+    }
+  end
+
+  defp display_tx(_, _addr_hash), do: nil
+
+  defp parse_token_balances(nil), do: {[], 0}
+
+  defp parse_token_balances(%{} = tokens_json) do
+    items =
+      case tokens_json["items"] do
+        list when is_list(list) -> list
+        _ -> []
+      end
+
+    balances =
+      Enum.flat_map(items, fn
+        %{"token" => %{} = token, "value" => value} ->
+          [
+            %{
+              token: %{
+                address: normalize_opt_string(token["address"]),
+                name: normalize_opt_string(token["name"]),
+                symbol: normalize_opt_string(token["symbol"])
+              },
+              value: to_string(value || "")
+            }
+          ]
+
+        _ ->
+          []
+      end)
+
+    {balances, length(balances)}
+  end
+
+  defp format_balance_display(nil), do: "0 ETH"
+
+  defp format_balance_display(wei_balance) when is_binary(wei_balance) do
+    Format.format_wei_to_eth_exact(wei_balance) <> " ETH"
+  end
+
+  defp derive_balance_usd_display(nil, _coin_price), do: nil
+  defp derive_balance_usd_display(_wei_balance, nil), do: nil
+
+  defp derive_balance_usd_display(wei_balance, coin_price) when is_binary(wei_balance) and is_binary(coin_price) do
+    with {eth, ""} <- Float.parse(Format.format_wei_to_eth(wei_balance)),
+         {cp, ""} <- Float.parse(String.replace(coin_price, ",", "")) do
+      usd = eth * cp
+
+      usd_s = :io_lib.format("~.2f", [usd]) |> IO.iodata_to_binary()
+
+      formatted =
+        case String.split(usd_s, ".", parts: 2) do
+          [int_part, frac_part] -> Format.format_number_with_commas(int_part) <> "." <> frac_part
+          [int_part] -> Format.format_number_with_commas(int_part)
+        end
+
+      "$" <> formatted
+    else
+      _ -> nil
+    end
+  end
+
+  defp format_tx_count_display(nil), do: ""
+
+  defp format_tx_count_display(count) when is_integer(count) and count >= 0 do
+    Format.format_number_with_commas(Integer.to_string(count))
+  end
+
+  defp normalize_opt_string(v) when is_binary(v), do: String.trim(v)
+  defp normalize_opt_string(_), do: nil
+
+  defp parse_u64(v) when is_integer(v) and v >= 0, do: v
+
+  defp parse_u64(v) when is_binary(v) do
+    case Integer.parse(String.trim(v)) do
+      {n, ""} when n >= 0 -> n
+      _ -> nil
+    end
+  end
+
+  defp parse_u64(_), do: nil
+end
+

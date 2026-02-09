@@ -268,6 +268,21 @@ defmodule FrontendEx.Format do
     end
   end
 
+  @spec truncate_addr_classic(binary()) :: binary()
+  def truncate_addr_classic(s) when is_binary(s) do
+    prefix_len = 10
+    suffix_len = 9
+
+    if byte_size(s) <= prefix_len + suffix_len + 3 do
+      s
+    else
+      prefix = binary_part(s, 0, min(prefix_len, byte_size(s)))
+      suffix_start = max(byte_size(s) - suffix_len, 0)
+      suffix = binary_part(s, suffix_start, byte_size(s) - suffix_start)
+      prefix <> "..." <> suffix
+    end
+  end
+
   @spec format_relative_time(binary()) :: binary()
   def format_relative_time(timestamp) when is_binary(timestamp) do
     timestamp = String.trim(timestamp)
