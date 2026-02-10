@@ -12,7 +12,7 @@ defmodule FrontendExWeb.TxsCursorPaginationTest do
       "total_transactions" => "1234567"
     }
 
-    @txs %{
+    @txs_page_1 %{
       "items" => [
         %{
           "hash" => "0x" <> String.duplicate("1", 64),
@@ -32,19 +32,44 @@ defmodule FrontendExWeb.TxsCursorPaginationTest do
       }
     }
 
+    @txs_page_2 %{
+      "items" => [
+        %{
+          "hash" => "0x" <> String.duplicate("a", 64),
+          "method" => "0x82ad56cb",
+          "block_number" => 6_999_999,
+          "timestamp" => "2026-02-09T11:58:00+00:00",
+          "from" => %{"hash" => "0x" <> String.duplicate("b", 40)},
+          "to" => %{"hash" => "0x" <> String.duplicate("c", 40)},
+          "value" => "0",
+          "fee" => %{"value" => "1000000000000000"}
+        }
+      ],
+      "next_page_params" => %{
+        "items_count" => 50,
+        "block_number" => 10_217_967,
+        "index" => 1
+      }
+    }
+
     @impl true
     def request_raw(url) when is_binary(url) do
       uri = URI.parse(url)
       path = uri.path || ""
       query = uri.query || ""
+      query_map = URI.decode_query(query)
 
       body =
-        case {path, query} do
-          {"/api/v2/stats", _} ->
+        case {path, query, query_map} do
+          {"/api/v2/stats", _q, _qm} ->
             @stats
 
-          {"/api/v2/transactions", "items_count=50"} ->
-            @txs
+          {"/api/v2/transactions", _q, %{"items_count" => "50"} = qm} when map_size(qm) == 1 ->
+            @txs_page_1
+
+          {"/api/v2/transactions", _q,
+           %{"items_count" => "50", "block_number" => "10217968", "index" => "82"}} ->
+            @txs_page_2
 
           _ ->
             nil
@@ -77,6 +102,7 @@ defmodule FrontendExWeb.TxsCursorPaginationTest do
       })
 
     on_exit(restore)
+    on_exit(fn -> _ = FrontendEx.Cache.clear(FrontendEx.ApiCache) end)
 
     # Avoid flakiness from cached responses in other tests. This test swaps the request adapter,
     # so we must ensure the client actually re-fetches.
@@ -86,6 +112,32 @@ defmodule FrontendExWeb.TxsCursorPaginationTest do
 
     assert body =~
              "href=\"/txs?cursor=block_number%3D10217968%26index%3D82%26items_count%3D50&amp;ps=50\""
+  end
+
+  test "/txs paginates even if cursor params arrive split by a proxy" do
+    restore =
+      put_env(%{
+        ff_skin: "classic",
+        blockscout_url: "https://sepolia.53627.org",
+        blockscout_api_url: "http://127.0.0.1:4901",
+        blockscout_ws_url: nil,
+        clock_utc_now: @frozen_now,
+        blockscout_request_adapter: Adapter
+      })
+
+    on_exit(restore)
+    on_exit(fn -> _ = FrontendEx.Cache.clear(FrontendEx.ApiCache) end)
+
+    _ = FrontendEx.Cache.clear(FrontendEx.ApiCache)
+
+    body =
+      html_response(
+        get(build_conn(), "/txs?cursor=block_number=10217968&index=82&items_count=50&ps=50"),
+        200
+      )
+
+    assert body =~
+             "href=\"/txs?cursor=block_number%3D10217967%26index%3D1%26items_count%3D50&amp;ps=50\""
   end
 
   defp put_env(kvs) when is_map(kvs) do

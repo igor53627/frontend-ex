@@ -21,13 +21,7 @@ defmodule FrontendExWeb.TxsController do
 
     page_size = normalize_page_size(params)
 
-    cursor_query =
-      case Map.get(params, "cursor") do
-        v when is_binary(v) -> String.trim(v)
-        _ -> ""
-      end
-
-    cursor_query = if cursor_query == "", do: nil, else: cursor_query
+    cursor_query = cursor_query_from_params(params)
 
     is_first_page = is_nil(cursor_query)
 
@@ -35,7 +29,16 @@ defmodule FrontendExWeb.TxsController do
     txs_path = txs_path(page_size, cursor_query)
 
     stats_task = Task.async(fn -> Client.get_json_cached(stats_path, :public) end)
-    txs_task = Task.async(fn -> Client.get_json_cached(txs_path, :public) end)
+
+    txs_api_url = Application.get_env(:frontend_ex, :blockscout_txs_api_url)
+
+    txs_task =
+      Task.async(fn ->
+        case txs_api_url do
+          v when is_binary(v) and v != "" -> Client.get_json_cached_at(v, txs_path, :public)
+          _ -> Client.get_json_cached(txs_path, :public)
+        end
+      end)
 
     [stats_json, txs_json] =
       await_many_ok([{stats_path, stats_task}, {txs_path, txs_task}], 10_000)
@@ -121,6 +124,103 @@ defmodule FrontendExWeb.TxsController do
       end
 
     if value in @page_size_options, do: value, else: @default_page_size
+  end
+
+  defp cursor_query_from_params(params) when is_map(params) do
+    cursor_raw =
+      case Map.get(params, "cursor") do
+        v when is_binary(v) -> String.trim(v)
+        _ -> ""
+      end
+
+    cursor_raw = if cursor_raw == "", do: nil, else: cursor_raw
+
+    cursor_query =
+      case cursor_raw do
+        v when is_binary(v) and v != "" ->
+          # Plug typically URL-decodes query params; however, some proxies can
+          # pre-decode and/or split query fragments. Be liberal in what we accept.
+          v =
+            if String.contains?(v, "%") do
+              case Cursor.decode_cursor_value(v) do
+                {:ok, decoded} -> decoded
+                :error -> v
+              end
+            else
+              v
+            end
+
+          merge_cursor_params(v, params)
+
+        _ ->
+          merge_cursor_params(nil, params)
+      end
+
+    case cursor_query do
+      v when is_binary(v) ->
+        v = String.trim(v)
+        if v == "", do: nil, else: v
+
+      _ ->
+        nil
+    end
+  end
+
+  defp merge_cursor_params(cursor_query, params) when is_map(params) do
+    cursor_query =
+      case cursor_query do
+        v when is_binary(v) -> v
+        _ -> ""
+      end
+
+    fragments = if cursor_query == "", do: [], else: [cursor_query]
+
+    fragments =
+      fragments
+      |> maybe_append_cursor_param(cursor_query, "block_number", params)
+      |> maybe_append_cursor_param(cursor_query, "index", params)
+      |> maybe_append_cursor_param(cursor_query, "items_count", params)
+
+    fragments =
+      fragments
+      |> Enum.flat_map(fn
+        v when is_binary(v) -> String.split(v, "&", trim: true)
+        _ -> []
+      end)
+      |> Enum.map(&String.trim/1)
+      |> Enum.reject(&(&1 == ""))
+
+    case fragments do
+      [] -> nil
+      _ -> Enum.join(fragments, "&")
+    end
+  end
+
+  defp maybe_append_cursor_param(fragments, cursor_query, key, params)
+       when is_list(fragments) and is_binary(cursor_query) and is_binary(key) and is_map(params) do
+    if cursor_query != "" and String.contains?(cursor_query, key <> "=") do
+      fragments
+    else
+      case normalize_numeric_param(params, key) do
+        nil -> fragments
+        v -> fragments ++ [key <> "=" <> v]
+      end
+    end
+  end
+
+  defp normalize_numeric_param(params, key) when is_map(params) and is_binary(key) do
+    raw =
+      case Map.get(params, key) do
+        v when is_binary(v) -> String.trim(v)
+        v when is_integer(v) and v >= 0 -> Integer.to_string(v)
+        _ -> ""
+      end
+
+    cond do
+      raw == "" -> nil
+      String.match?(raw, ~r/^\d+$/) -> raw
+      true -> nil
+    end
   end
 
   defp txs_path(page_size, nil) when is_integer(page_size) do

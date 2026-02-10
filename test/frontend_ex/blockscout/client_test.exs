@@ -72,6 +72,34 @@ defmodule FrontendEx.Blockscout.ClientTest do
     assert calls(agent, url) == 1
   end
 
+  test "get_json_uncached/1 keeps the last occurrence for duplicate JSON keys", %{
+    stub_agent: agent
+  } do
+    url = "http://stub/api/v2/transactions?items_count=50"
+
+    # Observed in Blockscout `next_page_params`: duplicate keys for `index`/`block_number`.
+    # We want last-wins semantics so cursor pagination advances.
+    put_script(agent, url, [
+      {:ok,
+       %Req.Response{
+         status: 200,
+         body:
+           ~s({"items":[],"next_page_params":{"index":50,"block_number":1,"items_count":50,"block_number":1,"index":0}})
+       }}
+    ])
+
+    assert {:ok,
+            %{
+              "next_page_params" => %{
+                "block_number" => 1,
+                "index" => 0,
+                "items_count" => 50
+              }
+            }} = Client.get_json_uncached("/api/v2/transactions?items_count=50")
+
+    assert calls(agent, url) == 1
+  end
+
   test "get_json_uncached/1 maps 404 to :not_found (tx endpoint)", %{stub_agent: agent} do
     url = "http://stub/api/v2/transactions/0xdead"
 

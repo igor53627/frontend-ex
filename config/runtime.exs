@@ -83,6 +83,13 @@ blockscout_api_url =
   |> String.trim()
   |> String.trim_trailing("/")
 
+blockscout_txs_api_url =
+  case System.get_env("BLOCKSCOUT_TXS_API_URL") do
+    nil -> nil
+    "" -> nil
+    v -> v |> String.trim() |> String.trim_trailing("/")
+  end
+
 blockscout_url =
   System.get_env("BLOCKSCOUT_URL", blockscout_api_url)
   |> String.trim()
@@ -106,6 +113,7 @@ ff_skin =
 
 config :frontend_ex,
   blockscout_api_url: blockscout_api_url,
+  blockscout_txs_api_url: blockscout_txs_api_url,
   blockscout_url: blockscout_url,
   blockscout_ws_url: blockscout_ws_url,
   base_url: base_url,

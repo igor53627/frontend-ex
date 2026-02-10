@@ -31,6 +31,13 @@ FF_SKIN=classic \
 mix phx.server
 ```
 
+If `/txs` pagination arrows are disabled because your upstream `/api/v2/transactions` response has
+`next_page_params: null`, you can override the `/txs` upstream only:
+
+```bash
+BLOCKSCOUT_TXS_API_URL=https://eth-sepolia.blockscout.com mix phx.server
+```
+
 ## Tests
 
 ```bash

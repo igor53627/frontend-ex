@@ -24,6 +24,12 @@ This project is configured primarily via environment variables (read in `config/
   - Base URL for upstream Blockscout API calls (e.g. `https://sepolia.53627.org`).
   - Trailing `/` is trimmed.
 
+- `BLOCKSCOUT_TXS_API_URL`
+  - Optional override for `/txs` upstream calls to `/api/v2/transactions`.
+  - Useful when your primary `BLOCKSCOUT_API_URL` does not return `next_page_params` for
+    `/api/v2/transactions` (pagination arrows would be disabled).
+  - Trailing `/` is trimmed.
+
 - `BLOCKSCOUT_URL`
   - Base URL used for links to the "classic explorer".
   - Default: `BLOCKSCOUT_API_URL`.

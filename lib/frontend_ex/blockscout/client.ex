@@ -1,6 +1,8 @@
 defmodule FrontendEx.Blockscout.Client do
   @moduledoc false
 
+  alias Jason.OrderedObject
+
   @api_cache FrontendEx.ApiCache
   @api_swr_cache FrontendEx.ApiSWRCache
 
@@ -40,50 +42,73 @@ defmodule FrontendEx.Blockscout.Client do
   def get_json_cached(path, context, ttl_ms)
       when is_binary(path) and is_integer(ttl_ms) and ttl_ms >= 0 do
     with {:ok, url} <- build_url(blockscout_api_url!(), path) do
-      # Cache keys must include any inputs that can vary the upstream response
-      # (auth headers, locale, etc). Callers must supply a context.
-      pos_key = {context, :pos, url}
-      neg_key = {context, :neg, url}
-
-      cache = api_cache_server()
-
-      case FrontendEx.Cache.get(cache, pos_key) do
-        {:ok, json} ->
-          {:ok, json}
-
-        :error ->
-          case FrontendEx.Cache.get(cache, neg_key) do
-            {:ok, true} ->
-              {:error, :not_found}
-
-            :error ->
-              result =
-                FrontendEx.Cache.get_or_fetch(cache, pos_key, ttl_ms, fn ->
-                  fetch_json_with_retry(url, 0)
-                end)
-
-              case result do
-                {:ok, json} ->
-                  {:ok, json}
-
-                {:error, :not_found} ->
-                  _ = FrontendEx.Cache.put(cache, neg_key, true, @negative_ttl_ms)
-                  {:error, :not_found}
-
-                {:error, {:http_status, _, _} = err} ->
-                  {:error, err}
-
-                {:error, {:transport, _} = err} ->
-                  {:error, err}
-
-                {:error, other} ->
-                  {:error, {:transport, {:cache_fetch_failed, other}}}
-              end
-          end
-      end
+      get_json_cached_url(url, context, ttl_ms)
     else
       {:error, reason} ->
         {:error, {:transport, reason}}
+    end
+  end
+
+  @spec get_json_cached_at(binary(), binary(), term()) :: {:ok, term()} | {:error, error()}
+  def get_json_cached_at(base_url, path, context)
+      when is_binary(base_url) and is_binary(path) do
+    get_json_cached_at(base_url, path, context, @standard_ttl_ms)
+  end
+
+  @spec get_json_cached_at(binary(), binary(), term(), non_neg_integer()) ::
+          {:ok, term()} | {:error, error()}
+  def get_json_cached_at(base_url, path, context, ttl_ms)
+      when is_binary(base_url) and is_binary(path) and is_integer(ttl_ms) and ttl_ms >= 0 do
+    with {:ok, url} <- build_url(base_url, path) do
+      get_json_cached_url(url, context, ttl_ms)
+    else
+      {:error, reason} ->
+        {:error, {:transport, reason}}
+    end
+  end
+
+  defp get_json_cached_url(url, context, ttl_ms)
+       when is_binary(url) and is_integer(ttl_ms) and ttl_ms >= 0 do
+    # Cache keys must include any inputs that can vary the upstream response
+    # (auth headers, locale, etc). Callers must supply a context.
+    pos_key = {context, :pos, url}
+    neg_key = {context, :neg, url}
+
+    cache = api_cache_server()
+
+    case FrontendEx.Cache.get(cache, pos_key) do
+      {:ok, json} ->
+        {:ok, json}
+
+      :error ->
+        case FrontendEx.Cache.get(cache, neg_key) do
+          {:ok, true} ->
+            {:error, :not_found}
+
+          :error ->
+            result =
+              FrontendEx.Cache.get_or_fetch(cache, pos_key, ttl_ms, fn ->
+                fetch_json_with_retry(url, 0)
+              end)
+
+            case result do
+              {:ok, json} ->
+                {:ok, json}
+
+              {:error, :not_found} ->
+                _ = FrontendEx.Cache.put(cache, neg_key, true, @negative_ttl_ms)
+                {:error, :not_found}
+
+              {:error, {:http_status, _, _} = err} ->
+                {:error, err}
+
+              {:error, {:transport, _} = err} ->
+                {:error, err}
+
+              {:error, other} ->
+                {:error, {:transport, {:cache_fetch_failed, other}}}
+            end
+        end
     end
   end
 
@@ -120,9 +145,13 @@ defmodule FrontendEx.Blockscout.Client do
     case request_raw(url) do
       {:ok, %Req.Response{status: status, body: body}}
       when status >= 200 and status <= 299 and is_binary(body) ->
-        case Jason.decode(body) do
+        # Blockscout occasionally returns objects with duplicate keys (observed in
+        # `next_page_params`). Different JSON parsers resolve duplicates
+        # differently; decode as ordered objects and normalize so the *last*
+        # occurrence wins, matching `jq` and serde_json behavior.
+        case Jason.decode(body, objects: :ordered_objects) do
           {:ok, json} ->
-            {:ok, json}
+            {:ok, normalize_json(json)}
 
           {:error, _} ->
             if attempt < 2 do
@@ -160,6 +189,22 @@ defmodule FrontendEx.Blockscout.Client do
         {:error, {:transport, other}}
     end
   end
+
+  defp normalize_json(%OrderedObject{values: values}) do
+    Enum.reduce(values, %{}, fn {k, v}, acc ->
+      Map.put(acc, k, normalize_json(v))
+    end)
+  end
+
+  defp normalize_json(%{} = map) do
+    Map.new(map, fn {k, v} -> {k, normalize_json(v)} end)
+  end
+
+  defp normalize_json(list) when is_list(list) do
+    Enum.map(list, &normalize_json/1)
+  end
+
+  defp normalize_json(other), do: other
 
   defp request_raw(url) when is_binary(url) do
     request_adapter().request_raw(url)
