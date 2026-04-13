@@ -37,10 +37,14 @@ for arg in "$@"; do
   esac
 done
 
-# Required env vars (checked after flag parsing so --dry-run can show actions
-# without a configured target).
-SERVER="${FX_DEPLOY_SERVER:?Set FX_DEPLOY_SERVER to your target hostname}"
-REMOTE_PATH="${FX_DEPLOY_PATH:?Set FX_DEPLOY_PATH to the remote app directory}"
+# Required env vars — skip validation in dry-run mode so you can preview
+# the script flow without a configured target.
+if [ "$DRY_RUN" = false ]; then
+  : "${FX_DEPLOY_SERVER:?Set FX_DEPLOY_SERVER to your target hostname}"
+  : "${FX_DEPLOY_PATH:?Set FX_DEPLOY_PATH to the remote app directory}"
+fi
+SERVER="${FX_DEPLOY_SERVER:-<server>}"
+REMOTE_PATH="${FX_DEPLOY_PATH:-<path>}"
 
 log() { echo "[$(date +%H:%M:%S)] $1"; }
 run() {
