@@ -12,8 +12,6 @@
 #
 set -euo pipefail
 
-SERVER="${FX_DEPLOY_SERVER:?Set FX_DEPLOY_SERVER to your target hostname}"
-REMOTE_PATH="${FX_DEPLOY_PATH:?Set FX_DEPLOY_PATH to the remote app directory}"
 SERVICE_NAME="${FX_SERVICE_NAME:-frontend-ex}"
 KEEP_RELEASES="${FX_KEEP_RELEASES:-5}"
 # Podman on Ubuntu often requires fully-qualified image names.
@@ -38,6 +36,11 @@ for arg in "$@"; do
       ;;
   esac
 done
+
+# Required env vars (checked after flag parsing so --dry-run can show actions
+# without a configured target).
+SERVER="${FX_DEPLOY_SERVER:?Set FX_DEPLOY_SERVER to your target hostname}"
+REMOTE_PATH="${FX_DEPLOY_PATH:?Set FX_DEPLOY_PATH to the remote app directory}"
 
 log() { echo "[$(date +%H:%M:%S)] $1"; }
 run() {

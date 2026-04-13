@@ -4,6 +4,7 @@ After=network.target
 
 [Service]
 Type=simple
+# Adjust these three paths to match FX_DEPLOY_PATH (see deploy.sh).
 WorkingDirectory=/opt/frontend-ex/current
 EnvironmentFile=/opt/frontend-ex/frontend-ex.env
 ExecStart=/opt/frontend-ex/current/bin/frontend_ex start
