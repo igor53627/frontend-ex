@@ -15,12 +15,14 @@ set -euo pipefail
 # Source local deploy config if present (gitignored).
 # Explicit env vars always take precedence over the file.
 if [ -f "$(dirname "$0")/.env.deploy" ]; then
+  _fx_had_server="${FX_DEPLOY_SERVER+set}"
+  _fx_had_path="${FX_DEPLOY_PATH+set}"
   _fx_saved_server="${FX_DEPLOY_SERVER:-}"
   _fx_saved_path="${FX_DEPLOY_PATH:-}"
   # shellcheck disable=SC1091
   . "$(dirname "$0")/.env.deploy"
-  [ -n "$_fx_saved_server" ] && FX_DEPLOY_SERVER="$_fx_saved_server"
-  [ -n "$_fx_saved_path" ]   && FX_DEPLOY_PATH="$_fx_saved_path"
+  [ "$_fx_had_server" = set ] && FX_DEPLOY_SERVER="$_fx_saved_server"
+  [ "$_fx_had_path" = set ]   && FX_DEPLOY_PATH="$_fx_saved_path"
 fi
 
 SERVICE_NAME="${FX_SERVICE_NAME:-frontend-ex}"
