@@ -23,5 +23,5 @@ priority: medium
 ## Final Summary
 
 <!-- SECTION:FINAL_SUMMARY:BEGIN -->
-Updated README + docs to cover local run env vars, cursor pagination and caching semantics, and added ops runbook for deploy/rollback + Caddy restart on aya.
+Updated README + docs to cover local run env vars, cursor pagination and caching semantics, and added ops runbook for deploy/rollback + Caddy restart.
 <!-- SECTION:FINAL_SUMMARY:END -->

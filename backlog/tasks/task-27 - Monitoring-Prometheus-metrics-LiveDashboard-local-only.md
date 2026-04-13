@@ -32,10 +32,10 @@ priority: medium
 
 <!-- SECTION:NOTES:BEGIN -->
 - Prometheus metrics endpoint (localhost-only): `http://127.0.0.1:9568/metrics` (configurable via `FF_METRICS_ENABLED` and `FF_METRICS_PORT`).
-- Telegraf on `aya` scrapes the metrics endpoint via `[[inputs.prometheus]]` (see `/mnt/sepolia/blockscout-proxy/telegraf.conf`).
+- Telegraf scrapes the metrics endpoint via `[[inputs.prometheus]]`.
 - LiveDashboard is mounted at `/_dashboard` and is intentionally not reachable through the public Caddy proxy:
   - `FrontendExWeb.Plugs.DashboardLocalOnly` blocks requests with `Forwarded`/`X-Forwarded-*` headers and requires `conn.remote_ip` to be loopback.
-  - Access via `ssh -L 4000:127.0.0.1:5174 aya` then open `http://localhost:4000/_dashboard`.
+  - Access via `ssh -L 4000:127.0.0.1:5174 <server>` then open `http://localhost:4000/_dashboard`.
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary

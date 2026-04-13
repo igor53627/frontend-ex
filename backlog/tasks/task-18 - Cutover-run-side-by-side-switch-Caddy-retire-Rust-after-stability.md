@@ -27,12 +27,12 @@ priority: medium
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
-Prepared cutover docs (docs/RUNBOOKS/cutover.md) and updated the Caddy snippet; deployed `frontend-ex` to aya and switched Caddy routing to proxy the fast routes to `frontend-ex` while retaining Rust `fast-frontend` as the fallback/rollback backend.
+Prepared cutover docs (docs/RUNBOOKS/cutover.md) and updated the Caddy snippet; deployed `frontend-ex` and switched Caddy routing to proxy the fast routes to `frontend-ex` while retaining Rust `fast-frontend` as the fallback/rollback backend.
 
-- `frontend-ex` runs on aya at `127.0.0.1:5174` (systemd service `frontend-ex`).
+- `frontend-ex` runs at `127.0.0.1:5174` (systemd service `frontend-ex`).
 - Caddy proxies the main SSR routes to `frontend-ex` and sets `X-Frontend: frontend-ex` for verification.
 - Caddy preserves the incoming `X-Forwarded-Proto` header to avoid HTTPS redirect loops with `force_ssl`.
 - Rust `fast-frontend` service is still running on `127.0.0.1:3002` for rollback.
 
-Perf tuning (safe, parity routes only): removed endpoint sessions and made TrimTrailingNewline keep iodata (avoid full-body copy). On aya warm SSR p50 improved from ~0.48ms to ~0.42ms for `/`, and ~0.84ms to ~0.71ms for `/tx` (Rust still faster, but both sub-ms; cache-miss pages are dominated by upstream API latency).
+Perf tuning (safe, parity routes only): removed endpoint sessions and made TrimTrailingNewline keep iodata (avoid full-body copy). Warm SSR p50 improved from ~0.48ms to ~0.42ms for `/`, and ~0.84ms to ~0.71ms for `/tx` (Rust still faster, but both sub-ms; cache-miss pages are dominated by upstream API latency).
 <!-- SECTION:NOTES:END -->

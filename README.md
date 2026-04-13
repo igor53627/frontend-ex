@@ -6,12 +6,12 @@ This repo is intentionally "un-Phoenix-y" in parity-critical paths: we prefer pl
 
 ## Docs
 
-- `docs/FEATURE_FLAGS.md`
-- `docs/ARCHITECTURE.md`
-- `docs/DEPLOYMENT.md`
-- `docs/API_ENDPOINTS.md`
-- `docs/RUNBOOKS/README.md`
-- `docs/ADR/`
+- `docs/ARCHITECTURE.md` - Request flow, skins, templates, caching
+- `docs/API_ENDPOINTS.md` - Full HTTP surface and upstream API usage
+- `docs/FEATURE_FLAGS.md` - Environment variables and runtime config
+- `docs/DEPLOYMENT.md` - Release builds, systemd, Caddy, deploy script
+- `docs/RUNBOOKS/` - Operational runbooks (deploy, cutover, rollback)
+- `docs/ADR/` - Architecture decision records
 
 ## Local Development
 
@@ -54,22 +54,6 @@ Update (overwrite) golden files from the current Phoenix output:
 UPDATE_GOLDENS=1 mix test test/frontend_ex_web/export_data_parity_test.exs
 ```
 
-Regenerate Rust goldens (example for `/exportData`):
+## Project Backlog
 
-```bash
-# in ../fast-frontend
-LISTEN_ADDR=127.0.0.1:4010 BLOCKSCOUT_API_URL=https://sepolia.53627.org \\
-  cargo run --no-default-features --features skin-classic
-
-curl -sS "http://127.0.0.1:4010/exportData?type=nft-mints&mode=date&start_date=2026-01-01&end_date=2026-02-01&start_block=123&end_block=456" \\
-  > ../frontend-ex/test/golden/exportData.classic.rust.html
-```
-
-## Backlog
-
-Project tasks/docs live under `backlog/` and are managed with Backlog.md:
-
-```bash
-backlog overview
-backlog tasks list --plain
-```
+Development history and task tracking live under `backlog/`. See `backlog/docs/` for the original feature inventory and parity checklist, and `backlog/tasks/` for per-feature implementation records.

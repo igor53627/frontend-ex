@@ -1,19 +1,19 @@
 #!/usr/bin/env bash
 #
-# Deploy frontend-ex to aya as a systemd-managed Phoenix release.
+# Deploy frontend-ex to a server as a systemd-managed Phoenix release.
 #
 # This script syncs the repo to the server, builds a release on the server,
 # promotes it into a versioned `releases/<id>/` directory, flips `current`,
 # and restarts the systemd service.
 #
 # Usage:
-#   FX_DEPLOY_SERVER=aya FX_DEPLOY_PATH=/mnt/sepolia/frontend-ex ./deploy.sh
+#   FX_DEPLOY_SERVER=myhost FX_DEPLOY_PATH=/opt/frontend-ex ./deploy.sh
 #   ./deploy.sh --dry-run
 #
 set -euo pipefail
 
-SERVER="${FX_DEPLOY_SERVER:-aya}"
-REMOTE_PATH="${FX_DEPLOY_PATH:-/mnt/sepolia/frontend-ex}"
+SERVER="${FX_DEPLOY_SERVER:?Set FX_DEPLOY_SERVER to your target hostname}"
+REMOTE_PATH="${FX_DEPLOY_PATH:?Set FX_DEPLOY_PATH to the remote app directory}"
 SERVICE_NAME="${FX_SERVICE_NAME:-frontend-ex}"
 KEEP_RELEASES="${FX_KEEP_RELEASES:-5}"
 # Podman on Ubuntu often requires fully-qualified image names.

@@ -1,20 +1,5 @@
 # Deployment
 
-Deployment and cutover are tracked in backlog tasks:
-
-- `backlog/tasks/task-16 - Deployment-mix-release-aya-podman-Caddy-routing.md`
-- `backlog/tasks/task-18 - Cutover-run-side-by-side-switch-Caddy-retire-Rust-after-stability.md`
-
-## Target Host (Aya)
-
-- Server: `aya` (`ssh aya`)
-- App path: `/mnt/sepolia/frontend-ex`
-- Service: `frontend-ex` (systemd)
-- Default listen (internal): `127.0.0.1:5174`
-- Caddy:
-  - Caddyfile: `/mnt/sepolia/blockscout-proxy/Caddyfile`
-  - Container: `blockscout-proxy_caddy_1` (podman)
-
 ## Local Run
 
 ```bash
@@ -36,12 +21,11 @@ MIX_ENV=prod mix compile
 MIX_ENV=prod mix release --overwrite
 ```
 
-On `aya`, if you don't have Elixir/Erlang installed on the host, you can build using `podman`
-instead (recommended):
+If you don't have Elixir/Erlang installed on the host, you can build using `podman` (or Docker):
 
 ```bash
 podman run --rm \
-  -v /mnt/sepolia/frontend-ex:/app \
+  -v /path/to/frontend-ex:/app \
   -w /app \
   -e MIX_ENV=prod \
   -e MIX_HOME=/app/.mix \
@@ -62,14 +46,14 @@ export LISTEN_ADDR=127.0.0.1:3010
 _build/prod/rel/frontend_ex/bin/frontend_ex start
 ```
 
-## Systemd Service (Aya)
+## Systemd Service
 
 1. Copy unit + env file:
 
 ```bash
-sudo install -m 0644 /mnt/sepolia/frontend-ex/ops/systemd/frontend-ex.service /etc/systemd/system/frontend-ex.service
-sudo install -m 0600 /mnt/sepolia/frontend-ex/ops/systemd/frontend-ex.env.example /mnt/sepolia/frontend-ex/frontend-ex.env
-sudo $EDITOR /mnt/sepolia/frontend-ex/frontend-ex.env
+sudo install -m 0644 ops/systemd/frontend-ex.service /etc/systemd/system/frontend-ex.service
+sudo install -m 0600 ops/systemd/frontend-ex.env.example /path/to/frontend-ex.env
+sudo $EDITOR /path/to/frontend-ex.env
 ```
 
 2. Reload + enable:
@@ -85,8 +69,8 @@ sudo systemctl status frontend-ex
 From your local machine:
 
 ```bash
-FX_DEPLOY_SERVER=aya \
-FX_DEPLOY_PATH=/mnt/sepolia/frontend-ex \
+FX_DEPLOY_SERVER=<server> \
+FX_DEPLOY_PATH=/path/to/frontend-ex \
 FX_SERVICE_NAME=frontend-ex \
 ./deploy.sh
 ```
@@ -98,37 +82,31 @@ Options:
 - `--skip-build`
 - `--skip-restart`
 
-## Caddy Routing (Aya)
+## Caddy Routing
 
-Merge `ops/caddy/Caddyfile.frontend-ex.snippet` into `/mnt/sepolia/blockscout-proxy/Caddyfile`
-inside the main `:80 { ... }` block, then restart Caddy:
+Merge `ops/caddy/Caddyfile.frontend-ex.snippet` into your Caddyfile inside the main site block, then restart Caddy:
 
 ```bash
-ssh aya "podman restart blockscout-proxy_caddy_1"
+podman restart <caddy-container>
 ```
 
-## Monitoring (Aya)
+## Monitoring
 
 `frontend-ex` exposes Prometheus metrics (via `:telemetry`) on:
 
 - `http://127.0.0.1:9568/metrics` (configurable with `FF_METRICS_ENABLED` and `FF_METRICS_PORT`)
 
-To ingest into Influx/Grafana on `aya`, add a Prometheus input to the telegraf config:
-
-- File: `/mnt/sepolia/blockscout-proxy/telegraf.conf`
-- Container: `blockscout-proxy_telegraf_1` (podman, host network)
-
-### LiveDashboard (Aya)
+### LiveDashboard
 
 `frontend-ex` mounts Phoenix LiveDashboard at `/_dashboard`.
 
 It is intentionally reachable only via direct access to the Phoenix listener (no `X-Forwarded-*` headers),
-so it is not exposed through the public Caddy proxy.
+so it is not exposed through the public reverse proxy.
 
 Access via SSH port forward:
 
 ```bash
-ssh -L 4000:127.0.0.1:5174 aya
+ssh -L 4000:127.0.0.1:5174 <server>
 open http://localhost:4000/_dashboard
 ```
 
@@ -137,15 +115,9 @@ open http://localhost:4000/_dashboard
 1. Roll back the app release:
 
 ```bash
-ssh aya "cd /mnt/sepolia/frontend-ex && ls -1dt releases/* | head"
+ssh <server> "cd /path/to/frontend-ex && ls -1dt releases/* | head"
 # Pick a previous release dir and point `current` to it:
-ssh aya "cd /mnt/sepolia/frontend-ex && ln -sfn releases/<release_id> current && systemctl restart frontend-ex"
+ssh <server> "cd /path/to/frontend-ex && ln -sfn releases/<release_id> current && systemctl restart frontend-ex"
 ```
 
-2. If you changed Caddy routing, revert the Caddyfile changes and restart Caddy:
-
-```bash
-ssh aya "podman restart blockscout-proxy_caddy_1"
-```
-
-The current production host for `fast-frontend` is `aya` behind Caddy (podman). This app is intended to run side-by-side first and only be switched over via Caddy once parity and stability are validated.
+2. If you changed Caddy routing, revert the Caddyfile changes and restart Caddy.

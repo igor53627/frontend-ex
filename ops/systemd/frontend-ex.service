@@ -4,9 +4,9 @@ After=network.target
 
 [Service]
 Type=simple
-WorkingDirectory=/mnt/sepolia/frontend-ex/current
-EnvironmentFile=/mnt/sepolia/frontend-ex/frontend-ex.env
-ExecStart=/mnt/sepolia/frontend-ex/current/bin/frontend_ex start
+WorkingDirectory=/opt/frontend-ex/current
+EnvironmentFile=/opt/frontend-ex/frontend-ex.env
+ExecStart=/opt/frontend-ex/current/bin/frontend_ex start
 Restart=always
 RestartSec=2
 TimeoutStopSec=10
@@ -16,4 +16,3 @@ LimitNOFILE=65536
 
 [Install]
 WantedBy=multi-user.target
-

@@ -33,7 +33,7 @@ config :phoenix, :json_library, Jason
 # whitespace on lines that contain only EEx tags (Askama does not trim).
 config :phoenix_template, :trim_on_html_eex_engine, false
 
-# Prometheus metrics exporter (scraped by telegraf on aya). The exporter runs
+# Prometheus metrics exporter (scraped by telegraf/prometheus). The exporter runs
 # its own HTTP server on localhost and does not impact parity SSR routes.
 config :frontend_ex, :metrics,
   enabled: true,
