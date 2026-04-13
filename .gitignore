@@ -37,3 +37,6 @@ frontend_ex-*.tar
 
 # Backup files
 *.orig
+
+# Local deploy config (not published)
+.env.deploy

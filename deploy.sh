@@ -12,6 +12,12 @@
 #
 set -euo pipefail
 
+# Source local deploy config if present (gitignored).
+if [ -f "$(dirname "$0")/.env.deploy" ]; then
+  # shellcheck disable=SC1091
+  . "$(dirname "$0")/.env.deploy"
+fi
+
 SERVICE_NAME="${FX_SERVICE_NAME:-frontend-ex}"
 KEEP_RELEASES="${FX_KEEP_RELEASES:-5}"
 # Podman on Ubuntu often requires fully-qualified image names.
