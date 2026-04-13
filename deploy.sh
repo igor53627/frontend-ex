@@ -13,6 +13,7 @@
 set -euo pipefail
 
 # Source local deploy config if present (gitignored).
+# Uses guarded assignments (:=) so explicit env vars take precedence.
 if [ -f "$(dirname "$0")/.env.deploy" ]; then
   # shellcheck disable=SC1091
   . "$(dirname "$0")/.env.deploy"
@@ -73,6 +74,7 @@ if [ "$SKIP_SYNC" = false ]; then
     --exclude releases/ \
     --exclude current \
     --exclude frontend-ex.env \
+    --exclude .env.deploy \
     --exclude tmp/ \
     "$LOCAL_PATH/" "$SERVER:$REMOTE_PATH/"
 else
