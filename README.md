@@ -1,17 +1,34 @@
 # frontend-ex
 
-Phoenix SSR app intended to replace `fast-frontend` (Rust/Axum/Askama) with byte-for-byte HTML parity per skin.
+Server-side rendered frontend for [Blockscout](https://github.com/blockscout/blockscout) explorer instances, built with Elixir/Phoenix.
 
-This repo is intentionally "un-Phoenix-y" in parity-critical paths: we prefer plain `.html.eex` templates and minimal helpers to keep output deterministic.
+`frontend-ex` fetches data from a Blockscout-compatible API (`/api/v2/*`) and renders HTML pages. It supports multiple visual skins (Classic-like, 53627-like) and is designed to produce byte-for-byte identical output to the Rust `fast-frontend` it replaces.
 
-## Docs
+## Architecture
 
-- `docs/ARCHITECTURE.md` - Request flow, skins, templates, caching
-- `docs/API_ENDPOINTS.md` - Full HTTP surface and upstream API usage
-- `docs/FEATURE_FLAGS.md` - Environment variables and runtime config
-- `docs/DEPLOYMENT.md` - Release builds, systemd, Caddy, deploy script
-- `docs/RUNBOOKS/` - Operational runbooks (deploy, cutover, rollback)
-- `docs/ADR/` - Architecture decision records
+```
+Browser
+  -> frontend-ex (Phoenix SSR)
+    -> Blockscout API (/api/v2/*)
+      -> Indexer database (PostgreSQL, FoundationDB, etc.)
+      -> Execution client (Reth, Geth, etc.)
+```
+
+`frontend-ex` is a stateless SSR layer — no database, no sessions. It makes upstream HTTP calls to a Blockscout API, caches responses in-memory (standard TTL + stale-while-revalidate), and renders HTML via EEx templates.
+
+### With blockscout-exex
+
+[`blockscout-exex`](https://github.com/blockscout/blockscout-exex) is a high-performance Rust indexer and API server that implements the Blockscout v2 API surface. It indexes chain data from a Reth execution client into FoundationDB and serves the `/api/v2/*` endpoints that `frontend-ex` consumes.
+
+```
+Browser -> frontend-ex -> blockscout-exex API -> FoundationDB + Reth
+```
+
+When deployed together, `frontend-ex` points `BLOCKSCOUT_API_URL` at the `blockscout-exex` API server (TCP or Unix socket via a local reverse proxy).
+
+### With standard Blockscout
+
+`frontend-ex` also works with the standard [Blockscout](https://github.com/blockscout/blockscout) Elixir backend — just point `BLOCKSCOUT_API_URL` at any instance that serves `/api/v2/*`.
 
 ## Local Development
 
@@ -53,6 +70,15 @@ Update (overwrite) golden files from the current Phoenix output:
 ```bash
 UPDATE_GOLDENS=1 mix test test/frontend_ex_web/export_data_parity_test.exs
 ```
+
+## Docs
+
+- `docs/ARCHITECTURE.md` - Request flow, skins, templates, caching
+- `docs/API_ENDPOINTS.md` - Full HTTP surface and upstream API usage
+- `docs/FEATURE_FLAGS.md` - Environment variables and runtime config
+- `docs/DEPLOYMENT.md` - Release builds, systemd, Caddy, deploy script
+- `docs/RUNBOOKS/` - Operational runbooks (deploy, cutover, rollback)
+- `docs/ADR/` - Architecture decision records
 
 ## Project Backlog
 
