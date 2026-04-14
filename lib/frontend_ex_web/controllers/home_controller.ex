@@ -1,6 +1,8 @@
 defmodule FrontendExWeb.HomeController do
   use FrontendExWeb, :controller
 
+  require Logger
+
   alias FrontendEx.Blockscout.Client
   alias FrontendEx.Format
   alias FrontendExWeb.HomeHTML
@@ -29,9 +31,9 @@ defmodule FrontendExWeb.HomeController do
         Client.get_json_swr("/api/v2/transactions?items_count=#{@txs_limit}", :public)
       end)
 
-    stats = parse_stats(await_ok(stats_task))
-    blocks = parse_blocks(await_ok(blocks_task))
-    transactions = parse_transactions(await_ok(txs_task))
+    stats = parse_stats(await_ok(stats_task, "stats"))
+    blocks = parse_blocks(await_ok(blocks_task, "blocks"))
+    transactions = parse_transactions(await_ok(txs_task, "transactions"))
 
     {coin_price, coin_price_change, gas_slow, gas_avg, gas_fast, gas_price} =
       derive_stats_fields(stats)
@@ -83,13 +85,27 @@ defmodule FrontendExWeb.HomeController do
     end
   end
 
-  defp await_ok(task) do
+  defp await_ok(task, label) do
     case Task.await(task, 10_000) do
-      {:ok, json} -> json
-      {:error, _} -> nil
+      {:ok, json} ->
+        json
+
+      {:error, reason} ->
+        Logger.warning("home: upstream request failed",
+          endpoint: label,
+          reason: inspect(reason)
+        )
+
+        nil
     end
   catch
-    :exit, _ -> nil
+    :exit, reason ->
+      Logger.warning("home: upstream task crashed/timed out",
+        endpoint: label,
+        reason: inspect(reason)
+      )
+
+      nil
   end
 
   defp parse_stats(nil), do: nil

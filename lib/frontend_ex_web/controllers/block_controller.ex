@@ -1,13 +1,27 @@
 defmodule FrontendExWeb.BlockController do
   use FrontendExWeb, :controller
 
+  require Logger
+
   alias FrontendEx.Blockscout.Client
   alias FrontendEx.Format
   alias FrontendExWeb.BlockHTML
 
   @txs_preview_limit 20
+  @block_hash_re ~r/\A0x[0-9a-fA-F]{64}\z/i
+  @block_height_re ~r/\A\d+\z/
 
   def show(conn, %{"id" => id}) when is_binary(id) do
+    id = String.trim(id)
+
+    if not valid_block_id?(id) do
+      conn |> put_resp_content_type("text/plain") |> send_resp(404, "Block not found")
+    else
+      show_block(conn, id)
+    end
+  end
+
+  defp show_block(conn, id) do
     skin = FrontendExWeb.Skin.current()
 
     safe_empty = {:safe, ""}
@@ -22,9 +36,9 @@ defmodule FrontendExWeb.BlockController do
         Client.get_json_cached("/api/v2/blocks/#{id}/transactions", :public)
       end)
 
-    stats_json = await_ok(stats_task)
-    block_json = await_ok(block_task)
-    txs_json = await_ok(txs_task)
+    stats_json = await_ok(stats_task, "stats")
+    block_json = await_ok(block_task, "block")
+    txs_json = await_ok(txs_task, "block_txs")
 
     if is_nil(block_json) do
       conn
@@ -78,6 +92,16 @@ defmodule FrontendExWeb.BlockController do
   end
 
   def txs(conn, %{"id" => id}) when is_binary(id) do
+    id = String.trim(id)
+
+    if not valid_block_id?(id) do
+      conn |> put_resp_content_type("text/plain") |> send_resp(404, "Block not found")
+    else
+      txs_block(conn, id)
+    end
+  end
+
+  defp txs_block(conn, id) do
     skin = FrontendExWeb.Skin.current()
 
     safe_empty = {:safe, ""}
@@ -92,9 +116,9 @@ defmodule FrontendExWeb.BlockController do
         Client.get_json_cached("/api/v2/blocks/#{id}/transactions", :public)
       end)
 
-    stats_json = await_ok(stats_task)
-    block_json = await_ok(block_task)
-    txs_json = await_ok(txs_task)
+    stats_json = await_ok(stats_task, "stats")
+    block_json = await_ok(block_task, "block")
+    txs_json = await_ok(txs_task, "block_txs")
 
     if is_nil(block_json) do
       conn
@@ -149,13 +173,31 @@ defmodule FrontendExWeb.BlockController do
     end
   end
 
-  defp await_ok(task) do
+  defp valid_block_id?(id) when is_binary(id) do
+    Regex.match?(@block_height_re, id) or Regex.match?(@block_hash_re, id)
+  end
+
+  defp await_ok(task, label) do
     case Task.await(task, 10_000) do
-      {:ok, json} -> json
-      {:error, _} -> nil
+      {:ok, json} ->
+        json
+
+      {:error, reason} ->
+        Logger.warning("block: upstream request failed",
+          endpoint: label,
+          reason: inspect(reason)
+        )
+
+        nil
     end
   catch
-    :exit, _ -> nil
+    :exit, reason ->
+      Logger.warning("block: upstream task crashed/timed out",
+        endpoint: label,
+        reason: inspect(reason)
+      )
+
+      nil
   end
 
   defp derive_coin_gas(nil), do: {nil, nil}

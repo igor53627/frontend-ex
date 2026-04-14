@@ -11,10 +11,15 @@ defmodule FrontendExWeb.TokenController do
   @task_timeout_ms 10_000
   @max_cursor_len 200
   @max_items_count 50
+  @address_re ~r/\A0x[0-9a-fA-F]{40}\z/
 
   def show(conn, %{"address" => address} = params) when is_binary(address) and is_map(params) do
     address = String.trim(address)
-    cursor_query = cursor_query_param(params)
+
+    if not Regex.match?(@address_re, address) do
+      conn |> put_resp_content_type("text/plain") |> send_resp(404, "Token not found")
+    else
+      cursor_query = cursor_query_param(params)
 
     skin = FrontendExWeb.Skin.current()
     safe_empty = {:safe, ""}
@@ -113,12 +118,17 @@ defmodule FrontendExWeb.TokenController do
           })
       end
     end
+    end
   end
 
   def holders(conn, %{"address" => address} = params)
       when is_binary(address) and is_map(params) do
     address = String.trim(address)
-    cursor_query = cursor_query_param(params)
+
+    if not Regex.match?(@address_re, address) do
+      conn |> put_resp_content_type("text/plain") |> send_resp(404, "Token not found")
+    else
+      cursor_query = cursor_query_param(params)
 
     skin = FrontendExWeb.Skin.current()
     safe_empty = {:safe, ""}
@@ -216,6 +226,7 @@ defmodule FrontendExWeb.TokenController do
               nav_tokens: "active"
           })
       end
+    end
     end
   end
 

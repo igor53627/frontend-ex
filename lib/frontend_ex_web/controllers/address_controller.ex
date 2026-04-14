@@ -1,6 +1,8 @@
 defmodule FrontendExWeb.AddressController do
   use FrontendExWeb, :controller
 
+  require Logger
+
   alias FrontendEx.Blockscout.Client
   alias FrontendEx.Format
   alias FrontendExWeb.AddressHTML
@@ -8,8 +10,21 @@ defmodule FrontendExWeb.AddressController do
 
   @txs_preview_limit 25
   @token_holdings_preview_limit 10
+  @address_re ~r/\A0x[0-9a-fA-F]{40}\z/
 
   def show(conn, %{"address" => address} = params) when is_binary(address) do
+    address = String.trim(address)
+
+    unless Regex.match?(@address_re, address) do
+      conn
+      |> put_resp_content_type("text/plain")
+      |> send_resp(404, "Address not found")
+    else
+      show_valid(conn, address, params)
+    end
+  end
+
+  defp show_valid(conn, address, params) do
     skin = FrontendExWeb.Skin.current()
 
     safe_empty = {:safe, ""}
@@ -37,10 +52,10 @@ defmodule FrontendExWeb.AddressController do
         Client.get_json_cached("/api/v2/addresses/#{address}/tokens", :public)
       end)
 
-    stats_json = await_ok(stats_task)
-    addr_json = await_ok(addr_task)
-    txs_json = await_ok(txs_task)
-    tokens_json = await_ok(tokens_task)
+    stats_json = await_ok(stats_task, "stats")
+    addr_json = await_ok(addr_task, "address")
+    txs_json = await_ok(txs_task, "address_txs")
+    tokens_json = await_ok(tokens_task, "address_tokens")
 
     if is_nil(addr_json) do
       conn
@@ -122,13 +137,27 @@ defmodule FrontendExWeb.AddressController do
     "/api/v2/addresses/#{address}/transactions?" <> cursor_query
   end
 
-  defp await_ok(task) do
+  defp await_ok(task, label) do
     case Task.await(task, 10_000) do
-      {:ok, json} -> json
-      {:error, _} -> nil
+      {:ok, json} ->
+        json
+
+      {:error, reason} ->
+        Logger.warning("address: upstream request failed",
+          endpoint: label,
+          reason: inspect(reason)
+        )
+
+        nil
     end
   catch
-    :exit, _ -> nil
+    :exit, reason ->
+      Logger.warning("address: upstream task crashed/timed out",
+        endpoint: label,
+        reason: inspect(reason)
+      )
+
+      nil
   end
 
   defp derive_coin_gas(nil), do: {nil, nil}
