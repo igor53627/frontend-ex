@@ -3,10 +3,10 @@ id: TASK-28
 title: >-
   Harden controllers: input validation + error logging + force_ssl health
   exclusion
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-04-14 06:56'
-updated_date: '2026-04-14 08:06'
+updated_date: '2026-04-14 08:17'
 labels:
   - hardening
   - elixir
@@ -47,3 +47,9 @@ Refs:
 - lib/frontend_ex_web/controllers/token_controller.ex:331-378 (good await_many_ok)
 - config/prod.exs:9 (commented health exclusion)
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Added input validation to AddressController, TokenController, and BlockController (matching existing patterns in AddressTabsController/TxController). Added Logger.warning to all bare await_ok calls in AddressController, BlockController, and HomeController. Fixed force_ssl exclude config (was a separate top-level key, moved into force_ssl options). Added 7 regression tests for invalid input 404 responses.
+<!-- SECTION:FINAL_SUMMARY:END -->
