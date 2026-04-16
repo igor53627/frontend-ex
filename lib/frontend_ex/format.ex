@@ -264,9 +264,27 @@ defmodule FrontendEx.Format do
 
   # Insert commas every 3 ASCII digits from the right. O(n) single pass —
   # the prior implementation used 7 Enum passes (graphemes/reverse/chunk/
-  # map-reverse/reverse/map-join/join). All digits are ASCII so byte-level
-  # binary pattern matching is correct.
+  # map-reverse/reverse/map-join/join).
+  #
+  # This operates on raw bytes, so non-ASCII-digit input is passed through
+  # unchanged (format_int_with_commas_str may receive non-numeric "int parts"
+  # from format_decimal_with_commas; we don't want to split mid-codepoint).
   defp insert_thousands_commas(s) when is_binary(s) do
+    if ascii_digits_only?(s) do
+      do_insert_commas(s)
+    else
+      s
+    end
+  end
+
+  defp ascii_digits_only?(<<>>), do: true
+
+  defp ascii_digits_only?(<<c, rest::binary>>) when c >= ?0 and c <= ?9,
+    do: ascii_digits_only?(rest)
+
+  defp ascii_digits_only?(_), do: false
+
+  defp do_insert_commas(s) do
     size = byte_size(s)
 
     if size <= 3 do

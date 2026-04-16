@@ -83,6 +83,26 @@ defmodule FrontendEx.FormatTest do
     end
   end
 
+  describe "format_decimal_with_commas/1 — UTF-8 safety" do
+    test "ASCII int parts are formatted normally" do
+      assert Format.format_decimal_with_commas("1234567.89") == "1,234,567.89"
+      assert Format.format_decimal_with_commas("1000.5") == "1,000.5"
+      assert Format.format_decimal_with_commas("1234") == "1,234"
+    end
+
+    test "non-ASCII int part is passed through without splitting codepoints" do
+      # If upstream ever returns garbage, the formatter must not split
+      # multi-byte UTF-8 sequences. Passing the non-numeric int part
+      # through untouched is the safe outcome.
+      assert Format.format_decimal_with_commas("нет.5") == "нет.5"
+      assert Format.format_decimal_with_commas("ábcdé.5") == "ábcdé.5"
+    end
+
+    test "non-ASCII no-decimal input is passed through" do
+      assert Format.format_decimal_with_commas("нет") == "нет"
+    end
+  end
+
   describe "format_blocks_time_ago/1" do
     setup do
       frozen_now = ~U[2026-02-09 12:00:00Z]
