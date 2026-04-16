@@ -1,8 +1,6 @@
 defmodule FrontendExWeb.BlockController do
   use FrontendExWeb, :controller
 
-  require Logger
-
   alias FrontendEx.Blockscout.Client
   alias FrontendEx.Format
   alias FrontendExWeb.BlockHTML
@@ -24,9 +22,9 @@ defmodule FrontendExWeb.BlockController do
   defp show_block(conn, id) do
     skin = FrontendExWeb.Skin.current()
 
-    safe_empty = {:safe, ""}
+    safe_empty = safe_empty()
 
-    explorer_url = Application.get_env(:frontend_ex, :blockscout_url, "https://sepolia.53627.org")
+    explorer_url = explorer_url()
 
     stats_task = Task.async(fn -> Client.get_json_cached("/api/v2/stats", :public) end)
     block_task = Task.async(fn -> Client.get_json_cached("/api/v2/blocks/#{id}", :public) end)
@@ -36,9 +34,9 @@ defmodule FrontendExWeb.BlockController do
         Client.get_json_cached("/api/v2/blocks/#{id}/transactions", :public)
       end)
 
-    stats_json = await_ok(stats_task, "stats")
-    block_json = await_ok(block_task, "block")
-    txs_json = await_ok(txs_task, "block_txs")
+    stats_json = await_ok(stats_task, "block", "stats")
+    block_json = await_ok(block_task, "block", "block")
+    txs_json = await_ok(txs_task, "block", "block_txs")
 
     if is_nil(block_json) do
       conn
@@ -104,9 +102,9 @@ defmodule FrontendExWeb.BlockController do
   defp txs_block(conn, id) do
     skin = FrontendExWeb.Skin.current()
 
-    safe_empty = {:safe, ""}
+    safe_empty = safe_empty()
 
-    explorer_url = Application.get_env(:frontend_ex, :blockscout_url, "https://sepolia.53627.org")
+    explorer_url = explorer_url()
 
     stats_task = Task.async(fn -> Client.get_json_cached("/api/v2/stats", :public) end)
     block_task = Task.async(fn -> Client.get_json_cached("/api/v2/blocks/#{id}", :public) end)
@@ -116,9 +114,9 @@ defmodule FrontendExWeb.BlockController do
         Client.get_json_cached("/api/v2/blocks/#{id}/transactions", :public)
       end)
 
-    stats_json = await_ok(stats_task, "stats")
-    block_json = await_ok(block_task, "block")
-    txs_json = await_ok(txs_task, "block_txs")
+    stats_json = await_ok(stats_task, "block", "stats")
+    block_json = await_ok(block_task, "block", "block")
+    txs_json = await_ok(txs_task, "block", "block_txs")
 
     if is_nil(block_json) do
       conn
@@ -175,50 +173,6 @@ defmodule FrontendExWeb.BlockController do
 
   defp valid_block_id?(id) when is_binary(id) do
     Regex.match?(@block_height_re, id) or Regex.match?(@block_hash_re, id)
-  end
-
-  defp await_ok(task, label) do
-    case Task.await(task, 10_000) do
-      {:ok, json} ->
-        json
-
-      {:error, reason} ->
-        Logger.warning("block: upstream request failed",
-          endpoint: label,
-          reason: inspect(reason)
-        )
-
-        nil
-    end
-  catch
-    :exit, reason ->
-      Logger.warning("block: upstream task crashed/timed out",
-        endpoint: label,
-        reason: inspect(reason)
-      )
-
-      nil
-  end
-
-  defp derive_coin_gas(nil), do: {nil, nil}
-
-  defp derive_coin_gas(%{} = stats_json) do
-    coin_price =
-      case stats_json["coin_price"] do
-        v when is_binary(v) -> Format.format_price_with_commas(v)
-        _ -> nil
-      end
-
-    gas_price =
-      case get_in(stats_json, ["gas_prices", "average", "price"]) do
-        v when is_number(v) ->
-          Format.format_one_decimal(v)
-
-        _ ->
-          nil
-      end
-
-    {coin_price, gas_price}
   end
 
   defp parse_block_and_preview_txs(block_json, txs_json, skin, explorer_url)

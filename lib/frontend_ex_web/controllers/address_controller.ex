@@ -1,8 +1,6 @@
 defmodule FrontendExWeb.AddressController do
   use FrontendExWeb, :controller
 
-  require Logger
-
   alias FrontendEx.Blockscout.Client
   alias FrontendEx.Format
   alias FrontendExWeb.AddressHTML
@@ -27,9 +25,9 @@ defmodule FrontendExWeb.AddressController do
   defp show_valid(conn, address, params) do
     skin = FrontendExWeb.Skin.current()
 
-    safe_empty = {:safe, ""}
+    safe_empty = safe_empty()
 
-    explorer_url = Application.get_env(:frontend_ex, :blockscout_url, "https://sepolia.53627.org")
+    explorer_url = explorer_url()
 
     cursor_query =
       case Map.get(params, "cursor") do
@@ -52,10 +50,10 @@ defmodule FrontendExWeb.AddressController do
         Client.get_json_cached("/api/v2/addresses/#{address}/tokens", :public)
       end)
 
-    stats_json = await_ok(stats_task, "stats")
-    addr_json = await_ok(addr_task, "address")
-    txs_json = await_ok(txs_task, "address_txs")
-    tokens_json = await_ok(tokens_task, "address_tokens")
+    stats_json = await_ok(stats_task, "address", "stats")
+    addr_json = await_ok(addr_task, "address", "address")
+    txs_json = await_ok(txs_task, "address", "address_txs")
+    tokens_json = await_ok(tokens_task, "address", "address_tokens")
 
     if is_nil(addr_json) do
       conn
@@ -135,50 +133,6 @@ defmodule FrontendExWeb.AddressController do
 
   defp address_txs_path(address, cursor_query) when is_binary(cursor_query) do
     "/api/v2/addresses/#{address}/transactions?" <> cursor_query
-  end
-
-  defp await_ok(task, label) do
-    case Task.await(task, 10_000) do
-      {:ok, json} ->
-        json
-
-      {:error, reason} ->
-        Logger.warning("address: upstream request failed",
-          endpoint: label,
-          reason: inspect(reason)
-        )
-
-        nil
-    end
-  catch
-    :exit, reason ->
-      Logger.warning("address: upstream task crashed/timed out",
-        endpoint: label,
-        reason: inspect(reason)
-      )
-
-      nil
-  end
-
-  defp derive_coin_gas(nil), do: {nil, nil}
-
-  defp derive_coin_gas(%{} = stats_json) do
-    coin_price =
-      case stats_json["coin_price"] do
-        v when is_binary(v) -> Format.format_price_with_commas(v)
-        _ -> nil
-      end
-
-    gas_price =
-      case get_in(stats_json, ["gas_prices", "average", "price"]) do
-        v when is_number(v) ->
-          Format.format_one_decimal(v)
-
-        _ ->
-          nil
-      end
-
-    {coin_price, gas_price}
   end
 
   defp parse_address(%{} = json) do
