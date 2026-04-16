@@ -5,10 +5,14 @@ defmodule FrontendExWeb.Router do
 
   # Sessions/CSRF are intentionally avoided for parity SSR routes (see :fast_browser),
   # but we keep a working :browser pipeline for future non-parity pages.
+  #
+  # The signing salt is read from config (compile-time). For prod,
+  # `config/prod.exs` requires the `SESSION_SIGNING_SALT` env var at build time.
   @session_options [
     store: :cookie,
     key: "_frontend_ex_key",
-    signing_salt: "EF6QTIu+",
+    signing_salt:
+      Application.compile_env(:frontend_ex, :session_signing_salt, "dev-only-not-for-prod"),
     same_site: "Lax"
   ]
 

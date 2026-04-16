@@ -11,6 +11,12 @@ config :frontend_ex,
   generators: [timestamp_type: :utc_datetime]
 
 # Configure the endpoint
+#
+# Session and LiveView signing salts default to dev-only placeholders here
+# and must be overridden at build time for prod — see `config/prod.exs` which
+# reads SESSION_SIGNING_SALT / LIVE_VIEW_SIGNING_SALT from the environment.
+config :frontend_ex, :session_signing_salt, "dev-only-not-for-prod"
+
 config :frontend_ex, FrontendExWeb.Endpoint,
   url: [host: "localhost"],
   adapter: Bandit.PhoenixAdapter,
@@ -19,7 +25,7 @@ config :frontend_ex, FrontendExWeb.Endpoint,
     layout: false
   ],
   pubsub_server: FrontendEx.PubSub,
-  live_view: [signing_salt: "fuLVURu+"]
+  live_view: [signing_salt: "dev-only-not-for-prod"]
 
 # Configure Elixir's Logger
 config :logger, :default_formatter,
