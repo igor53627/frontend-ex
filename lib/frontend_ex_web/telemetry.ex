@@ -46,6 +46,9 @@ defmodule FrontendExWeb.Telemetry do
         reporter_options: [buckets: duration_buckets_seconds()],
         description: "Histogram of endpoint request duration."
       ),
+      # `:route` is Phoenix's matched route *template* (e.g. "/block/:id"), not
+      # the resolved path — so cardinality is bounded by route count, not
+      # request count. Safe as a Prometheus label.
       counter("phoenix.router_dispatch.stop.count.total",
         event_name: [:phoenix, :router_dispatch, :stop],
         measurement: &inc_one/2,
