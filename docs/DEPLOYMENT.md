@@ -13,7 +13,19 @@ mix phx.server
 
 ## Release Build
 
-Build a runnable release:
+Build-time secrets. `SESSION_SIGNING_SALT` and `LIVE_VIEW_SIGNING_SALT`
+are compile-time Phoenix session options and must be set in the environment
+*before* `mix release` — they are baked into the built release and cannot
+be overridden at runtime. `SECRET_KEY_BASE` is runtime and is exported in
+the "run" step below.
+
+```bash
+# Generate once per deploy, store safely, reuse across rebuilds.
+export SESSION_SIGNING_SALT="$(mix phx.gen.secret 32)"
+export LIVE_VIEW_SIGNING_SALT="$(mix phx.gen.secret 32)"
+```
+
+Then build a runnable release:
 
 ```bash
 MIX_ENV=prod mix deps.get --only prod
@@ -21,7 +33,7 @@ MIX_ENV=prod mix compile
 MIX_ENV=prod mix release --overwrite
 ```
 
-If you don't have Elixir/Erlang installed on the host, you can build using `podman` (or Docker):
+If you don't have Elixir/Erlang installed on the host, you can build using `podman` (or Docker). Pass the build-time salts through to the container:
 
 ```bash
 podman run --rm \
@@ -30,6 +42,8 @@ podman run --rm \
   -e MIX_ENV=prod \
   -e MIX_HOME=/app/.mix \
   -e HEX_HOME=/app/.hex \
+  -e SESSION_SIGNING_SALT \
+  -e LIVE_VIEW_SIGNING_SALT \
   docker.io/library/elixir:1.16.3-otp-26 \
   sh -lc 'mix local.hex --force && mix local.rebar --force && mix deps.get --only prod && mix compile && mix release --overwrite'
 ```
@@ -39,10 +53,6 @@ Run the release:
 ```bash
 export PHX_SERVER=true
 export SECRET_KEY_BASE="$(mix phx.gen.secret)"
-# Required at *build* time (baked into the release during `mix release`).
-# If you built the release above without these set, rebuild with them set.
-export SESSION_SIGNING_SALT="$(mix phx.gen.secret 32)"
-export LIVE_VIEW_SIGNING_SALT="$(mix phx.gen.secret 32)"
 
 # Example: bind locally for a quick smoke test
 export LISTEN_ADDR=127.0.0.1:3010
