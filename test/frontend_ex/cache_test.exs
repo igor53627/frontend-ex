@@ -83,4 +83,25 @@ defmodule FrontendEx.CacheTest do
       assert :error = Cache.get(cache, :k)
     end
   end
+
+  describe "non-atom server name" do
+    # A `{:via, Registry, …}` or similar non-atom registration must still work.
+    # Non-atom names fall back to an anonymous table and GenServer-mediated
+    # reads (no direct-ETS optimization).
+    test "starts cleanly and serves reads via GenServer" do
+      {:ok, _} =
+        start_supervised(
+          Supervisor.child_spec(
+            {Cache, name: {:global, :cache_non_atom_test}, max_entries: 5},
+            id: :cache_non_atom_test
+          )
+        )
+
+      cache = {:global, :cache_non_atom_test}
+
+      :ok = Cache.put(cache, :k, "v", 5_000)
+      assert {:ok, "v"} = Cache.get(cache, :k)
+      assert :error = Cache.get(cache, :missing)
+    end
+  end
 end
