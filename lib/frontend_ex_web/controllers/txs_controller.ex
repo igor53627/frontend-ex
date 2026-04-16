@@ -104,25 +104,9 @@ defmodule FrontendExWeb.TxsController do
     end
   end
 
-  defp normalize_page_size(params) when is_map(params) do
-    raw = Map.get(params, "ps") || Map.get(params, "limit") || ""
-
-    parsed =
-      case raw do
-        v when is_integer(v) -> v
-        v when is_binary(v) -> Integer.parse(String.trim(v))
-        _ -> :error
-      end
-
-    value =
-      case parsed do
-        v when is_integer(v) -> v
-        {v, ""} when is_integer(v) -> v
-        _ -> @default_page_size
-      end
-
-    if value in @page_size_options, do: value, else: @default_page_size
-  end
+  defp normalize_page_size(params),
+    do:
+      FrontendExWeb.Pagination.normalize_page_size(params, @page_size_options, @default_page_size)
 
   defp cursor_query_from_params(params) when is_map(params) do
     cursor_raw =

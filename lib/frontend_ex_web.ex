@@ -43,6 +43,7 @@ defmodule FrontendExWeb do
 
       import Plug.Conn
       import FrontendExWeb.ControllerHelpers
+      import FrontendExWeb.Pagination
       import FrontendExWeb.Parsers
 
       unquote(verified_routes())

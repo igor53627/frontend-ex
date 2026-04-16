@@ -195,54 +195,17 @@ defmodule FrontendExWeb.NftController do
     end
   end
 
-  defp normalize_page_size(params) when is_map(params) do
-    raw = Map.get(params, "ps") || Map.get(params, "limit") || ""
+  defp normalize_page_size(params),
+    do:
+      FrontendExWeb.Pagination.normalize_page_size(params, @page_size_options, @default_page_size)
 
-    parsed =
-      case raw do
-        v when is_integer(v) -> v
-        v when is_binary(v) -> Integer.parse(String.trim(v))
-        _ -> :error
-      end
-
-    value =
-      case parsed do
-        v when is_integer(v) -> v
-        {v, ""} when is_integer(v) -> v
-        _ -> @default_page_size
-      end
-
-    if value in @page_size_options, do: value, else: @default_page_size
-  end
-
-  defp normalize_export_page_size(params) when is_map(params) do
-    raw = Map.get(params, "ps") || Map.get(params, "limit") || ""
-
-    parsed =
-      case raw do
-        v when is_integer(v) -> v
-        v when is_binary(v) -> Integer.parse(String.trim(v))
-        _ -> :error
-      end
-
-    value =
-      case parsed do
-        v when is_integer(v) -> v
-        {v, ""} when is_integer(v) -> v
-        _ -> @default_export_page_size
-      end
-
-    if value in @page_size_options, do: value, else: @default_export_page_size
-  end
-
-  defp normalize_cursor_param(nil), do: nil
-
-  defp normalize_cursor_param(value) when is_binary(value) do
-    value = String.trim(value)
-    if value == "", do: nil, else: value
-  end
-
-  defp normalize_cursor_param(_), do: nil
+  defp normalize_export_page_size(params),
+    do:
+      FrontendExWeb.Pagination.normalize_page_size(
+        params,
+        @page_size_options,
+        @default_export_page_size
+      )
 
   defp token_transfers_path(page_size, nil, token_types)
        when is_integer(page_size) and is_binary(token_types) do
