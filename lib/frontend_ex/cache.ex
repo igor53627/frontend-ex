@@ -342,23 +342,40 @@ defmodule FrontendEx.Cache do
 
     token = make_ref()
 
-    {:ok, pid} =
-      Task.Supervisor.start_child(task_supervisor(), fn ->
-        result = safe_call(fun)
-        send(parent, {:fetch_done, key, token, result})
-      end)
+    case safe_start_child(task_supervisor(), fn ->
+           result = safe_call(fun)
+           send(parent, {:fetch_done, key, token, result})
+         end) do
+      {:ok, pid} ->
+        ref = Process.monitor(pid)
 
-    ref = Process.monitor(pid)
+        inflight = %{
+          pid: pid,
+          ref: ref,
+          token: token,
+          waiters: [first_waiter],
+          ttl_ms: ttl_ms
+        }
 
-    inflight = %{
-      pid: pid,
-      ref: ref,
-      token: token,
-      waiters: [first_waiter],
-      ttl_ms: ttl_ms
-    }
+        %{state | inflight: Map.put(state.inflight, key, inflight)}
 
-    %{state | inflight: Map.put(state.inflight, key, inflight)}
+      {:error, reason} ->
+        # Task supervisor unavailable (shutdown / :max_children / missing
+        # process). Reply the waiter instead of crashing the cache GenServer;
+        # the inflight map stays clean so a retry can go through a healthy
+        # supervisor later.
+        GenServer.reply(first_waiter, {:error, {:task_start_failed, reason}})
+        state
+    end
+  end
+
+  # Wraps `Task.Supervisor.start_child/2` so a missing supervisor (which
+  # would raise `:exit` from an underlying `GenServer.call`) becomes an
+  # `{:error, _}` return instead of propagating into the cache GenServer.
+  defp safe_start_child(supervisor, fun) do
+    Task.Supervisor.start_child(supervisor, fun)
+  catch
+    :exit, reason -> {:error, {:supervisor_exit, reason}}
   end
 
   defp safe_call(fun) do

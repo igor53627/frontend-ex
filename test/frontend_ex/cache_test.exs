@@ -102,6 +102,30 @@ defmodule FrontendEx.CacheTest do
                Cache.get_or_fetch(cache, :k_bad, 1000, fetch)
     end
 
+    test "waiter receives error when task supervisor is unavailable", %{cache: cache} do
+      prev = Application.get_env(:frontend_ex, :cache_task_supervisor)
+
+      on_exit(fn ->
+        if is_nil(prev) do
+          Application.delete_env(:frontend_ex, :cache_task_supervisor)
+        else
+          Application.put_env(:frontend_ex, :cache_task_supervisor, prev)
+        end
+      end)
+
+      # Point at a supervisor that doesn't exist → start_child returns error.
+      Application.put_env(:frontend_ex, :cache_task_supervisor, :nonexistent_supervisor)
+
+      assert {:error, {:task_start_failed, _reason}} =
+               Cache.get_or_fetch(cache, :k_nosup, 1_000, fn -> {:ok, :val} end)
+
+      # Cache survives the failure and stays usable once supervisor is restored.
+      Application.put_env(:frontend_ex, :cache_task_supervisor, FrontendEx.Cache.TaskSupervisor)
+
+      assert {:ok, :ok_val} =
+               Cache.get_or_fetch(cache, :k_nosup, 1_000, fn -> {:ok, :ok_val} end)
+    end
+
     test "waiters receive error when fetch process is killed externally", %{cache: cache} do
       # Start a fetch that blocks forever, then kill it from outside.
       parent = self()

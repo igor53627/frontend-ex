@@ -286,24 +286,42 @@ defmodule FrontendEx.Cache.SWR do
     else
       parent = self()
       token = make_ref()
-      {:ok, pid} = start_refresh_task(parent, key, token, fetch_fun)
-      ref = Process.monitor(pid)
 
-      inflight = %{
-        pid: pid,
-        ref: ref,
-        token: token
-      }
+      case start_refresh_task(parent, key, token, fetch_fun) do
+        {:ok, pid} ->
+          ref = Process.monitor(pid)
 
-      %{state | refresh_inflight: Map.put(state.refresh_inflight, key, inflight)}
+          inflight = %{
+            pid: pid,
+            ref: ref,
+            token: token
+          }
+
+          %{state | refresh_inflight: Map.put(state.refresh_inflight, key, inflight)}
+
+        {:error, _reason} ->
+          # Best-effort refresh. If the Task.Supervisor isn't available,
+          # skip this refresh cycle; callers serving the stale value still
+          # get a correct response.
+          state
+      end
     end
   end
 
   defp start_refresh_task(parent, key, token, fetch_fun) do
-    Task.Supervisor.start_child(task_supervisor(), fn ->
+    safe_start_child(task_supervisor(), fn ->
       result = safe_call(fetch_fun)
       send(parent, {:refresh_done, key, token, result})
     end)
+  end
+
+  # Wraps `Task.Supervisor.start_child/2` so a missing supervisor (which
+  # would raise `:exit` from an underlying `GenServer.call`) becomes an
+  # `{:error, _}` return instead of propagating into the SWR GenServer.
+  defp safe_start_child(supervisor, fun) do
+    Task.Supervisor.start_child(supervisor, fun)
+  catch
+    :exit, reason -> {:error, {:supervisor_exit, reason}}
   end
 
   defp start_fetch(state, key, fetch_fun, first_waiter) do
@@ -316,23 +334,29 @@ defmodule FrontendEx.Cache.SWR do
         parent = self()
         token = make_ref()
 
-        {:ok, pid} =
-          Task.Supervisor.start_child(task_supervisor(), fn ->
-            result = safe_call(fetch_fun)
-            send(parent, {:fetch_done, key, token, result})
-          end)
+        case safe_start_child(task_supervisor(), fn ->
+               result = safe_call(fetch_fun)
+               send(parent, {:fetch_done, key, token, result})
+             end) do
+          {:ok, pid} ->
+            ref = Process.monitor(pid)
 
-        ref = Process.monitor(pid)
+            inflight = %{
+              pid: pid,
+              ref: ref,
+              token: token,
+              waiters: [first_waiter],
+              fetch: fetch_fun
+            }
 
-        inflight = %{
-          pid: pid,
-          ref: ref,
-          token: token,
-          waiters: [first_waiter],
-          fetch: fetch_fun
-        }
+            %{state | inflight: Map.put(state.inflight, key, inflight)}
 
-        %{state | inflight: Map.put(state.inflight, key, inflight)}
+          {:error, reason} ->
+            # Task supervisor unavailable. Reply the waiter; keep inflight
+            # clean so a subsequent call under a healthy supervisor can retry.
+            GenServer.reply(first_waiter, {:error, {:task_start_failed, reason}})
+            state
+        end
     end
   end
 
