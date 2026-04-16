@@ -13,6 +13,11 @@ defmodule FrontendEx.Application do
       # Keep a single shared HTTP pool for all outbound requests.
       # Connect timeout is set to match fast-frontend's reqwest client (10s).
       {Finch, name: FrontendEx.Finch, pools: %{default: [conn_opts: [timeout: 10_000]]}},
+      # Supervises background fetch/refresh tasks started by the cache
+      # modules. Using a Task.Supervisor (vs bare Task.start) gives us clean
+      # shutdown on application stop and removes orphan risk if the cache
+      # GenServers crash while tasks are in flight.
+      {Task.Supervisor, name: FrontendEx.Cache.TaskSupervisor},
       # In-memory caches for Blockscout API responses.
       {FrontendEx.Cache, name: FrontendEx.ApiCache, max_entries: 1000},
       {FrontendEx.Cache.SWR, name: FrontendEx.ApiSWRCache, max_entries: 100},

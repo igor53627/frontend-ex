@@ -84,6 +84,51 @@ defmodule FrontendEx.CacheTest do
     end
   end
 
+  describe "fetch task failure paths" do
+    test "waiters receive error when fetch raises", %{cache: cache} do
+      fetch = fn -> raise "boom" end
+
+      assert {:error, {%RuntimeError{}, _stacktrace}} =
+               Cache.get_or_fetch(cache, :k_raise, 1000, fetch)
+
+      # Map is clean; a subsequent successful fetch is served without coalescing.
+      assert {:ok, :ok_val} = Cache.get_or_fetch(cache, :k_raise, 1000, fn -> {:ok, :ok_val} end)
+    end
+
+    test "waiters receive error when fetch returns invalid shape", %{cache: cache} do
+      fetch = fn -> :not_a_tuple end
+
+      assert {:error, {:invalid_fetch_return, :not_a_tuple}} =
+               Cache.get_or_fetch(cache, :k_bad, 1000, fetch)
+    end
+
+    test "waiters receive error when fetch process is killed externally", %{cache: cache} do
+      # Start a fetch that blocks forever, then kill it from outside.
+      parent = self()
+
+      fetch = fn ->
+        send(parent, {:fetch_pid, self()})
+
+        receive do
+          :never -> :unreachable
+        end
+      end
+
+      task = Task.async(fn -> Cache.get_or_fetch(cache, :k_kill, 5_000, fetch) end)
+
+      # Wait for fetch task to announce its pid.
+      receive do
+        {:fetch_pid, pid} ->
+          # Hard-kill the fetch task; bypasses safe_call's rescue/catch.
+          Process.exit(pid, :kill)
+      after
+        1_000 -> flunk("fetch task never started")
+      end
+
+      assert {:error, {:task_down, :killed}} = Task.await(task, 2_000)
+    end
+  end
+
   describe "non-atom server name" do
     # A `{:via, Registry, …}` or similar non-atom registration must still work.
     # Non-atom names fall back to an anonymous table and GenServer-mediated

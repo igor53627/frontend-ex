@@ -343,7 +343,7 @@ defmodule FrontendEx.Cache do
     token = make_ref()
 
     {:ok, pid} =
-      Task.start(fn ->
+      Task.Supervisor.start_child(task_supervisor(), fn ->
         result = safe_call(fun)
         send(parent, {:fetch_done, key, token, result})
       end)
@@ -378,6 +378,12 @@ defmodule FrontendEx.Cache do
   defp find_inflight_key(inflight, ref) do
     inflight
     |> Enum.find_value(fn {key, %{ref: r}} -> if r == ref, do: key, else: nil end)
+  end
+
+  # Which Task.Supervisor to use for background fetches. Defaults to the app's
+  # shared supervisor; tests can override via `:blockscout_task_supervisor`.
+  defp task_supervisor do
+    Application.get_env(:frontend_ex, :cache_task_supervisor, FrontendEx.Cache.TaskSupervisor)
   end
 
   defp schedule_cleanup do
