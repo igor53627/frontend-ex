@@ -10,6 +10,10 @@ defmodule FrontendExWeb.ParsersTest do
       assert Parsers.eth_address?("0xAaBbCcDdEeFf0011223344556677889900aAbBcC")
     end
 
+    test "accepts uppercase 0X prefix" do
+      assert Parsers.eth_address?("0X" <> String.duplicate("a", 40))
+    end
+
     test "rejects wrong length" do
       refute Parsers.eth_address?("0x" <> String.duplicate("a", 39))
       refute Parsers.eth_address?("0x" <> String.duplicate("a", 41))
@@ -40,6 +44,10 @@ defmodule FrontendExWeb.ParsersTest do
       assert Parsers.tx_hash?("0x" <> String.duplicate("F", 64))
     end
 
+    test "accepts uppercase 0X prefix" do
+      assert Parsers.tx_hash?("0X" <> String.duplicate("a", 64))
+    end
+
     test "rejects wrong length" do
       refute Parsers.tx_hash?("0x" <> String.duplicate("a", 63))
       refute Parsers.tx_hash?("0x" <> String.duplicate("a", 65))
@@ -58,6 +66,10 @@ defmodule FrontendExWeb.ParsersTest do
 
     test "accepts 32-byte hash" do
       assert Parsers.block_id?("0x" <> String.duplicate("a", 64))
+    end
+
+    test "accepts uppercase 0X prefix on hash" do
+      assert Parsers.block_id?("0X" <> String.duplicate("a", 64))
     end
 
     test "rejects eth-address-sized hash" do

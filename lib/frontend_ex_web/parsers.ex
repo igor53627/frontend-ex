@@ -9,20 +9,21 @@ defmodule FrontendExWeb.Parsers do
   fallback. None of these functions raise on malformed input.
   """
 
-  @address_re ~r/\A0x[0-9a-fA-F]{40}\z/
-  @hash32_re ~r/\A0x[0-9a-fA-F]{64}\z/
+  @address_re ~r/\A0x[0-9a-fA-F]{40}\z/i
+  @hash32_re ~r/\A0x[0-9a-fA-F]{64}\z/i
   @decimal_re ~r/\A\d+\z/
 
-  @doc "Regex matching a lowercase-or-mixed-case EVM address (`0x` + 40 hex chars)."
+  @doc "Regex matching an EVM address (`0x` + 40 hex chars, case-insensitive prefix)."
   @spec address_regex() :: Regex.t()
   def address_regex, do: @address_re
 
-  @doc "Regex matching a 32-byte hex hash (tx hash or block hash)."
+  @doc "Regex matching a 32-byte hex hash (tx hash or block hash), case-insensitive prefix."
   @spec hash32_regex() :: Regex.t()
   def hash32_regex, do: @hash32_re
 
   @doc """
-  Returns `true` iff `v` is a binary of the form `0x[0-9a-fA-F]{40}`.
+  Returns `true` iff `v` is an EVM-style address (`0x` + 40 hex chars). The
+  prefix is case-insensitive (`0x` or `0X`).
 
   Does not trim; callers should trim first if needed.
   """
@@ -31,9 +32,8 @@ defmodule FrontendExWeb.Parsers do
   def eth_address?(_), do: false
 
   @doc """
-  Returns `true` iff `v` is a binary of the form `0x[0-9a-fA-F]{64}`.
-
-  Covers transaction hashes and block hashes alike.
+  Returns `true` iff `v` is a 32-byte hex hash (`0x` + 64 hex chars). The
+  prefix is case-insensitive. Covers transaction and block hashes alike.
   """
   @spec tx_hash?(term()) :: boolean()
   def tx_hash?(v) when is_binary(v), do: Regex.match?(@hash32_re, v)
