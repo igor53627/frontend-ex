@@ -3,11 +3,14 @@ defmodule FrontendExWeb.Endpoint do
 
   # Parity routes intentionally avoid sessions/CSRF. Keep the endpoint lean to
   # reduce overhead and avoid cookie parsing/signing on every request.
-
+  #
+  # Signing salt is read from config (compile-time). Prod requires the
+  # SESSION_SIGNING_SALT env var at build time (see config/prod.exs).
   @session_options [
     store: :cookie,
     key: "_frontend_ex_key",
-    signing_salt: "EF6QTIu+",
+    signing_salt:
+      Application.compile_env(:frontend_ex, :session_signing_salt, "dev-only-not-for-prod"),
     same_site: "Lax"
   ]
 
@@ -37,9 +40,13 @@ defmodule FrontendExWeb.Endpoint do
   plug Plug.RequestId
   plug Plug.Telemetry, event_prefix: [:phoenix, :endpoint]
 
+  # Parity routes are GET-only; POST parsers exist for LiveDashboard and
+  # forward-compat. Cap body size and reject unknown content-types (no
+  # `pass: ["*/*"]`) so unexpected large/odd payloads 415 instead of being
+  # buffered through.
   plug Plug.Parsers,
     parsers: [:urlencoded, :multipart, :json],
-    pass: ["*/*"],
+    length: 1_000_000,
     json_decoder: Phoenix.json_library()
 
   plug Plug.MethodOverride
