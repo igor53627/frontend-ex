@@ -210,6 +210,11 @@ defmodule FrontendEx.Blockscout.Client do
     request_adapter().request_raw(url)
   end
 
+  # Tests swap the adapter via `Application.put_env/3` (see
+  # `test/frontend_ex/blockscout/client_test.exs`), so this stays read-through
+  # rather than being cached in `:persistent_term` — a cache would serve a
+  # stale adapter after test-side mutation. The lookup is an ETS read
+  # (sub-microsecond); not a meaningful hot-path cost.
   defp request_adapter do
     Application.get_env(
       :frontend_ex,
