@@ -45,7 +45,42 @@ defmodule FrontendEx.Cache do
   end
 
   @spec get(GenServer.server(), key()) :: {:ok, value()} | :error
+  def get(server, key) when is_atom(server) do
+    # Direct ETS read. The prod hot path (`Client.get_or_fetch/4`) hits this
+    # on every request; previously every read serialized through a single
+    # GenServer.call. The table is `:protected`, so only the owning GenServer
+    # writes — readers observe the last committed write without coordination.
+    #
+    # Instances started with an injected `now_ms` (tests) skip this path so
+    # expiry is checked against the injected clock, not `System.monotonic_time`.
+    if :persistent_term.get({__MODULE__, server, :direct_reads}, false) do
+      direct_get(server, key)
+    else
+      GenServer.call(server, {:get, key})
+    end
+  end
+
   def get(server, key), do: GenServer.call(server, {:get, key})
+
+  defp direct_get(server, key) do
+    case :ets.lookup(data_table(server), key) do
+      [{^key, value, _inserted_ms, expires_ms}] ->
+        if System.monotonic_time(:millisecond) < expires_ms do
+          {:ok, value}
+        else
+          :error
+        end
+
+      [] ->
+        :error
+    end
+  rescue
+    ArgumentError ->
+      # Named table not registered (race with init or teardown).
+      GenServer.call(server, {:get, key})
+  end
+
+  defp data_table(name) when is_atom(name), do: :"#{name}.data"
 
   @spec put(GenServer.server(), key(), value(), non_neg_integer()) :: :ok
   def put(server, key, value, ttl_ms) when is_integer(ttl_ms) and ttl_ms >= 0 do
@@ -75,10 +110,23 @@ defmodule FrontendEx.Cache do
 
   @impl true
   def init(opts) do
-    table = :ets.new(__MODULE__, [:set, :private, read_concurrency: true])
+    # `:protected, :named_table` lets callers do `:ets.lookup/2` directly
+    # (see `get/2`) while keeping writes owner-only. The name is derived from
+    # the GenServer's registered name so multiple cache instances coexist.
+    name = Keyword.get(opts, :name, __MODULE__)
+
+    table =
+      :ets.new(data_table(name), [:set, :protected, :named_table, read_concurrency: true])
+
     index_table = :ets.new(__MODULE__, [:ordered_set, :private])
-    now_ms = Keyword.get(opts, :now_ms, fn -> System.monotonic_time(:millisecond) end)
+    injected_now_ms = Keyword.get(opts, :now_ms)
+    now_ms = injected_now_ms || fn -> System.monotonic_time(:millisecond) end
     max_entries = Keyword.get(opts, :max_entries, :infinity)
+
+    # Only enable the direct read path when the default clock is in use.
+    # An injected clock (test scenario) must go through the GenServer so
+    # expiry checks against the test's frozen time, not wall time.
+    :persistent_term.put({__MODULE__, name, :direct_reads}, is_nil(injected_now_ms))
 
     state = %__MODULE__{
       table: table,
