@@ -32,4 +32,32 @@ defmodule FrontendExWeb.Plugs.DashboardLocalOnlyTest do
 
     refute conn.halted
   end
+
+  test "allows IPv6 ::1 loopback", %{conn: conn} do
+    conn =
+      conn
+      |> Map.put(:remote_ip, {0, 0, 0, 0, 0, 0, 0, 1})
+      |> DashboardLocalOnly.call([])
+
+    refute conn.halted
+  end
+
+  test "allows IPv4-mapped IPv6 ::ffff:127.0.0.1", %{conn: conn} do
+    conn =
+      conn
+      |> Map.put(:remote_ip, {0, 0, 0, 0, 0, 0xFFFF, 0x7F00, 0x0001})
+      |> DashboardLocalOnly.call([])
+
+    refute conn.halted
+  end
+
+  test "rejects non-loopback IPv6 addresses", %{conn: conn} do
+    conn =
+      conn
+      |> Map.put(:remote_ip, {0x2001, 0xDB8, 0, 0, 0, 0, 0, 1})
+      |> DashboardLocalOnly.call([])
+
+    assert conn.halted
+    assert response(conn, 404) == "Not found"
+  end
 end
