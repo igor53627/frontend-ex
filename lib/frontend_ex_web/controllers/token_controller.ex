@@ -9,12 +9,11 @@ defmodule FrontendExWeb.TokenController do
   @task_timeout_ms 10_000
   @max_cursor_len 200
   @max_items_count 50
-  @address_re ~r/\A0x[0-9a-fA-F]{40}\z/
 
   def show(conn, %{"address" => address} = params) when is_binary(address) and is_map(params) do
     address = String.trim(address)
 
-    if not Regex.match?(@address_re, address) do
+    if not eth_address?(address) do
       conn |> put_resp_content_type("text/plain") |> send_resp(404, "Token not found")
     else
       cursor_query = cursor_query_param(params)
@@ -124,7 +123,7 @@ defmodule FrontendExWeb.TokenController do
       when is_binary(address) and is_map(params) do
     address = String.trim(address)
 
-    if not Regex.match?(@address_re, address) do
+    if not eth_address?(address) do
       conn |> put_resp_content_type("text/plain") |> send_resp(404, "Token not found")
     else
       cursor_query = cursor_query_param(params)
@@ -767,11 +766,4 @@ defmodule FrontendExWeb.TokenController do
   end
 
   defp parse_opt_u8(_), do: nil
-
-  defp parse_int_or(s, fallback) when is_binary(s) do
-    case Integer.parse(String.trim(s)) do
-      {n, ""} -> n
-      _ -> fallback
-    end
-  end
 end

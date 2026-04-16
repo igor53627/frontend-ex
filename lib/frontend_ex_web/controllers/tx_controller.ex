@@ -9,8 +9,6 @@ defmodule FrontendExWeb.TxController do
   @task_timeout_ms 10_000
   # Rust treats transaction-by-hash and related tx tabs data as immutable (300s cache).
   @immutable_ttl_ms 300_000
-  @tx_hash_re ~r/\A0x[0-9a-fA-F]{64}\z/i
-  @eth_address_re ~r/\A0x[0-9a-fA-F]{40}\z/i
 
   def show(conn, %{"hash" => hash}) when is_binary(hash) do
     hash = String.trim(hash)
@@ -417,13 +415,8 @@ defmodule FrontendExWeb.TxController do
     |> send_resp(404, "Transaction not found")
   end
 
-  defp valid_tx_hash?(hash) when is_binary(hash) do
-    String.match?(String.trim(hash), @tx_hash_re)
-  end
-
-  defp valid_eth_address?(address) when is_binary(address) do
-    String.match?(String.trim(address), @eth_address_re)
-  end
+  defp valid_tx_hash?(hash) when is_binary(hash), do: tx_hash?(String.trim(hash))
+  defp valid_eth_address?(address) when is_binary(address), do: eth_address?(String.trim(address))
 
   defp render_logs_tab(conn, hash) when is_binary(hash) do
     safe_empty = safe_empty()
@@ -944,9 +937,6 @@ defmodule FrontendExWeb.TxController do
   defp parse_fee(%{"value" => v}) when is_binary(v), do: %{value: v}
   defp parse_fee(_), do: nil
 
-  defp normalize_opt_string(v) when is_binary(v), do: String.trim(v)
-  defp normalize_opt_string(_), do: nil
-
   defp maybe_format_method(nil), do: nil
 
   defp maybe_format_method(%{} = tx) do
@@ -1078,15 +1068,4 @@ defmodule FrontendExWeb.TxController do
   end
 
   defp gas_fields(_used, _limit), do: {nil, nil}
-
-  defp parse_u64(v) when is_integer(v) and v >= 0, do: v
-
-  defp parse_u64(v) when is_binary(v) do
-    case Integer.parse(String.trim(v)) do
-      {n, ""} when n >= 0 -> n
-      _ -> nil
-    end
-  end
-
-  defp parse_u64(_), do: nil
 end

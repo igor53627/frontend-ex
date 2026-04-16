@@ -8,12 +8,11 @@ defmodule FrontendExWeb.AddressController do
 
   @txs_preview_limit 25
   @token_holdings_preview_limit 10
-  @address_re ~r/\A0x[0-9a-fA-F]{40}\z/
 
   def show(conn, %{"address" => address} = params) when is_binary(address) do
     address = String.trim(address)
 
-    unless Regex.match?(@address_re, address) do
+    unless eth_address?(address) do
       conn
       |> put_resp_content_type("text/plain")
       |> send_resp(404, "Address not found")
@@ -290,18 +289,4 @@ defmodule FrontendExWeb.AddressController do
   defp format_tx_count_display(count) when is_integer(count) and count >= 0 do
     Format.format_number_with_commas(Integer.to_string(count))
   end
-
-  defp normalize_opt_string(v) when is_binary(v), do: String.trim(v)
-  defp normalize_opt_string(_), do: nil
-
-  defp parse_u64(v) when is_integer(v) and v >= 0, do: v
-
-  defp parse_u64(v) when is_binary(v) do
-    case Integer.parse(String.trim(v)) do
-      {n, ""} when n >= 0 -> n
-      _ -> nil
-    end
-  end
-
-  defp parse_u64(_), do: nil
 end

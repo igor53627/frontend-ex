@@ -6,13 +6,11 @@ defmodule FrontendExWeb.BlockController do
   alias FrontendExWeb.BlockHTML
 
   @txs_preview_limit 20
-  @block_hash_re ~r/\A0x[0-9a-fA-F]{64}\z/i
-  @block_height_re ~r/\A\d+\z/
 
   def show(conn, %{"id" => id}) when is_binary(id) do
     id = String.trim(id)
 
-    if not valid_block_id?(id) do
+    if not block_id?(id) do
       conn |> put_resp_content_type("text/plain") |> send_resp(404, "Block not found")
     else
       show_block(conn, id)
@@ -92,7 +90,7 @@ defmodule FrontendExWeb.BlockController do
   def txs(conn, %{"id" => id}) when is_binary(id) do
     id = String.trim(id)
 
-    if not valid_block_id?(id) do
+    if not block_id?(id) do
       conn |> put_resp_content_type("text/plain") |> send_resp(404, "Block not found")
     else
       txs_block(conn, id)
@@ -169,10 +167,6 @@ defmodule FrontendExWeb.BlockController do
           })
       end
     end
-  end
-
-  defp valid_block_id?(id) when is_binary(id) do
-    Regex.match?(@block_height_re, id) or Regex.match?(@block_hash_re, id)
   end
 
   defp parse_block_and_preview_txs(block_json, txs_json, skin, explorer_url)
@@ -423,17 +417,6 @@ defmodule FrontendExWeb.BlockController do
       Float.to_string(v)
     end
   end
-
-  defp parse_u64(v) when is_integer(v) and v >= 0, do: v
-
-  defp parse_u64(v) when is_binary(v) do
-    case Integer.parse(String.trim(v)) do
-      {n, ""} when n >= 0 -> n
-      _ -> nil
-    end
-  end
-
-  defp parse_u64(_), do: nil
 
   defp format_signed(n) when is_integer(n) and n >= 0, do: "+" <> Integer.to_string(n)
   defp format_signed(n) when is_integer(n), do: Integer.to_string(n)

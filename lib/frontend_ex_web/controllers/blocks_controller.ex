@@ -121,13 +121,6 @@ defmodule FrontendExWeb.BlocksController do
     }
   end
 
-  defp parse_int_or(s, fallback) when is_binary(s) do
-    case Integer.parse(s) do
-      {n, ""} -> n
-      _ -> fallback
-    end
-  end
-
   defp format_optional_number_string(nil), do: ""
 
   defp format_optional_number_string(v) when is_integer(v),
