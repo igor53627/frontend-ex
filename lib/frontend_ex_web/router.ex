@@ -123,13 +123,4 @@ defmodule FrontendExWeb.Router do
 
     get "/tx/:hash/og-image.svg", TxController, :og_image
   end
-
-  scope "/", FrontendExWeb do
-    pipe_through :browser
-  end
-
-  # Other scopes may use custom stacks.
-  # scope "/api", FrontendExWeb do
-  #   pipe_through :api
-  # end
 end
