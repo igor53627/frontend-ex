@@ -117,4 +117,43 @@ defmodule FrontendEx.CacheSWRTest do
 
     assert Process.alive?(pid)
   end
+
+  describe "fetch task failure paths" do
+    test "waiters receive error when fetch raises", %{cache: cache} do
+      fetch = fn -> raise "boom" end
+
+      assert {:error, {%RuntimeError{}, _stacktrace}} =
+               SWR.get_or_fetch(cache, :k_raise, 5_000, 20_000, fetch)
+
+      # GenServer survives; a subsequent fetch succeeds.
+      assert Process.alive?(Process.whereis(cache))
+
+      assert {:ok, :ok_val} =
+               SWR.get_or_fetch(cache, :k_raise, 5_000, 20_000, fn -> {:ok, :ok_val} end)
+    end
+
+    test "waiters receive error when fetch process is externally killed", %{cache: cache} do
+      parent = self()
+
+      fetch = fn ->
+        send(parent, {:fetch_pid, self()})
+
+        receive do
+          :never -> :unreachable
+        end
+      end
+
+      caller =
+        Task.async(fn -> SWR.get_or_fetch(cache, :k_kill, 5_000, 20_000, fetch) end)
+
+      receive do
+        {:fetch_pid, pid} -> Process.exit(pid, :kill)
+      after
+        1_000 -> flunk("fetch task never started")
+      end
+
+      assert {:error, {:task_down, :killed}} = Task.await(caller, 2_000)
+      assert Process.alive?(Process.whereis(cache))
+    end
+  end
 end
