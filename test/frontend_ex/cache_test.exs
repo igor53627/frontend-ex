@@ -57,4 +57,30 @@ defmodule FrontendEx.CacheTest do
     assert {:ok, "v"} = Task.await(t2, 1_000)
     assert Agent.get(counter, & &1) == 1
   end
+
+  describe "direct ETS read path" do
+    # Separate setup: no injected clock, so the direct-read path is enabled.
+    setup do
+      name = :"#{__MODULE__}.DirectReads"
+      start_supervised!({Cache, name: name, max_entries: 10})
+      %{cache: name}
+    end
+
+    test "get/2 returns fresh values via direct ETS read", %{cache: cache} do
+      :ok = Cache.put(cache, :k, "v", 5_000)
+      assert {:ok, "v"} = Cache.get(cache, :k)
+    end
+
+    test "get/2 returns :error for missing keys", %{cache: cache} do
+      assert :error = Cache.get(cache, :missing)
+    end
+
+    test "get/2 treats expired entries as :error", %{cache: cache} do
+      :ok = Cache.put(cache, :k, "v", 0)
+      # With ttl_ms=0 the entry is instantly expired under monotonic time.
+      # Small sleep to guarantee monotonic tick moves past expiry.
+      Process.sleep(5)
+      assert :error = Cache.get(cache, :k)
+    end
+  end
 end
