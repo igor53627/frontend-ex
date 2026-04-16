@@ -9,8 +9,11 @@ defmodule FrontendExWeb.Plugs.TrimTrailingNewline do
     register_before_send(conn, fn conn ->
       content_type = conn |> get_resp_header("content-type") |> List.first()
 
-      # Only trim SSR HTML responses. Other responses (e.g. CSV exports) must
-      # preserve trailing newlines for parity with Rust.
+      # Trim only if we're rendering HTML (parity bytes must not have trailing
+      # newlines). Any explicit non-HTML content-type — CSV exports, SVG,
+      # plain text — must be passed through untouched for parity with Rust.
+      # A missing content-type header falls through to the trim branch; in
+      # Phoenix SSR flows the default rendered content-type is text/html.
       if is_binary(content_type) and not String.starts_with?(content_type, "text/html") do
         conn
       else
