@@ -9,7 +9,6 @@ defmodule FrontendExWeb.AddressTabsController do
   @task_timeout_ms 10_000
   @preview_limit 25
 
-  @address_re ~r/\A0x[0-9a-fA-F]{40}\z/
   @digits_re ~r/\A\d+\z/
 
   def tokens(conn, %{"address" => address}) when is_binary(address) do
@@ -60,7 +59,7 @@ defmodule FrontendExWeb.AddressTabsController do
   defp normalize_address_param(address) when is_binary(address) do
     address = String.trim(address)
 
-    if Regex.match?(@address_re, address) do
+    if eth_address?(address) do
       String.downcase(address)
     else
       nil
@@ -396,9 +395,6 @@ defmodule FrontendExWeb.AddressTabsController do
     Format.format_number_with_commas(Integer.to_string(count))
   end
 
-  defp normalize_opt_string(v) when is_binary(v), do: String.trim(v)
-  defp normalize_opt_string(_), do: nil
-
   defp normalize_id_or_dash(v) when is_binary(v) do
     v = String.trim(v)
     if v == "", do: "-", else: v
@@ -406,17 +402,6 @@ defmodule FrontendExWeb.AddressTabsController do
 
   defp normalize_id_or_dash(v) when is_integer(v), do: Integer.to_string(v)
   defp normalize_id_or_dash(_), do: "-"
-
-  defp parse_u64(v) when is_integer(v) and v >= 0, do: v
-
-  defp parse_u64(v) when is_binary(v) do
-    case Integer.parse(String.trim(v)) do
-      {n, ""} when n >= 0 -> n
-      _ -> nil
-    end
-  end
-
-  defp parse_u64(_), do: nil
 
   defp parse_opt_u8(nil), do: nil
   defp parse_opt_u8(v) when is_integer(v) and v >= 0 and v <= 255, do: v
@@ -767,16 +752,4 @@ defmodule FrontendExWeb.AddressTabsController do
   end
 
   defp format_internal_amount(_), do: "0 ETH"
-
-  defp parse_int_or(nil, fallback), do: fallback
-  defp parse_int_or(v, _fallback) when is_integer(v), do: v
-
-  defp parse_int_or(v, fallback) when is_binary(v) do
-    case Integer.parse(String.trim(v)) do
-      {n, ""} -> n
-      _ -> fallback
-    end
-  end
-
-  defp parse_int_or(_v, fallback), do: fallback
 end

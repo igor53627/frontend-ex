@@ -851,15 +851,4 @@ defmodule FrontendExWeb.NftController do
   end
 
   defp string_or_nil(_), do: nil
-
-  defp parse_u64(v) when is_integer(v) and v >= 0, do: v
-
-  defp parse_u64(v) when is_binary(v) do
-    case Integer.parse(v) do
-      {n, ""} when n >= 0 -> n
-      _ -> nil
-    end
-  end
-
-  defp parse_u64(_), do: nil
 end
