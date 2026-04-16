@@ -381,7 +381,7 @@ defmodule FrontendEx.Cache do
   end
 
   # Which Task.Supervisor to use for background fetches. Defaults to the app's
-  # shared supervisor; tests can override via `:blockscout_task_supervisor`.
+  # shared supervisor; tests can override via `:cache_task_supervisor`.
   defp task_supervisor do
     Application.get_env(:frontend_ex, :cache_task_supervisor, FrontendEx.Cache.TaskSupervisor)
   end
