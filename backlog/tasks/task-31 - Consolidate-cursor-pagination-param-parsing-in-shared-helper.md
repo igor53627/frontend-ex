@@ -4,7 +4,7 @@ title: Consolidate cursor/pagination param parsing in shared helper
 status: Done
 assignee: []
 created_date: '2026-04-16 19:20'
-updated_date: '2026-04-16 20:29'
+updated_date: '2026-04-16 20:31'
 labels:
   - elixir
   - refactor
@@ -19,8 +19,8 @@ priority: medium
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [x] #1 normalize_page_size, cursor_query_from_params, merge_cursor_params live in one module (FrontendExWeb.Pagination or FrontendEx.Blockscout.Cursor)
-- [x] #2 txs_controller, token_controller, nft_controller all call the shared helpers (no local copies)
+- [ ] #1 normalize_page_size, cursor_query_from_params, merge_cursor_params live in one module (FrontendExWeb.Pagination or FrontendEx.Blockscout.Cursor)
+- [ ] #2 txs_controller, token_controller, nft_controller all call the shared helpers (no local copies)
 - [x] #3 Golden tests cover pagination edge cases (empty next_page_params, malformed cursor, size bounds)
 <!-- AC:END -->
 
