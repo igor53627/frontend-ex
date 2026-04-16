@@ -68,6 +68,11 @@ defmodule FrontendEx.Cache do
         if System.monotonic_time(:millisecond) < expires_ms do
           {:ok, value}
         else
+          # Expired. Ask the owning GenServer to delete both the data row and
+          # its index-table sibling. A cast keeps the read path non-blocking
+          # while still pruning promptly (so `max_entries` accounting matches
+          # reality and the 60s cleanup timer isn't the only gardener).
+          GenServer.cast(server, {:delete_expired, key})
           :error
         end
 
@@ -215,6 +220,26 @@ defmodule FrontendEx.Cache do
             {:noreply, state}
         end
     end
+  end
+
+  @impl true
+  def handle_cast({:delete_expired, key}, state) do
+    # Sent from the direct-read path when it observes an expired entry.
+    # Delete only if the row is still present *and* still expired under the
+    # GenServer's own clock — racing with a concurrent `put/4` must not drop
+    # a just-refreshed value.
+    now = state.now_ms.()
+
+    case :ets.lookup(state.table, key) do
+      [{^key, _v, inserted_ms, expires_ms}] when now >= expires_ms ->
+        _ = :ets.delete(state.table, key)
+        _ = :ets.delete(state.index_table, {inserted_ms, key})
+
+      _ ->
+        :ok
+    end
+
+    {:noreply, state}
   end
 
   @impl true
