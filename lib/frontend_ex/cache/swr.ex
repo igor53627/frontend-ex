@@ -300,7 +300,7 @@ defmodule FrontendEx.Cache.SWR do
   end
 
   defp start_refresh_task(parent, key, token, fetch_fun) do
-    Task.start(fn ->
+    Task.Supervisor.start_child(task_supervisor(), fn ->
       result = safe_call(fetch_fun)
       send(parent, {:refresh_done, key, token, result})
     end)
@@ -317,7 +317,7 @@ defmodule FrontendEx.Cache.SWR do
         token = make_ref()
 
         {:ok, pid} =
-          Task.start(fn ->
+          Task.Supervisor.start_child(task_supervisor(), fn ->
             result = safe_call(fetch_fun)
             send(parent, {:fetch_done, key, token, result})
           end)
@@ -444,6 +444,11 @@ defmodule FrontendEx.Cache.SWR do
     waiters = Map.get(state.refresh_waiters, key, [])
     Enum.each(waiters, &GenServer.reply(&1, :ok))
     %{state | refresh_waiters: Map.delete(state.refresh_waiters, key)}
+  end
+
+  # Which Task.Supervisor to use for fetch/refresh. Shared with FrontendEx.Cache.
+  defp task_supervisor do
+    Application.get_env(:frontend_ex, :cache_task_supervisor, FrontendEx.Cache.TaskSupervisor)
   end
 
   defp schedule_cleanup do
