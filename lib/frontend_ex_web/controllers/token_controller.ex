@@ -1,8 +1,6 @@
 defmodule FrontendExWeb.TokenController do
   use FrontendExWeb, :controller
 
-  require Logger
-
   alias FrontendEx.Blockscout.Client
   alias FrontendEx.Blockscout.Cursor
   alias FrontendEx.Format
@@ -21,103 +19,104 @@ defmodule FrontendExWeb.TokenController do
     else
       cursor_query = cursor_query_param(params)
 
-    skin = FrontendExWeb.Skin.current()
-    safe_empty = {:safe, ""}
+      skin = FrontendExWeb.Skin.current()
+      safe_empty = safe_empty()
 
-    explorer_url = Application.get_env(:frontend_ex, :blockscout_url, "https://sepolia.53627.org")
+      explorer_url = explorer_url()
 
-    is_first_page = is_nil(cursor_query)
+      is_first_page = is_nil(cursor_query)
 
-    stats_path = "/api/v2/stats"
-    token_path = "/api/v2/tokens/#{address}"
-    transfers_path = transfers_path(address, cursor_query)
+      stats_path = "/api/v2/stats"
+      token_path = "/api/v2/tokens/#{address}"
+      transfers_path = transfers_path(address, cursor_query)
 
-    stats_task = Task.async(fn -> safe_get_json_cached(stats_path, :public) end)
-    token_task = Task.async(fn -> safe_get_json_cached(token_path, :public) end)
-    transfers_task = Task.async(fn -> safe_get_json_cached(transfers_path, :public) end)
+      stats_task = Task.async(fn -> safe_get_json_cached(stats_path, :public) end)
+      token_task = Task.async(fn -> safe_get_json_cached(token_path, :public) end)
+      transfers_task = Task.async(fn -> safe_get_json_cached(transfers_path, :public) end)
 
-    [stats_json, token_json, transfers_json] =
-      await_many_ok(
-        [{"stats", stats_task}, {"token", token_task}, {"transfers", transfers_task}],
-        @task_timeout_ms
-      )
+      [stats_json, token_json, transfers_json] =
+        await_many_ok(
+          [{"stats", stats_task}, {"token", token_task}, {"transfers", transfers_task}],
+          "token",
+          @task_timeout_ms
+        )
 
-    if is_nil(token_json) do
-      conn
-      |> put_resp_content_type("text/plain")
-      |> send_resp(404, "Token not found")
-    else
-      {coin_price, gas_price} = derive_coin_gas(stats_json)
-      token = parse_token(token_json, address)
-      header = build_token_header(token, address)
+      if is_nil(token_json) do
+        conn
+        |> put_resp_content_type("text/plain")
+        |> send_resp(404, "Token not found")
+      else
+        {coin_price, gas_price} = derive_coin_gas(stats_json)
+        token = parse_token(token_json, address)
+        header = build_token_header(token, address)
 
-      {transfers, next_cursor} = parse_transfers_response(transfers_json)
+        {transfers, next_cursor} = parse_transfers_response(transfers_json)
 
-      page_label =
-        if is_first_page do
-          "Latest"
-        else
-          "Older"
+        page_label =
+          if is_first_page do
+            "Latest"
+          else
+            "Older"
+          end
+
+        base_assigns = %{
+          page_title: "",
+          explorer_url: explorer_url,
+          head_meta: safe_empty,
+          styles: safe_empty,
+          scripts: safe_empty,
+          topbar: safe_empty,
+          nav_home: "",
+          nav_blocks: "",
+          nav_txs: "",
+          nav_tokens: "",
+          nav_nfts: "",
+          token: token,
+          token_name: header.token_name,
+          token_symbol: header.token_symbol_display,
+          token_type: header.token_type,
+          token_title: header.token_title,
+          avatar_letter: header.avatar_letter,
+          token_address: header.token_address,
+          total_supply_display: header.total_supply_display,
+          holders_display: header.holders_display,
+          total_transfers_display: "N/A",
+          volume_24h_display: header.volume_24h_display,
+          price_display: header.price_display,
+          market_cap_display: header.market_cap_display,
+          transfers: transfers,
+          page_label: page_label,
+          is_first_page: is_first_page,
+          next_cursor: next_cursor,
+          coin_price: coin_price,
+          gas_price: gas_price
+        }
+
+        case skin do
+          :classic ->
+            render(conn, :classic_content, %{
+              base_assigns
+              | page_title: header.token_title,
+                nav_tokens: "active"
+            })
+
+          :s53627 ->
+            topbar = BlockHTML.s53627_topbar(base_assigns)
+
+            render(conn, :s53627_content, %{
+              base_assigns
+              | page_title: "Token #{header.token_name} | Explorer",
+                topbar: topbar
+            })
+
+          _ ->
+            render(conn, :classic_content, %{
+              base_assigns
+              | page_title: header.token_title,
+                nav_tokens: "active"
+            })
         end
-
-      base_assigns = %{
-        page_title: "",
-        explorer_url: explorer_url,
-        head_meta: safe_empty,
-        styles: safe_empty,
-        scripts: safe_empty,
-        topbar: safe_empty,
-        nav_home: "",
-        nav_blocks: "",
-        nav_txs: "",
-        nav_tokens: "",
-        nav_nfts: "",
-        token: token,
-        token_name: header.token_name,
-        token_symbol: header.token_symbol_display,
-        token_type: header.token_type,
-        token_title: header.token_title,
-        avatar_letter: header.avatar_letter,
-        token_address: header.token_address,
-        total_supply_display: header.total_supply_display,
-        holders_display: header.holders_display,
-        total_transfers_display: "N/A",
-        volume_24h_display: header.volume_24h_display,
-        price_display: header.price_display,
-        market_cap_display: header.market_cap_display,
-        transfers: transfers,
-        page_label: page_label,
-        is_first_page: is_first_page,
-        next_cursor: next_cursor,
-        coin_price: coin_price,
-        gas_price: gas_price
-      }
-
-      case skin do
-        :classic ->
-          render(conn, :classic_content, %{
-            base_assigns
-            | page_title: header.token_title,
-              nav_tokens: "active"
-          })
-
-        :s53627 ->
-          topbar = BlockHTML.s53627_topbar(base_assigns)
-
-          render(conn, :s53627_content, %{
-            base_assigns
-            | page_title: "Token #{header.token_name} | Explorer",
-              topbar: topbar
-          })
-
-        _ ->
-          render(conn, :classic_content, %{
-            base_assigns
-            | page_title: header.token_title,
-              nav_tokens: "active"
-          })
       end
-    end
     end
   end
 
@@ -130,103 +129,104 @@ defmodule FrontendExWeb.TokenController do
     else
       cursor_query = cursor_query_param(params)
 
-    skin = FrontendExWeb.Skin.current()
-    safe_empty = {:safe, ""}
+      skin = FrontendExWeb.Skin.current()
+      safe_empty = safe_empty()
 
-    explorer_url = Application.get_env(:frontend_ex, :blockscout_url, "https://sepolia.53627.org")
+      explorer_url = explorer_url()
 
-    is_first_page = is_nil(cursor_query)
+      is_first_page = is_nil(cursor_query)
 
-    stats_path = "/api/v2/stats"
-    token_path = "/api/v2/tokens/#{address}"
-    holders_path = holders_path(address, cursor_query)
+      stats_path = "/api/v2/stats"
+      token_path = "/api/v2/tokens/#{address}"
+      holders_path = holders_path(address, cursor_query)
 
-    stats_task = Task.async(fn -> safe_get_json_cached(stats_path, :public) end)
-    token_task = Task.async(fn -> safe_get_json_cached(token_path, :public) end)
-    holders_task = Task.async(fn -> safe_get_json_cached(holders_path, :public) end)
+      stats_task = Task.async(fn -> safe_get_json_cached(stats_path, :public) end)
+      token_task = Task.async(fn -> safe_get_json_cached(token_path, :public) end)
+      holders_task = Task.async(fn -> safe_get_json_cached(holders_path, :public) end)
 
-    [stats_json, token_json, holders_json] =
-      await_many_ok(
-        [{"stats", stats_task}, {"token", token_task}, {"holders", holders_task}],
-        @task_timeout_ms
-      )
+      [stats_json, token_json, holders_json] =
+        await_many_ok(
+          [{"stats", stats_task}, {"token", token_task}, {"holders", holders_task}],
+          "token",
+          @task_timeout_ms
+        )
 
-    if is_nil(token_json) do
-      conn
-      |> put_resp_content_type("text/plain")
-      |> send_resp(404, "Token not found")
-    else
-      {coin_price, gas_price} = derive_coin_gas(stats_json)
-      token = parse_token(token_json, address)
-      header = build_token_header(token, address)
+      if is_nil(token_json) do
+        conn
+        |> put_resp_content_type("text/plain")
+        |> send_resp(404, "Token not found")
+      else
+        {coin_price, gas_price} = derive_coin_gas(stats_json)
+        token = parse_token(token_json, address)
+        header = build_token_header(token, address)
 
-      {holders, next_cursor} = parse_holders_response(holders_json, token)
+        {holders, next_cursor} = parse_holders_response(holders_json, token)
 
-      page_label =
-        if is_first_page do
-          "Top"
-        else
-          "More"
+        page_label =
+          if is_first_page do
+            "Top"
+          else
+            "More"
+          end
+
+        base_assigns = %{
+          page_title: "",
+          explorer_url: explorer_url,
+          head_meta: safe_empty,
+          styles: safe_empty,
+          scripts: safe_empty,
+          topbar: safe_empty,
+          nav_home: "",
+          nav_blocks: "",
+          nav_txs: "",
+          nav_tokens: "",
+          nav_nfts: "",
+          token: token,
+          token_name: header.token_name,
+          token_symbol: header.token_symbol_display,
+          token_type: header.token_type,
+          token_title: header.token_title,
+          avatar_letter: header.avatar_letter,
+          token_address: header.token_address,
+          total_supply_display: header.total_supply_display,
+          holders_display: header.holders_display,
+          total_transfers_display: "N/A",
+          volume_24h_display: header.volume_24h_display,
+          price_display: header.price_display,
+          market_cap_display: header.market_cap_display,
+          holders: holders,
+          page_label: page_label,
+          is_first_page: is_first_page,
+          next_cursor: next_cursor,
+          coin_price: coin_price,
+          gas_price: gas_price
+        }
+
+        case skin do
+          :classic ->
+            render(conn, :classic_holders_content, %{
+              base_assigns
+              | page_title: header.token_title,
+                nav_tokens: "active"
+            })
+
+          :s53627 ->
+            topbar = BlockHTML.s53627_topbar(base_assigns)
+
+            render(conn, :s53627_holders_content, %{
+              base_assigns
+              | page_title: "Token #{header.token_name} | Explorer",
+                topbar: topbar
+            })
+
+          _ ->
+            render(conn, :classic_holders_content, %{
+              base_assigns
+              | page_title: header.token_title,
+                nav_tokens: "active"
+            })
         end
-
-      base_assigns = %{
-        page_title: "",
-        explorer_url: explorer_url,
-        head_meta: safe_empty,
-        styles: safe_empty,
-        scripts: safe_empty,
-        topbar: safe_empty,
-        nav_home: "",
-        nav_blocks: "",
-        nav_txs: "",
-        nav_tokens: "",
-        nav_nfts: "",
-        token: token,
-        token_name: header.token_name,
-        token_symbol: header.token_symbol_display,
-        token_type: header.token_type,
-        token_title: header.token_title,
-        avatar_letter: header.avatar_letter,
-        token_address: header.token_address,
-        total_supply_display: header.total_supply_display,
-        holders_display: header.holders_display,
-        total_transfers_display: "N/A",
-        volume_24h_display: header.volume_24h_display,
-        price_display: header.price_display,
-        market_cap_display: header.market_cap_display,
-        holders: holders,
-        page_label: page_label,
-        is_first_page: is_first_page,
-        next_cursor: next_cursor,
-        coin_price: coin_price,
-        gas_price: gas_price
-      }
-
-      case skin do
-        :classic ->
-          render(conn, :classic_holders_content, %{
-            base_assigns
-            | page_title: header.token_title,
-              nav_tokens: "active"
-          })
-
-        :s53627 ->
-          topbar = BlockHTML.s53627_topbar(base_assigns)
-
-          render(conn, :s53627_holders_content, %{
-            base_assigns
-            | page_title: "Token #{header.token_name} | Explorer",
-              topbar: topbar
-          })
-
-        _ ->
-          render(conn, :classic_holders_content, %{
-            base_assigns
-            | page_title: header.token_title,
-              nav_tokens: "active"
-          })
       end
-    end
     end
   end
 
@@ -338,75 +338,6 @@ defmodule FrontendExWeb.TokenController do
   end
 
   defp parse_nonneg_int(_), do: nil
-
-  defp await_many_ok(labeled_tasks, timeout_ms)
-       when is_list(labeled_tasks) and is_integer(timeout_ms) do
-    labels_by_ref =
-      Map.new(labeled_tasks, fn {label, %Task{ref: ref}} -> {ref, label} end)
-
-    tasks = Enum.map(labeled_tasks, &elem(&1, 1))
-
-    tasks
-    |> Task.yield_many(timeout_ms)
-    |> Enum.map(fn {task, res} ->
-      label = Map.get(labels_by_ref, task.ref, "unknown")
-
-      case res do
-        {:ok, {:ok, json}} ->
-          json
-
-        {:ok, {:error, reason}} ->
-          Logger.warning("token: upstream request failed",
-            endpoint: label,
-            reason: inspect(reason)
-          )
-
-          nil
-
-        {:ok, other} ->
-          Logger.warning("token: upstream request returned unexpected result",
-            endpoint: label,
-            result: inspect(other)
-          )
-
-          nil
-
-        {:exit, reason} ->
-          Logger.warning("token: upstream task crashed", endpoint: label, reason: inspect(reason))
-          nil
-
-        nil ->
-          Task.shutdown(task, :brutal_kill)
-
-          Logger.warning("token: upstream request timed out",
-            endpoint: label,
-            timeout_ms: timeout_ms
-          )
-
-          nil
-      end
-    end)
-  end
-
-  defp derive_coin_gas(nil), do: {nil, nil}
-
-  defp derive_coin_gas(%{} = stats_json) do
-    coin_price =
-      case stats_json["coin_price"] do
-        v when is_binary(v) -> Format.format_price_with_commas(v)
-        _ -> nil
-      end
-
-    gas_price =
-      case get_in(stats_json, ["gas_prices", "average", "price"]) do
-        v when is_number(v) -> Format.format_one_decimal(v)
-        _ -> nil
-      end
-
-    {coin_price, gas_price}
-  end
-
-  defp derive_coin_gas(_), do: {nil, nil}
 
   defp parse_token(nil, address) when is_binary(address) do
     %{

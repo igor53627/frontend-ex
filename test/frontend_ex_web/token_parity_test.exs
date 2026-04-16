@@ -6,9 +6,9 @@ defmodule FrontendExWeb.TokenParityTest do
 
   @golden_classic_path Path.expand("../golden/token.classic.rust.html", __DIR__)
   @golden_classic_holders_path Path.expand(
-                                   "../golden/token_holders.classic.rust.html",
-                                   __DIR__
-                                 )
+                                 "../golden/token_holders.classic.rust.html",
+                                 __DIR__
+                               )
   @golden_53627_path Path.expand("../golden/token.53627.rust.html", __DIR__)
   @golden_53627_holders_path Path.expand("../golden/token_holders.53627.rust.html", __DIR__)
 

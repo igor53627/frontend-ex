@@ -1,8 +1,6 @@
 defmodule FrontendExWeb.TxsController do
   use FrontendExWeb, :controller
 
-  require Logger
-
   alias FrontendEx.Blockscout.Client
   alias FrontendEx.Blockscout.Cursor
   alias FrontendEx.Format
@@ -15,9 +13,9 @@ defmodule FrontendExWeb.TxsController do
   def index(conn, params) when is_map(params) do
     skin = FrontendExWeb.Skin.current()
 
-    safe_empty = {:safe, ""}
+    safe_empty = safe_empty()
 
-    explorer_url = Application.get_env(:frontend_ex, :blockscout_url, "https://sepolia.53627.org")
+    explorer_url = explorer_url()
 
     page_size = normalize_page_size(params)
 
@@ -41,7 +39,7 @@ defmodule FrontendExWeb.TxsController do
       end)
 
     [stats_json, txs_json] =
-      await_many_ok([{stats_path, stats_task}, {txs_path, txs_task}], 10_000)
+      await_many_ok([{stats_path, stats_task}, {txs_path, txs_task}], "txs")
 
     {coin_price, gas_price, total_transactions_display} = derive_stats_fields(stats_json)
     {transactions, next_cursor} = parse_transactions_response(txs_json)
@@ -233,51 +231,6 @@ defmodule FrontendExWeb.TxsController do
     else
       "/api/v2/transactions?items_count=#{page_size}&" <> cursor_query
     end
-  end
-
-  defp await_many_ok(labeled_tasks, timeout_ms)
-       when is_list(labeled_tasks) and is_integer(timeout_ms) do
-    labels_by_ref =
-      Map.new(labeled_tasks, fn {label, %Task{ref: ref}} -> {ref, label} end)
-
-    tasks = Enum.map(labeled_tasks, &elem(&1, 1))
-
-    tasks
-    |> Task.yield_many(timeout_ms)
-    |> Enum.map(fn {task, res} ->
-      label = Map.get(labels_by_ref, task.ref, "unknown")
-
-      case res do
-        {:ok, {:ok, json}} ->
-          json
-
-        {:ok, {:error, reason}} ->
-          Logger.warning("txs: upstream request failed", endpoint: label, reason: inspect(reason))
-          nil
-
-        {:ok, other} ->
-          Logger.warning("txs: upstream request returned unexpected result",
-            endpoint: label,
-            result: inspect(other)
-          )
-
-          nil
-
-        {:exit, reason} ->
-          Logger.warning("txs: upstream task crashed", endpoint: label, reason: inspect(reason))
-          nil
-
-        nil ->
-          Task.shutdown(task, :brutal_kill)
-
-          Logger.warning("txs: upstream request timed out",
-            endpoint: label,
-            timeout_ms: timeout_ms
-          )
-
-          nil
-      end
-    end)
   end
 
   defp derive_stats_fields(nil), do: {nil, nil, nil}

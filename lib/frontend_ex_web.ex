@@ -42,6 +42,7 @@ defmodule FrontendExWeb do
       use Phoenix.Controller, formats: [:html, :json]
 
       import Plug.Conn
+      import FrontendExWeb.ControllerHelpers
 
       unquote(verified_routes())
     end

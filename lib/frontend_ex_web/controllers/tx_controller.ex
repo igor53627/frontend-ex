@@ -22,10 +22,9 @@ defmodule FrontendExWeb.TxController do
     else
       skin = FrontendExWeb.Skin.current()
 
-      safe_empty = {:safe, ""}
+      safe_empty = safe_empty()
 
-      explorer_url =
-        Application.get_env(:frontend_ex, :blockscout_url, "https://sepolia.53627.org")
+      explorer_url = explorer_url()
 
       base_url = Application.get_env(:frontend_ex, :base_url, "https://fast.53627.org")
 
@@ -209,7 +208,7 @@ defmodule FrontendExWeb.TxController do
     if not valid_tx_hash?(hash) do
       send_tx_not_found(conn)
     else
-      safe_empty = {:safe, ""}
+      safe_empty = safe_empty()
 
       stats_task = Task.async(fn -> Client.get_json_cached("/api/v2/stats", :public) end)
 
@@ -427,9 +426,9 @@ defmodule FrontendExWeb.TxController do
   end
 
   defp render_logs_tab(conn, hash) when is_binary(hash) do
-    safe_empty = {:safe, ""}
+    safe_empty = safe_empty()
 
-    explorer_url = Application.get_env(:frontend_ex, :blockscout_url, "https://sepolia.53627.org")
+    explorer_url = explorer_url()
 
     stats_task = Task.async(fn -> Client.get_json_cached("/api/v2/stats", :public) end)
 
@@ -474,9 +473,9 @@ defmodule FrontendExWeb.TxController do
   end
 
   defp render_state_tab(conn, hash) when is_binary(hash) do
-    safe_empty = {:safe, ""}
+    safe_empty = safe_empty()
 
-    explorer_url = Application.get_env(:frontend_ex, :blockscout_url, "https://sepolia.53627.org")
+    explorer_url = explorer_url()
 
     stats_task = Task.async(fn -> Client.get_json_cached("/api/v2/stats", :public) end)
 
@@ -531,9 +530,9 @@ defmodule FrontendExWeb.TxController do
   end
 
   defp render_internal_tab(conn, hash, params) when is_binary(hash) and is_map(params) do
-    safe_empty = {:safe, ""}
+    safe_empty = safe_empty()
 
-    explorer_url = Application.get_env(:frontend_ex, :blockscout_url, "https://sepolia.53627.org")
+    explorer_url = explorer_url()
 
     show_advanced = parse_advanced(params)
 
@@ -876,27 +875,6 @@ defmodule FrontendExWeb.TxController do
 
       json
     end)
-  end
-
-  defp derive_coin_gas(nil), do: {nil, nil}
-
-  defp derive_coin_gas(%{} = stats_json) do
-    coin_price =
-      case stats_json["coin_price"] do
-        v when is_binary(v) -> Format.format_price_with_commas(v)
-        _ -> nil
-      end
-
-    gas_price =
-      case get_in(stats_json, ["gas_prices", "average", "price"]) do
-        v when is_number(v) ->
-          Format.format_one_decimal(v)
-
-        _ ->
-          nil
-      end
-
-    {coin_price, gas_price}
   end
 
   defp parse_logs_count(%{} = logs_json) do

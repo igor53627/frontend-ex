@@ -6,9 +6,9 @@ defmodule FrontendExWeb.NftParityTest do
 
   @golden_transfers_classic Path.expand("../golden/nft_transfers.classic.rust.html", __DIR__)
   @golden_latest_mints_classic Path.expand(
-                                   "../golden/nft_latest_mints.classic.rust.html",
-                                   __DIR__
-                                 )
+                                 "../golden/nft_latest_mints.classic.rust.html",
+                                 __DIR__
+                               )
   @golden_transfers_53627 Path.expand("../golden/nft_transfers.53627.rust.html", __DIR__)
   @golden_latest_mints_53627 Path.expand("../golden/nft_latest_mints.53627.rust.html", __DIR__)
   @golden_latest_mints_csv Path.expand("../golden/nft_latest_mints_export.rust.csv", __DIR__)
