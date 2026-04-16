@@ -39,6 +39,10 @@ Run the release:
 ```bash
 export PHX_SERVER=true
 export SECRET_KEY_BASE="$(mix phx.gen.secret)"
+# Required at *build* time (baked into the release during `mix release`).
+# If you built the release above without these set, rebuild with them set.
+export SESSION_SIGNING_SALT="$(mix phx.gen.secret 32)"
+export LIVE_VIEW_SIGNING_SALT="$(mix phx.gen.secret 32)"
 
 # Example: bind locally for a quick smoke test
 export LISTEN_ADDR=127.0.0.1:3010

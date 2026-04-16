@@ -2,6 +2,10 @@ import Config
 
 # We don't run a server during test. If one is required,
 # you can enable the server option below.
+#
+# `secret_key_base` is a fixed test-only value — it's required by
+# Phoenix.Endpoint whenever sessions or signed cookies might be set,
+# even when `server: false`. Never used outside tests.
 config :frontend_ex, FrontendExWeb.Endpoint,
   http: [ip: {127, 0, 0, 1}, port: 4002],
   secret_key_base: "4sKqK+UKftQQ3Zxl0VxgXg5PycuuB7MhHRyZBP09y96P4OYwp+0v4I1HUngwLv04",

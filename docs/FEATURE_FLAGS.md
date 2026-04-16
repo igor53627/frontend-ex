@@ -57,4 +57,12 @@ This project is configured primarily via environment variables (read in `config/
   - When set (non-empty), starts the Phoenix endpoint in releases.
 
 - `SECRET_KEY_BASE`
-  - Required in `MIX_ENV=prod` for releases.
+  - Required in `MIX_ENV=prod` at runtime (start-up). Used to sign/encrypt cookies.
+
+- `SESSION_SIGNING_SALT`
+  - Required in `MIX_ENV=prod` at *build* time (`mix release`). Signs the
+    cookie session store. Generate with `mix phx.gen.secret 32`.
+
+- `LIVE_VIEW_SIGNING_SALT`
+  - Required in `MIX_ENV=prod` at *build* time. Signs LiveView tokens
+    (used by the local-only dashboard). Generate with `mix phx.gen.secret 32`.
