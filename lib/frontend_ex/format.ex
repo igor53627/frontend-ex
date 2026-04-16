@@ -250,15 +250,7 @@ defmodule FrontendEx.Format do
 
     case Integer.parse(s) do
       {n, ""} when n >= 0 ->
-        n
-        |> Integer.to_string()
-        |> String.graphemes()
-        |> Enum.reverse()
-        |> Enum.chunk_every(3)
-        |> Enum.map(&Enum.reverse/1)
-        |> Enum.reverse()
-        |> Enum.map(&Enum.join/1)
-        |> Enum.join(",")
+        n |> Integer.to_string() |> insert_thousands_commas()
 
       _ ->
         s
@@ -267,20 +259,36 @@ defmodule FrontendEx.Format do
 
   defp format_int_with_commas_str(int_part) when is_binary(int_part) do
     s = String.trim(int_part)
+    if s == "", do: "0", else: insert_thousands_commas(s)
+  end
 
-    if s == "" do
-      "0"
-    else
+  # Insert commas every 3 ASCII digits from the right. O(n) single pass —
+  # the prior implementation used 7 Enum passes (graphemes/reverse/chunk/
+  # map-reverse/reverse/map-join/join). All digits are ASCII so byte-level
+  # binary pattern matching is correct.
+  defp insert_thousands_commas(s) when is_binary(s) do
+    size = byte_size(s)
+
+    if size <= 3 do
       s
-      |> String.graphemes()
-      |> Enum.reverse()
-      |> Enum.chunk_every(3)
-      |> Enum.map(&Enum.reverse/1)
-      |> Enum.reverse()
-      |> Enum.map(&Enum.join/1)
-      |> Enum.join(",")
+    else
+      head_size = rem(size, 3)
+
+      {head, rest} =
+        if head_size == 0 do
+          {binary_part(s, 0, 3), binary_part(s, 3, size - 3)}
+        else
+          {binary_part(s, 0, head_size), binary_part(s, head_size, size - head_size)}
+        end
+
+      head <> "," <> comma_every_three(rest)
     end
   end
+
+  defp comma_every_three(<<a::binary-size(3)>>), do: a
+
+  defp comma_every_three(<<a::binary-size(3), rest::binary>>),
+    do: a <> "," <> comma_every_three(rest)
 
   @spec format_decimal_with_commas(binary()) :: binary()
   def format_decimal_with_commas(value) when is_binary(value) do

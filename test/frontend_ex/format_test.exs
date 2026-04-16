@@ -29,6 +29,60 @@ defmodule FrontendEx.FormatTest do
     assert Format.format_one_decimal(1.05) == "1.1"
   end
 
+  describe "format_number_with_commas/1" do
+    test "single digit passes through" do
+      assert Format.format_number_with_commas("0") == "0"
+      assert Format.format_number_with_commas("5") == "5"
+    end
+
+    test "2-3 digits pass through unchanged" do
+      assert Format.format_number_with_commas("12") == "12"
+      assert Format.format_number_with_commas("999") == "999"
+    end
+
+    test "4-6 digits: single comma" do
+      assert Format.format_number_with_commas("1000") == "1,000"
+      assert Format.format_number_with_commas("12345") == "12,345"
+      assert Format.format_number_with_commas("123456") == "123,456"
+    end
+
+    test "7+ digits: multiple commas" do
+      assert Format.format_number_with_commas("1234567") == "1,234,567"
+      assert Format.format_number_with_commas("12345678") == "12,345,678"
+      assert Format.format_number_with_commas("123456789") == "123,456,789"
+      assert Format.format_number_with_commas("1000000000") == "1,000,000,000"
+    end
+
+    test "boundary: exactly 3 digits after first chunk" do
+      # size = 6, head_size = 0 → treated as 3, then one chunk of 3
+      assert Format.format_number_with_commas("999999") == "999,999"
+    end
+
+    test "very large integer (50+ digits)" do
+      s = String.duplicate("1", 50)
+      result = Format.format_number_with_commas(s)
+      # Expect 16 commas: 50 digits = 1 head of 2 + 16 chunks of 3
+      assert String.length(result) == 50 + 16
+      # Verify round-trip: strip commas and compare to input
+      assert String.replace(result, ",", "") == s
+    end
+
+    test "trims whitespace before parsing" do
+      assert Format.format_number_with_commas("  1234  ") == "1,234"
+    end
+
+    test "passes unparseable input through verbatim" do
+      assert Format.format_number_with_commas("abc") == "abc"
+      assert Format.format_number_with_commas("") == ""
+      assert Format.format_number_with_commas("1.5") == "1.5"
+    end
+
+    test "rejects negative" do
+      # Negative is unparseable by the guard (n >= 0); returns trimmed input
+      assert Format.format_number_with_commas("-1") == "-1"
+    end
+  end
+
   describe "format_blocks_time_ago/1" do
     setup do
       frozen_now = ~U[2026-02-09 12:00:00Z]
