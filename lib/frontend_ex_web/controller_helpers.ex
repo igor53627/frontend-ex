@@ -156,14 +156,47 @@ defmodule FrontendExWeb.ControllerHelpers do
           nil
 
         nil ->
-          _ = Task.shutdown(task, :brutal_kill)
+          # `Task.yield_many/2` did not consume the reply message from the
+          # mailbox, so `Task.shutdown/2` can still return a late result here
+          # (per https://hexdocs.pm/elixir/Task.html#shutdown/2). Pattern-match
+          # its return so we don't misclassify a just-in-time reply as a
+          # timeout — symmetric with await_ok/4.
+          case Task.shutdown(task, :brutal_kill) do
+            {:ok, {:ok, json}} ->
+              json
 
-          Logger.warning("#{log_prefix}: upstream request timed out",
-            endpoint: label,
-            timeout_ms: timeout_ms
-          )
+            {:ok, {:error, reason}} ->
+              Logger.warning("#{log_prefix}: upstream request failed",
+                endpoint: label,
+                reason: inspect(reason)
+              )
 
-          nil
+              nil
+
+            {:ok, other} ->
+              Logger.warning("#{log_prefix}: upstream request returned unexpected result",
+                endpoint: label,
+                result: inspect(other)
+              )
+
+              nil
+
+            {:exit, reason} ->
+              Logger.warning("#{log_prefix}: upstream task crashed",
+                endpoint: label,
+                reason: inspect(reason)
+              )
+
+              nil
+
+            nil ->
+              Logger.warning("#{log_prefix}: upstream request timed out",
+                endpoint: label,
+                timeout_ms: timeout_ms
+              )
+
+              nil
+          end
       end
     end)
   end

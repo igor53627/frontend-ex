@@ -45,10 +45,16 @@ defmodule FrontendExWeb.AddressController do
         Client.get_json_cached("/api/v2/addresses/#{address}/tokens", :public)
       end)
 
-    stats_json = await_ok(stats_task, "address", "stats")
-    addr_json = await_ok(addr_task, "address", "address")
-    txs_json = await_ok(txs_task, "address", "address_txs")
-    tokens_json = await_ok(tokens_task, "address", "address_tokens")
+    [stats_json, addr_json, txs_json, tokens_json] =
+      await_many_ok(
+        [
+          {"stats", stats_task},
+          {"address", addr_task},
+          {"address_txs", txs_task},
+          {"address_tokens", tokens_task}
+        ],
+        "address"
+      )
 
     if is_nil(addr_json) do
       conn

@@ -27,9 +27,18 @@ defmodule FrontendExWeb.HomeController do
         Client.get_json_swr("/api/v2/transactions?items_count=#{@txs_limit}", :public)
       end)
 
-    stats = parse_stats(await_ok(stats_task, "home", "stats"))
-    blocks = parse_blocks(await_ok(blocks_task, "home", "blocks"))
-    transactions = parse_transactions(await_ok(txs_task, "home", "transactions"))
+    # Await concurrently so a single slow upstream doesn't stack
+    # 3 × timeout. Tasks run in parallel anyway; sequential await would
+    # extend wall-clock latency on the slow-path.
+    [stats_json, blocks_json, txs_json] =
+      await_many_ok(
+        [{"stats", stats_task}, {"blocks", blocks_task}, {"transactions", txs_task}],
+        "home"
+      )
+
+    stats = parse_stats(stats_json)
+    blocks = parse_blocks(blocks_json)
+    transactions = parse_transactions(txs_json)
 
     {coin_price, coin_price_change, gas_slow, gas_avg, gas_fast, gas_price} =
       derive_stats_fields(stats)
