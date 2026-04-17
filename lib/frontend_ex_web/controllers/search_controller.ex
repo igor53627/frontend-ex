@@ -27,7 +27,7 @@ defmodule FrontendExWeb.SearchController do
 
       true ->
         explorer_url =
-          Application.get_env(:frontend_ex, :blockscout_url, "https://sepolia.53627.org")
+          explorer_url()
           |> to_string()
           |> String.trim()
           |> String.trim_trailing("/")
