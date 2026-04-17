@@ -98,6 +98,18 @@ defmodule FrontendExWeb.ParsersTest do
       assert Parsers.parse_u64(-1) == nil
     end
 
+    test "accepts values at the u64 boundary (2^64 - 1)" do
+      assert Parsers.parse_u64(18_446_744_073_709_551_615) == 18_446_744_073_709_551_615
+
+      assert Parsers.parse_u64("18446744073709551615") ==
+               18_446_744_073_709_551_615
+    end
+
+    test "rejects values above 2^64 - 1" do
+      assert Parsers.parse_u64(18_446_744_073_709_551_616) == nil
+      assert Parsers.parse_u64("18446744073709551616") == nil
+    end
+
     test "parses positive decimal binary" do
       assert Parsers.parse_u64("0") == 0
       assert Parsers.parse_u64("42") == 42

@@ -13,6 +13,11 @@ defmodule FrontendExWeb.Parsers do
   @hash32_re ~r/\A0x[0-9a-fA-F]{64}\z/i
   @decimal_re ~r/\A\d+\z/
 
+  # u64 max = 2^64 - 1. Upstream numeric fields (block numbers, tx counts,
+  # indexes) fit within this range; anything larger is malformed and returns
+  # nil from parse_u64/1.
+  @u64_max 18_446_744_073_709_551_615
+
   @doc "Regex matching an EVM address (`0x` + 40 hex chars, case-insensitive prefix)."
   @spec address_regex() :: Regex.t()
   def address_regex, do: @address_re
@@ -51,14 +56,17 @@ defmodule FrontendExWeb.Parsers do
 
   @doc """
   Parses a non-negative integer (`u64`-shaped) from an integer or binary.
-  Whitespace in binaries is trimmed. Returns `nil` on any failure.
+
+  Whitespace in binaries is trimmed. Returns `nil` on any failure, including
+  negative values and values above `2^64 - 1`.
   """
   @spec parse_u64(term()) :: non_neg_integer() | nil
-  def parse_u64(v) when is_integer(v) and v >= 0, do: v
+  def parse_u64(v) when is_integer(v) and v >= 0 and v <= @u64_max, do: v
+  def parse_u64(v) when is_integer(v), do: nil
 
   def parse_u64(v) when is_binary(v) do
     case Integer.parse(String.trim(v)) do
-      {n, ""} when n >= 0 -> n
+      {n, ""} when n >= 0 and n <= @u64_max -> n
       _ -> nil
     end
   end
