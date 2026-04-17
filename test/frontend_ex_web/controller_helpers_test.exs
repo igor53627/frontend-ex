@@ -137,6 +137,24 @@ defmodule FrontendExWeb.ControllerHelpersTest do
 
       assert log =~ "test: upstream request timed out"
     end
+
+    test "recovers late task result delivered between yield_many timeout and shutdown" do
+      # Force yield_many/2 to time out (timeout_ms=0 is reliable), so we
+      # enter the late-shutdown branch. Task.shutdown then sees the reply
+      # message that was sent before brutal-kill could land, and returns
+      # {:ok, {:ok, result}}. This locks in the pattern-match recovery
+      # added after codereview of 862ea78.
+      task = Task.async(fn -> {:ok, :late} end)
+      # Give the task process a moment to complete and enqueue its reply.
+      Process.sleep(20)
+
+      log =
+        capture_log(fn ->
+          assert ControllerHelpers.await_many_ok([{"late", task}], "test", 0) == [:late]
+        end)
+
+      refute log =~ "timed out"
+    end
   end
 
   describe "derive_coin_gas/1" do
