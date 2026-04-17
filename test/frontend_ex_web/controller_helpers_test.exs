@@ -171,22 +171,37 @@ defmodule FrontendExWeb.ControllerHelpersTest do
       refute log =~ "crashed"
     end
 
-    # Spin until `{ref, _}` appears in the mailbox, without consuming it.
-    defp await_task_reply_in_mailbox(ref, attempts \\ 100)
+    # Wait until `{ref, _}` appears in the mailbox, without consuming it.
+    # Uses a monotonic deadline rather than a fixed attempt count so slow
+    # CI runners don't race. The inner `receive ... after 1 -> :ok` yields
+    # the scheduler without touching the mailbox (no patterns = no message
+    # is consumable).
+    @mailbox_poll_deadline_ms 1_000
 
-    defp await_task_reply_in_mailbox(_ref, 0), do: flunk("task reply never arrived")
+    defp await_task_reply_in_mailbox(ref) do
+      deadline = System.monotonic_time(:millisecond) + @mailbox_poll_deadline_ms
+      do_await_task_reply_in_mailbox(ref, deadline)
+    end
 
-    defp await_task_reply_in_mailbox(ref, attempts) do
+    defp do_await_task_reply_in_mailbox(ref, deadline) do
       {:messages, msgs} = :erlang.process_info(self(), :messages)
 
-      if Enum.any?(msgs, fn
-           {^ref, _} -> true
-           _ -> false
-         end) do
-        :ok
-      else
-        Process.sleep(1)
-        await_task_reply_in_mailbox(ref, attempts - 1)
+      cond do
+        Enum.any?(msgs, fn
+          {^ref, _} -> true
+          _ -> false
+        end) ->
+          :ok
+
+        System.monotonic_time(:millisecond) >= deadline ->
+          flunk("task reply never arrived within #{@mailbox_poll_deadline_ms}ms")
+
+        true ->
+          receive do
+          after 1 -> :ok
+          end
+
+          do_await_task_reply_in_mailbox(ref, deadline)
       end
     end
   end
