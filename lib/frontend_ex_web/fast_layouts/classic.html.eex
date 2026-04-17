@@ -161,7 +161,7 @@
                     Sepolia Testnet Explorer
                 </div>
                 <div class="footer-text footer-version" title="frontend-ex release">
-                    v<%= @app_version %>·<%= @git_sha %>
+                    v<%= @app_version %>·<%= @git_sha %><%= if assigns[:backend_version], do: " · backend #{@backend_version}" %>
                 </div>
             </div>
             <div class="footer-links">

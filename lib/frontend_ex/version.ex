@@ -6,6 +6,9 @@ defmodule FrontendEx.Version do
   * `sha/0` — short git SHA from the `GIT_SHA` env var at *build* time, or
     `"dev"` when unset. `deploy.sh` forwards the SHA; release builders
     should set it explicitly.
+  * `backend/0` — upstream Blockscout API version, fetched from
+    `/api/v2/health` via the shared cache (5-minute TTL). Returns `nil` if
+    the upstream hasn't exposed a version field.
   * `display/0` — formatted for display (`"v0.2.0·abc1234"`)
   """
 
@@ -22,11 +25,30 @@ defmodule FrontendEx.Version do
                      sha |> String.trim() |> String.slice(0, 12)
                  end)
 
+  # Backend version rarely changes; a 5-min TTL keeps upstream load minimal
+  # without requiring a restart to pick up a new version.
+  @backend_ttl_ms 300_000
+
   @spec app() :: binary()
   def app, do: Application.get_env(:frontend_ex, :app_version_override, @compiled_app)
 
   @spec sha() :: binary()
   def sha, do: Application.get_env(:frontend_ex, :git_sha_override, @compiled_sha)
+
+  @spec backend() :: binary() | nil
+  def backend do
+    case Application.get_env(:frontend_ex, :backend_version_override, :unset) do
+      :unset -> fetch_backend()
+      override -> override
+    end
+  end
+
+  defp fetch_backend do
+    case FrontendEx.Blockscout.Client.get_json_cached("/api/v2/health", :public, @backend_ttl_ms) do
+      {:ok, %{"version" => v}} when is_binary(v) and v != "" -> v
+      _ -> nil
+    end
+  end
 
   @spec display() :: binary()
   def display, do: "v#{app()}·#{sha()}"

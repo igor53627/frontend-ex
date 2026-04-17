@@ -55,7 +55,8 @@ defmodule FrontendExWeb.ControllerHelpers do
       nav_tokens: "",
       nav_nfts: "",
       app_version: Version.app(),
-      git_sha: Version.sha()
+      git_sha: Version.sha(),
+      backend_version: Version.backend()
     }
 
     Map.merge(base, Map.new(extras))
