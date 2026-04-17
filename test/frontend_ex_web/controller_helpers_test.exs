@@ -75,16 +75,29 @@ defmodule FrontendExWeb.ControllerHelpersTest do
       assert log =~ "test: upstream request failed"
     end
 
-    test "logs and returns nil on timeout" do
-      Process.flag(:trap_exit, true)
+    test "logs and returns nil on timeout; task is shut down" do
       task = Task.async(fn -> Process.sleep(500) end)
+      task_pid = task.pid
 
       log =
         capture_log(fn ->
           assert ControllerHelpers.await_ok(task, "test", "stats", 50) == nil
         end)
 
-      assert log =~ "test: upstream task crashed/timed out"
+      assert log =~ "test: upstream request timed out"
+      # `Task.shutdown/2` with `:brutal_kill` should terminate the task.
+      refute Process.alive?(task_pid)
+    end
+
+    test "logs and returns nil on unexpected return shape" do
+      task = Task.async(fn -> :not_a_tuple end)
+
+      log =
+        capture_log(fn ->
+          assert ControllerHelpers.await_ok(task, "test", "stats") == nil
+        end)
+
+      assert log =~ "test: upstream request returned unexpected result"
     end
   end
 

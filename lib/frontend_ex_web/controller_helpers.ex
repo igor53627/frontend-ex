@@ -63,29 +63,49 @@ defmodule FrontendExWeb.ControllerHelpers do
 
   On `:error`, crash, or timeout, logs under `log_prefix` (e.g. `"home"`) with
   `endpoint: label` and returns `nil`.
+
+  Uses `Task.yield/2` + `Task.shutdown/2` rather than `Task.await/2` so the
+  task is explicitly terminated on timeout (not just abandoned to the linked
+  parent-exit mechanism). Matches the pattern in `await_many_ok/3`.
   """
   @spec await_ok(Task.t(), binary(), binary(), pos_integer()) :: term() | nil
   def await_ok(%Task{} = task, log_prefix, label, timeout_ms \\ @default_timeout_ms) do
-    case Task.await(task, timeout_ms) do
-      {:ok, json} ->
+    case Task.yield(task, timeout_ms) || Task.shutdown(task, :brutal_kill) do
+      {:ok, {:ok, json}} ->
         json
 
-      {:error, reason} ->
+      {:ok, {:error, reason}} ->
         Logger.warning("#{log_prefix}: upstream request failed",
           endpoint: label,
           reason: inspect(reason)
         )
 
         nil
-    end
-  catch
-    :exit, reason ->
-      Logger.warning("#{log_prefix}: upstream task crashed/timed out",
-        endpoint: label,
-        reason: inspect(reason)
-      )
 
-      nil
+      {:ok, other} ->
+        Logger.warning("#{log_prefix}: upstream request returned unexpected result",
+          endpoint: label,
+          result: inspect(other)
+        )
+
+        nil
+
+      {:exit, reason} ->
+        Logger.warning("#{log_prefix}: upstream task crashed",
+          endpoint: label,
+          reason: inspect(reason)
+        )
+
+        nil
+
+      nil ->
+        Logger.warning("#{log_prefix}: upstream request timed out",
+          endpoint: label,
+          timeout_ms: timeout_ms
+        )
+
+        nil
+    end
   end
 
   @doc """
