@@ -31,7 +31,9 @@ layouts.ex:38-60 contains boilerplate Phoenix links from scaffold. Any future no
 ## Final Summary
 
 <!-- SECTION:FINAL_SUMMARY:BEGIN -->
-Removed the default Phoenix `Layouts.app/1` component (containing the `Website`, `GitHub`, `Get Started` scaffold links). It had no callers — only self-reference in its own docstring. `flash_group/1` is still used by `home.html.heex` via a `<Layouts.flash_group/>` reference and will be addressed under task-43 together with the rest of the scaffold dead code.
+Removed the default Phoenix `Layouts.app/1` component (containing the `Website`, `GitHub`, `Get Started` scaffold links). It had no callers — only self-reference in its own docstring.
+
+**Update:** `flash_group/1` was also removed as part of TASK-43's follow-up cleanup (along with `home.html.heex` and the `PageController` family). `FrontendExWeb.Layouts` is now a minimal module that only carries `embed_templates "layouts/*"`.
 
 Addresses TASK-42
 <!-- SECTION:FINAL_SUMMARY:END -->

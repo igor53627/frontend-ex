@@ -31,7 +31,7 @@ plugs/dashboard_local_only.ex:14 — dual-stack hosts can route to dashboard as 
 <!-- SECTION:FINAL_SUMMARY:BEGIN -->
 Added `{0, 0, 0, 0, 0, 0xFFFF, 0x7F00, 0x0001}` match clause for IPv4-mapped IPv6 `::ffff:127.0.0.1`. The plug already accepted `::1`; this was the missing variant dual-stack sockets present when a request comes in over IPv6 but originated on v4 loopback.
 
-Added 3 plug tests: `::1` allow, `::ffff:127.0.0.1` allow, `2001:db8::1` reject. 160 tests pass.
+Added 3 plug tests: `::1` allow, `::ffff:127.0.0.1` allow, `2001:db8::1` reject. All tests pass.
 
 Addresses TASK-40
 <!-- SECTION:FINAL_SUMMARY:END -->

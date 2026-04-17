@@ -39,7 +39,7 @@ Migrated `nft_controller` (2 normalize_page_size variants + normalize_cursor_par
 
 Scope narrowed from initial AC: `txs_controller.cursor_query_from_params` / `merge_cursor_params` / `normalize_numeric_param` (txs-specific block_number+index cursor merge semantics), `token_controller.cursor_query_param` / `sanitize_cursor_query` (cap and safe-subset rebuild), and cursor reading logic stay controller-local — each upstream endpoint expects a different cursor shape, and the per-controller logic isn't duplication.
 
-Added 13 unit tests for the shared helpers. All 181 tests pass.
+Added 13 unit tests for the shared helpers. All tests pass.
 
 Addresses TASK-31
 <!-- SECTION:FINAL_SUMMARY:END -->

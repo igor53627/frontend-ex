@@ -1,6 +1,6 @@
 ---
 id: TASK-39
-title: Move committed session salt + secret_key_base to env via runtime.exs
+title: Move committed session salt + secret_key_base to env (compile-time via config/prod.exs)
 status: Done
 assignee: []
 created_date: '2026-04-16 19:21'
@@ -19,7 +19,7 @@ priority: medium
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [x] #1 Session signing salt no longer hardcoded in router.ex/endpoint.ex; read from SECRET_KEY_BASE / SESSION_SIGNING_SALT env in runtime.exs
+- [x] #1 Session signing salt no longer hardcoded in router.ex/endpoint.ex; read from SESSION_SIGNING_SALT env at build time via `config/prod.exs` + `Application.compile_env/3` (Phoenix session options are compile-time, not runtime — see Final Summary)
 - [x] #2 config/test.exs uses a clearly-marked test value (or reads a defaulted env) — documentation notes it's test-only
 - [x] #3 Production deploy script/docs updated with required env vars
 <!-- AC:END -->

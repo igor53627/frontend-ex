@@ -34,7 +34,7 @@ Added `length: 1_000_000` (1 MB body cap) and removed `pass: ["*/*"]` from `Plug
 
 Bonus: noticed `endpoint.ex` had its own committed `signing_salt` copy (separate from `router.ex` handled in TASK-39). Pulled it out via `Application.compile_env/3` the same way — `config/prod.exs`'s existing `SESSION_SIGNING_SALT` enforcement covers both.
 
-No test coverage added: parity routes are GET-only so there's no natural test surface for the parser pipeline. AC-3 (413/400 tests) deferred — noted in commit that it would require adding a test-only POST route just to exercise this.
+**Update (follow-up commit 1db7dde):** AC-3 test coverage was added in a second commit after the initial roborev review flagged the gap. `test/frontend_ex_web/endpoint_parsers_test.exs` POSTs to `/health` with (a) oversized urlencoded body → 413 and (b) unsupported content-type → 415, using `assert_error_sent/2` so the full endpoint `render_errors` pipeline is exercised. The "deferred" note in earlier drafts is obsolete.
 
 Addresses TASK-37
 <!-- SECTION:FINAL_SUMMARY:END -->

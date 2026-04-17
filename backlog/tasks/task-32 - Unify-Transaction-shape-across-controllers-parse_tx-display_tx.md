@@ -33,6 +33,8 @@ parse_tx at tx_controller.ex:927 and display_tx at address_controller.ex:218, tx
 ## Final Summary
 
 <!-- SECTION:FINAL_SUMMARY:BEGIN -->
+**Resolution:** closed as intentionally deferred (the backlog config only supports `To Do` / `In Progress` / `Done`; marking `Done` to close the ticket — none of the ACs were implemented, by deliberate choice explained below).
+
 Deferred — the four `display_tx`/`parse_tx` variants are **view-specific by design**, not duplication. After close reading each site:
 
 - `block_controller.display_tx/1`: raw wei, nested `from: %{hash: _}` / `to: %{hash: _}` (the block detail template uses nested maps).

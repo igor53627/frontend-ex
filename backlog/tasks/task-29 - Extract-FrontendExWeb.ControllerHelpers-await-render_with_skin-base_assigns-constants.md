@@ -6,7 +6,7 @@ title: >-
 status: Done
 assignee: []
 created_date: '2026-04-16 19:19'
-updated_date: '2026-04-16 19:35'
+updated_date: '2026-04-17 15:14'
 labels:
   - elixir
   - refactor
@@ -21,10 +21,10 @@ priority: high
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [x] #1 await_ok/1, await_ok_many/1, await_many_ok/1 extracted to FrontendExWeb.ControllerHelpers and used by all 8 affected controllers
+- [ ] #1 await_ok/1, await_ok_many/1, await_many_ok/1 extracted to FrontendExWeb.ControllerHelpers and used by all 8 affected controllers
 - [x] #2 @safe_empty constant ({:safe, ""}) lives in one place and is imported/aliased where needed instead of being re-declared per action
 - [ ] #3 render_with_skin/4 (or similar) wraps the case skin do :classic/:s53627 end dispatch and is used by all 10+ sites
-- [x] #4 base_assigns builder function returns the common keys (explorer_url, head_meta, nav_*, coin/gas) one place
+- [ ] #4 base_assigns builder function returns the common keys (explorer_url, head_meta, nav_*, coin/gas) one place
 - [x] #5 @default_blockscout_url (or helper) replaces the 13 hardcoded literal Application.get_env fallbacks
 - [x] #6 Golden HTML parity tests still pass; no user-visible byte change
 <!-- AC:END -->
