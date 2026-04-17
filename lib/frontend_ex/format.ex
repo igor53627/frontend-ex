@@ -299,14 +299,17 @@ defmodule FrontendEx.Format do
           {binary_part(s, 0, head_size), binary_part(s, head_size, size - head_size)}
         end
 
-      head <> "," <> comma_every_three(rest)
+      # Build as iodata and materialize once. The earlier form
+      # `head <> "," <> comma_every_three(rest)` allocated a fresh binary at
+      # every recursion level (each `<>` copies the growing suffix).
+      IO.iodata_to_binary([head | comma_every_three(rest)])
     end
   end
 
-  defp comma_every_three(<<a::binary-size(3)>>), do: a
+  defp comma_every_three(<<a::binary-size(3)>>), do: [",", a]
 
   defp comma_every_three(<<a::binary-size(3), rest::binary>>),
-    do: a <> "," <> comma_every_three(rest)
+    do: [",", a | comma_every_three(rest)]
 
   @spec format_decimal_with_commas(binary()) :: binary()
   def format_decimal_with_commas(value) when is_binary(value) do
