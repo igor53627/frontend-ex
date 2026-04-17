@@ -13,8 +13,21 @@ defmodule FrontendExWeb.ControllerHelpersTest do
 
   describe "explorer_url/0" do
     setup do
-      prior = Application.get_env(:frontend_ex, :blockscout_url)
-      on_exit(fn -> Application.put_env(:frontend_ex, :blockscout_url, prior) end)
+      # Distinguish absent vs explicitly-nil via fetch_env; the default-fallback
+      # behavior in `explorer_url/0` depends on key presence, not value.
+      prior =
+        case Application.fetch_env(:frontend_ex, :blockscout_url) do
+          {:ok, value} -> {:present, value}
+          :error -> :absent
+        end
+
+      on_exit(fn ->
+        case prior do
+          {:present, value} -> Application.put_env(:frontend_ex, :blockscout_url, value)
+          :absent -> Application.delete_env(:frontend_ex, :blockscout_url)
+        end
+      end)
+
       :ok
     end
 
@@ -198,7 +211,8 @@ defmodule FrontendExWeb.ControllerHelpersTest do
 
         true ->
           receive do
-          after 1 -> :ok
+          after
+            1 -> :ok
           end
 
           do_await_task_reply_in_mailbox(ref, deadline)
