@@ -88,9 +88,18 @@ else
 fi
 
 if [ "$SKIP_BUILD" = false ]; then
+  # Phoenix session options are compile-time, so SESSION_SIGNING_SALT and
+  # LIVE_VIEW_SIGNING_SALT must be set when `mix release` runs — not at
+  # runtime. Require them here so the failure is loud and early, not 30
+  # lines deep into `mix release`.
+  : "${SESSION_SIGNING_SALT:?SESSION_SIGNING_SALT is required at build time (set it in .env.deploy or export it before running deploy.sh; generate with: mix phx.gen.secret 32)}"
+  : "${LIVE_VIEW_SIGNING_SALT:?LIVE_VIEW_SIGNING_SALT is required at build time (same instructions)}"
+
   log "Building release on server..."
   build_cmd="set -euo pipefail
 cd \"$REMOTE_PATH\"
+export SESSION_SIGNING_SALT=\"$SESSION_SIGNING_SALT\"
+export LIVE_VIEW_SIGNING_SALT=\"$LIVE_VIEW_SIGNING_SALT\"
 
 if command -v mix >/dev/null 2>&1; then
   MIX_ENV=prod mix local.hex --force
@@ -111,6 +120,8 @@ else
     -e MIX_ENV=prod \
     -e MIX_HOME=/app/.mix \
     -e HEX_HOME=/app/.hex \
+    -e SESSION_SIGNING_SALT \
+    -e LIVE_VIEW_SIGNING_SALT \
     \"$BUILD_IMAGE\" \
     sh -lc 'mix local.hex --force && mix local.rebar --force && mix deps.get --only prod && mix compile && mix release --overwrite'
 fi"

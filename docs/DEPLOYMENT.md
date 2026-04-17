@@ -80,7 +80,16 @@ sudo systemctl status frontend-ex
 
 ## Deploy
 
-From your local machine:
+First-time setup (once per workstation):
+
+```bash
+cp .env.deploy.example .env.deploy
+# Generate the two build-time salts and paste them into .env.deploy
+mix phx.gen.secret 32   # SESSION_SIGNING_SALT
+mix phx.gen.secret 32   # LIVE_VIEW_SIGNING_SALT
+```
+
+Then from your local machine:
 
 ```bash
 FX_DEPLOY_SERVER=<server> \
@@ -88,6 +97,12 @@ FX_DEPLOY_PATH=/path/to/frontend-ex \
 FX_SERVICE_NAME=frontend-ex \
 ./deploy.sh
 ```
+
+`deploy.sh` sources `.env.deploy` for defaults and forwards
+`SESSION_SIGNING_SALT` / `LIVE_VIEW_SIGNING_SALT` to the remote build,
+so `mix release` has the compile-time secrets it needs. Explicit
+environment variables on the command line take precedence over
+`.env.deploy`.
 
 Options:
 
