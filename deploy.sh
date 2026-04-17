@@ -95,11 +95,16 @@ if [ "$SKIP_BUILD" = false ]; then
   : "${SESSION_SIGNING_SALT:?SESSION_SIGNING_SALT is required at build time (set it in .env.deploy or export it before running deploy.sh; generate with: mix phx.gen.secret 32)}"
   : "${LIVE_VIEW_SIGNING_SALT:?LIVE_VIEW_SIGNING_SALT is required at build time (same instructions)}"
 
+  # Capture local git SHA so FrontendEx.Version has something to bake in;
+  # .git/ is excluded from rsync so the server cannot resolve it otherwise.
+  GIT_SHA="${GIT_SHA:-$(cd "$LOCAL_PATH" && git rev-parse --short=12 HEAD 2>/dev/null || echo dev)}"
+
   log "Building release on server..."
   build_cmd="set -euo pipefail
 cd \"$REMOTE_PATH\"
 export SESSION_SIGNING_SALT=\"$SESSION_SIGNING_SALT\"
 export LIVE_VIEW_SIGNING_SALT=\"$LIVE_VIEW_SIGNING_SALT\"
+export GIT_SHA=\"$GIT_SHA\"
 
 if command -v mix >/dev/null 2>&1; then
   MIX_ENV=prod mix local.hex --force
@@ -122,6 +127,7 @@ else
     -e HEX_HOME=/app/.hex \
     -e SESSION_SIGNING_SALT \
     -e LIVE_VIEW_SIGNING_SALT \
+    -e GIT_SHA \
     \"$BUILD_IMAGE\" \
     sh -lc 'mix local.hex --force && mix local.rebar --force && mix deps.get --only prod && mix compile && mix release --overwrite'
 fi"

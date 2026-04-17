@@ -15,6 +15,7 @@ defmodule FrontendExWeb.ControllerHelpers do
 
   require Logger
   alias FrontendEx.Format
+  alias FrontendEx.Version
 
   @default_blockscout_url "https://sepolia.53627.org"
   @default_timeout_ms 10_000
@@ -52,7 +53,9 @@ defmodule FrontendExWeb.ControllerHelpers do
       nav_blocks: "",
       nav_txs: "",
       nav_tokens: "",
-      nav_nfts: ""
+      nav_nfts: "",
+      app_version: Version.app(),
+      git_sha: Version.sha()
     }
 
     Map.merge(base, Map.new(extras))

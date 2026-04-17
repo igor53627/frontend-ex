@@ -160,6 +160,9 @@
                 <div class="footer-text">
                     Sepolia Testnet Explorer
                 </div>
+                <div class="footer-text footer-version" title="frontend-ex release">
+                    v<%= @app_version %>·<%= @git_sha %>
+                </div>
             </div>
             <div class="footer-links">
                 <a href="/terms">Terms</a>
