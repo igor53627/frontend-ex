@@ -19,9 +19,8 @@ defmodule FrontendExWeb.BlockController do
 
   defp show_block(conn, id) do
     skin = FrontendExWeb.Skin.current()
-
-    safe_empty = safe_empty()
-
+    # parse_block_and_preview_txs/4 needs the explorer URL for its own
+    # templating; binding it once here avoids a second helper call.
     explorer_url = explorer_url()
 
     stats_task = Task.async(fn -> Client.get_json_cached("/api/v2/stats", :public) end)
@@ -46,23 +45,13 @@ defmodule FrontendExWeb.BlockController do
       {block, txs_preview} =
         parse_block_and_preview_txs(block_json, txs_json, skin, explorer_url)
 
-      base_assigns = %{
-        page_title: "",
-        explorer_url: explorer_url,
-        head_meta: safe_empty,
-        styles: safe_empty,
-        scripts: safe_empty,
-        topbar: safe_empty,
-        nav_home: "",
-        nav_blocks: "",
-        nav_txs: "",
-        nav_tokens: "",
-        nav_nfts: "",
-        block: block,
-        transactions: txs_preview,
-        coin_price: coin_price,
-        gas_price: gas_price
-      }
+      base_assigns =
+        base_assigns(%{
+          block: block,
+          transactions: txs_preview,
+          coin_price: coin_price,
+          gas_price: gas_price
+        })
 
       case skin do
         :classic ->
@@ -100,10 +89,6 @@ defmodule FrontendExWeb.BlockController do
   defp txs_block(conn, id) do
     skin = FrontendExWeb.Skin.current()
 
-    safe_empty = safe_empty()
-
-    explorer_url = explorer_url()
-
     stats_task = Task.async(fn -> Client.get_json_cached("/api/v2/stats", :public) end)
     block_task = Task.async(fn -> Client.get_json_cached("/api/v2/blocks/#{id}", :public) end)
 
@@ -127,24 +112,14 @@ defmodule FrontendExWeb.BlockController do
       tx_count = parse_tx_count(block_json)
       transactions = parse_transactions(txs_json)
 
-      base_assigns = %{
-        page_title: "",
-        explorer_url: explorer_url,
-        head_meta: safe_empty,
-        styles: safe_empty,
-        scripts: safe_empty,
-        topbar: safe_empty,
-        nav_home: "",
-        nav_blocks: "",
-        nav_txs: "",
-        nav_tokens: "",
-        nav_nfts: "",
-        block_height: block_height,
-        tx_count: tx_count,
-        transactions: transactions,
-        coin_price: coin_price,
-        gas_price: gas_price
-      }
+      base_assigns =
+        base_assigns(%{
+          block_height: block_height,
+          tx_count: tx_count,
+          transactions: transactions,
+          coin_price: coin_price,
+          gas_price: gas_price
+        })
 
       case skin do
         :classic ->

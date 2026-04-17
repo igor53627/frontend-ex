@@ -24,10 +24,6 @@ defmodule FrontendExWeb.AddressController do
   defp show_valid(conn, address, params) do
     skin = FrontendExWeb.Skin.current()
 
-    safe_empty = safe_empty()
-
-    explorer_url = explorer_url()
-
     cursor_query =
       case Map.get(params, "cursor") do
         v when is_binary(v) -> String.trim(v)
@@ -83,28 +79,18 @@ defmodule FrontendExWeb.AddressController do
 
       tx_count_display = format_tx_count_display(address_info.transactions_count)
 
-      base_assigns = %{
-        page_title: "",
-        explorer_url: explorer_url,
-        head_meta: safe_empty,
-        styles: safe_empty,
-        scripts: safe_empty,
-        topbar: safe_empty,
-        nav_home: "",
-        nav_blocks: "",
-        nav_txs: "",
-        nav_tokens: "",
-        nav_nfts: "",
-        address: address_info,
-        transactions: transactions,
-        token_balances: token_balances,
-        balance_display: balance_display,
-        balance_usd_display: balance_usd_display,
-        token_holdings_display: token_holdings_display,
-        tx_count_display: tx_count_display,
-        coin_price: coin_price,
-        gas_price: gas_price
-      }
+      base_assigns =
+        base_assigns(%{
+          address: address_info,
+          transactions: transactions,
+          token_balances: token_balances,
+          balance_display: balance_display,
+          balance_usd_display: balance_usd_display,
+          token_holdings_display: token_holdings_display,
+          tx_count_display: tx_count_display,
+          coin_price: coin_price,
+          gas_price: gas_price
+        })
 
       case skin do
         :classic ->

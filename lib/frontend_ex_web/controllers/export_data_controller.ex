@@ -6,8 +6,6 @@ defmodule FrontendExWeb.ExportDataController do
   def index(conn, params) do
     skin = FrontendExWeb.Skin.current()
 
-    safe_empty = {:safe, ""}
-
     export_type =
       case params["type"] do
         "nft-mints" -> "nft-mints"
@@ -29,24 +27,17 @@ defmodule FrontendExWeb.ExportDataController do
     start_block = params["start_block"] || ""
     end_block = params["end_block"] || ""
 
-    explorer_url = explorer_url()
-
-    base_assigns = %{
-      page_title: "",
-      explorer_url: explorer_url,
-      export_type: export_type,
-      export_label: export_label,
-      is_date_mode: is_date_mode,
-      is_block_mode: is_block_mode,
-      start_date: Date.to_string(start_date),
-      end_date: Date.to_string(end_date),
-      start_block: start_block,
-      end_block: end_block,
-      head_meta: safe_empty,
-      scripts: safe_empty,
-      styles: safe_empty,
-      topbar: safe_empty
-    }
+    base_assigns =
+      base_assigns(%{
+        export_type: export_type,
+        export_label: export_label,
+        is_date_mode: is_date_mode,
+        is_block_mode: is_block_mode,
+        start_date: Date.to_string(start_date),
+        end_date: Date.to_string(end_date),
+        start_block: start_block,
+        end_block: end_block
+      })
 
     case skin do
       :classic ->

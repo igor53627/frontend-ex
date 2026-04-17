@@ -11,8 +11,6 @@ defmodule FrontendExWeb.HomeController do
   def index(conn, _params) do
     skin = FrontendExWeb.Skin.current()
 
-    safe_empty = safe_empty()
-
     explorer_url = explorer_url()
     api_url = Application.get_env(:frontend_ex, :blockscout_api_url, explorer_url)
     ws_url = ws_url(explorer_url)
@@ -36,26 +34,20 @@ defmodule FrontendExWeb.HomeController do
     {coin_price, coin_price_change, gas_slow, gas_avg, gas_fast, gas_price} =
       derive_stats_fields(stats)
 
-    base_assigns = %{
-      page_title: "",
-      explorer_url: explorer_url,
-      api_url: api_url,
-      ws_url: ws_url,
-      stats: stats,
-      blocks: blocks,
-      transactions: transactions,
-      coin_price: coin_price,
-      coin_price_change: coin_price_change,
-      gas_price: gas_price,
-      gas_slow: gas_slow,
-      gas_avg: gas_avg,
-      gas_fast: gas_fast,
-      head_meta: safe_empty,
-      scripts: safe_empty,
-      styles: safe_empty,
-      topbar: safe_empty,
-      nav_home: ""
-    }
+    base_assigns =
+      base_assigns(%{
+        api_url: api_url,
+        ws_url: ws_url,
+        stats: stats,
+        blocks: blocks,
+        transactions: transactions,
+        coin_price: coin_price,
+        coin_price_change: coin_price_change,
+        gas_price: gas_price,
+        gas_slow: gas_slow,
+        gas_avg: gas_avg,
+        gas_fast: gas_fast
+      })
 
     case skin do
       :classic ->
