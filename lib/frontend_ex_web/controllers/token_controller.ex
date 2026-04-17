@@ -19,10 +19,6 @@ defmodule FrontendExWeb.TokenController do
       cursor_query = cursor_query_param(params)
 
       skin = FrontendExWeb.Skin.current()
-      safe_empty = safe_empty()
-
-      explorer_url = explorer_url()
-
       is_first_page = is_nil(cursor_query)
 
       stats_path = "/api/v2/stats"
@@ -58,38 +54,28 @@ defmodule FrontendExWeb.TokenController do
             "Older"
           end
 
-        base_assigns = %{
-          page_title: "",
-          explorer_url: explorer_url,
-          head_meta: safe_empty,
-          styles: safe_empty,
-          scripts: safe_empty,
-          topbar: safe_empty,
-          nav_home: "",
-          nav_blocks: "",
-          nav_txs: "",
-          nav_tokens: "",
-          nav_nfts: "",
-          token: token,
-          token_name: header.token_name,
-          token_symbol: header.token_symbol_display,
-          token_type: header.token_type,
-          token_title: header.token_title,
-          avatar_letter: header.avatar_letter,
-          token_address: header.token_address,
-          total_supply_display: header.total_supply_display,
-          holders_display: header.holders_display,
-          total_transfers_display: "N/A",
-          volume_24h_display: header.volume_24h_display,
-          price_display: header.price_display,
-          market_cap_display: header.market_cap_display,
-          transfers: transfers,
-          page_label: page_label,
-          is_first_page: is_first_page,
-          next_cursor: next_cursor,
-          coin_price: coin_price,
-          gas_price: gas_price
-        }
+        base_assigns =
+          base_assigns(%{
+            token: token,
+            token_name: header.token_name,
+            token_symbol: header.token_symbol_display,
+            token_type: header.token_type,
+            token_title: header.token_title,
+            avatar_letter: header.avatar_letter,
+            token_address: header.token_address,
+            total_supply_display: header.total_supply_display,
+            holders_display: header.holders_display,
+            total_transfers_display: "N/A",
+            volume_24h_display: header.volume_24h_display,
+            price_display: header.price_display,
+            market_cap_display: header.market_cap_display,
+            transfers: transfers,
+            page_label: page_label,
+            is_first_page: is_first_page,
+            next_cursor: next_cursor,
+            coin_price: coin_price,
+            gas_price: gas_price
+          })
 
         case skin do
           :classic ->
@@ -129,10 +115,6 @@ defmodule FrontendExWeb.TokenController do
       cursor_query = cursor_query_param(params)
 
       skin = FrontendExWeb.Skin.current()
-      safe_empty = safe_empty()
-
-      explorer_url = explorer_url()
-
       is_first_page = is_nil(cursor_query)
 
       stats_path = "/api/v2/stats"
@@ -168,38 +150,28 @@ defmodule FrontendExWeb.TokenController do
             "More"
           end
 
-        base_assigns = %{
-          page_title: "",
-          explorer_url: explorer_url,
-          head_meta: safe_empty,
-          styles: safe_empty,
-          scripts: safe_empty,
-          topbar: safe_empty,
-          nav_home: "",
-          nav_blocks: "",
-          nav_txs: "",
-          nav_tokens: "",
-          nav_nfts: "",
-          token: token,
-          token_name: header.token_name,
-          token_symbol: header.token_symbol_display,
-          token_type: header.token_type,
-          token_title: header.token_title,
-          avatar_letter: header.avatar_letter,
-          token_address: header.token_address,
-          total_supply_display: header.total_supply_display,
-          holders_display: header.holders_display,
-          total_transfers_display: "N/A",
-          volume_24h_display: header.volume_24h_display,
-          price_display: header.price_display,
-          market_cap_display: header.market_cap_display,
-          holders: holders,
-          page_label: page_label,
-          is_first_page: is_first_page,
-          next_cursor: next_cursor,
-          coin_price: coin_price,
-          gas_price: gas_price
-        }
+        base_assigns =
+          base_assigns(%{
+            token: token,
+            token_name: header.token_name,
+            token_symbol: header.token_symbol_display,
+            token_type: header.token_type,
+            token_title: header.token_title,
+            avatar_letter: header.avatar_letter,
+            token_address: header.token_address,
+            total_supply_display: header.total_supply_display,
+            holders_display: header.holders_display,
+            total_transfers_display: "N/A",
+            volume_24h_display: header.volume_24h_display,
+            price_display: header.price_display,
+            market_cap_display: header.market_cap_display,
+            holders: holders,
+            page_label: page_label,
+            is_first_page: is_first_page,
+            next_cursor: next_cursor,
+            coin_price: coin_price,
+            gas_price: gas_price
+          })
 
         case skin do
           :classic ->
