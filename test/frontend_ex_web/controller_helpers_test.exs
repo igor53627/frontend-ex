@@ -235,9 +235,12 @@ defmodule FrontendExWeb.ControllerHelpersTest do
         "gas_prices" => %{"average" => %{"price" => 12.345}}
       }
 
-      {coin, gas} = ControllerHelpers.derive_coin_gas(stats)
-      assert is_binary(coin)
-      assert is_binary(gas)
+      # Assert exact formatted values — `is_binary/1` alone would miss
+      # regressions in Format.format_price_with_commas/format_one_decimal.
+      assert ControllerHelpers.derive_coin_gas(stats) == {
+               FrontendEx.Format.format_price_with_commas("1234.56"),
+               FrontendEx.Format.format_one_decimal(12.345)
+             }
     end
 
     test "returns {nil, nil} for empty stats map" do
@@ -245,9 +248,8 @@ defmodule FrontendExWeb.ControllerHelpersTest do
     end
 
     test "partial stats map: only coin_price present" do
-      {coin, gas} = ControllerHelpers.derive_coin_gas(%{"coin_price" => "1.00"})
-      assert is_binary(coin)
-      assert gas == nil
+      assert ControllerHelpers.derive_coin_gas(%{"coin_price" => "1.00"}) ==
+               {FrontendEx.Format.format_price_with_commas("1.00"), nil}
     end
   end
 end
