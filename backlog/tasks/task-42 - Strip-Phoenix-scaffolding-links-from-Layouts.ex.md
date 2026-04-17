@@ -25,7 +25,7 @@ priority: low
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
-layouts.ex:38-60 contains boilerplate Phoenix links from scaffold. Any future non-parity route would leak them; future parity work could accidentally inherit them.
+layouts.ex:38-60 contained boilerplate Phoenix links from scaffold. Any future non-parity route would leak them; future parity work could accidentally inherit them.
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary
