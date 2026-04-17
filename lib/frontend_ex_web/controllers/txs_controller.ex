@@ -13,10 +13,6 @@ defmodule FrontendExWeb.TxsController do
   def index(conn, params) when is_map(params) do
     skin = FrontendExWeb.Skin.current()
 
-    safe_empty = safe_empty()
-
-    explorer_url = explorer_url()
-
     page_size = normalize_page_size(params)
 
     cursor_query = cursor_query_from_params(params)
@@ -59,28 +55,18 @@ defmodule FrontendExWeb.TxsController do
         }
       end)
 
-    base_assigns = %{
-      page_title: "",
-      explorer_url: explorer_url,
-      head_meta: safe_empty,
-      styles: safe_empty,
-      scripts: safe_empty,
-      topbar: safe_empty,
-      nav_home: "",
-      nav_blocks: "",
-      nav_txs: "",
-      nav_tokens: "",
-      nav_nfts: "",
-      transactions: transactions,
-      coin_price: coin_price,
-      gas_price: gas_price,
-      page_size: page_size,
-      page_size_options: page_size_options,
-      page_label: page_label,
-      is_first_page: is_first_page,
-      next_cursor: next_cursor,
-      total_transactions_display: total_transactions_display
-    }
+    base_assigns =
+      base_assigns(%{
+        transactions: transactions,
+        coin_price: coin_price,
+        gas_price: gas_price,
+        page_size: page_size,
+        page_size_options: page_size_options,
+        page_label: page_label,
+        is_first_page: is_first_page,
+        next_cursor: next_cursor,
+        total_transactions_display: total_transactions_display
+      })
 
     case skin do
       :classic ->

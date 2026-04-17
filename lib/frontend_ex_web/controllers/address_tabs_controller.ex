@@ -81,10 +81,6 @@ defmodule FrontendExWeb.AddressTabsController do
   end
 
   defp render_tokens(conn, address) when is_binary(address) do
-    safe_empty = safe_empty()
-
-    explorer_url = explorer_url()
-
     stats_path = "/api/v2/stats"
     addr_path = "/api/v2/addresses/#{address}"
     tokens_path = "/api/v2/addresses/#{address}/tokens"
@@ -124,27 +120,17 @@ defmodule FrontendExWeb.AddressTabsController do
 
         tx_count_display = format_tx_count_display(address_info.transactions_count)
 
-        base_assigns = %{
-          page_title: "",
-          explorer_url: explorer_url,
-          head_meta: safe_empty,
-          styles: safe_empty,
-          scripts: safe_empty,
-          topbar: safe_empty,
-          nav_home: "",
-          nav_blocks: "",
-          nav_txs: "",
-          nav_tokens: "",
-          nav_nfts: "",
-          address: address_info,
-          token_balances: token_balances,
-          balance_display: balance_display,
-          balance_usd_display: balance_usd_display,
-          token_holdings_display: token_holdings_display,
-          tx_count_display: tx_count_display,
-          coin_price: coin_price,
-          gas_price: gas_price
-        }
+        base_assigns =
+          base_assigns(%{
+            address: address_info,
+            token_balances: token_balances,
+            balance_display: balance_display,
+            balance_usd_display: balance_usd_display,
+            token_holdings_display: token_holdings_display,
+            tx_count_display: tx_count_display,
+            coin_price: coin_price,
+            gas_price: gas_price
+          })
 
         styles = AddressTabsHTML.classic_tokens_styles(base_assigns)
 
@@ -158,10 +144,6 @@ defmodule FrontendExWeb.AddressTabsController do
   end
 
   defp render_token_transfers(conn, address) when is_binary(address) do
-    safe_empty = safe_empty()
-
-    explorer_url = explorer_url()
-
     stats_path = "/api/v2/stats"
     addr_path = "/api/v2/addresses/#{address}"
     transfers_path = "/api/v2/addresses/#{address}/token-transfers"
@@ -209,27 +191,17 @@ defmodule FrontendExWeb.AddressTabsController do
 
         tx_count_display = format_tx_count_display(address_info.transactions_count)
 
-        base_assigns = %{
-          page_title: "",
-          explorer_url: explorer_url,
-          head_meta: safe_empty,
-          styles: safe_empty,
-          scripts: safe_empty,
-          topbar: safe_empty,
-          nav_home: "",
-          nav_blocks: "",
-          nav_txs: "",
-          nav_tokens: "",
-          nav_nfts: "",
-          address: address_info,
-          token_transfers: token_transfers,
-          balance_display: balance_display,
-          balance_usd_display: balance_usd_display,
-          token_holdings_display: token_holdings_display,
-          tx_count_display: tx_count_display,
-          coin_price: coin_price,
-          gas_price: gas_price
-        }
+        base_assigns =
+          base_assigns(%{
+            address: address_info,
+            token_transfers: token_transfers,
+            balance_display: balance_display,
+            balance_usd_display: balance_usd_display,
+            token_holdings_display: token_holdings_display,
+            tx_count_display: tx_count_display,
+            coin_price: coin_price,
+            gas_price: gas_price
+          })
 
         styles = AddressHTML.classic_styles(base_assigns)
 
@@ -243,10 +215,6 @@ defmodule FrontendExWeb.AddressTabsController do
   end
 
   defp render_internal(conn, address) when is_binary(address) do
-    safe_empty = safe_empty()
-
-    explorer_url = explorer_url()
-
     stats_path = "/api/v2/stats"
     addr_path = "/api/v2/addresses/#{address}"
     internal_path = "/api/v2/addresses/#{address}/internal-transactions"
@@ -294,27 +262,17 @@ defmodule FrontendExWeb.AddressTabsController do
 
         tx_count_display = format_tx_count_display(address_info.transactions_count)
 
-        base_assigns = %{
-          page_title: "",
-          explorer_url: explorer_url,
-          head_meta: safe_empty,
-          styles: safe_empty,
-          scripts: safe_empty,
-          topbar: safe_empty,
-          nav_home: "",
-          nav_blocks: "",
-          nav_txs: "",
-          nav_tokens: "",
-          nav_nfts: "",
-          address: address_info,
-          internal_txns: internal_txns,
-          balance_display: balance_display,
-          balance_usd_display: balance_usd_display,
-          token_holdings_display: token_holdings_display,
-          tx_count_display: tx_count_display,
-          coin_price: coin_price,
-          gas_price: gas_price
-        }
+        base_assigns =
+          base_assigns(%{
+            address: address_info,
+            internal_txns: internal_txns,
+            balance_display: balance_display,
+            balance_usd_display: balance_usd_display,
+            token_holdings_display: token_holdings_display,
+            tx_count_display: tx_count_display,
+            coin_price: coin_price,
+            gas_price: gas_price
+          })
 
         styles = AddressHTML.classic_styles(base_assigns)
 

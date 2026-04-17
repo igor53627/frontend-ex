@@ -9,10 +9,6 @@ defmodule FrontendExWeb.TokensController do
   def index(conn, _params) do
     skin = FrontendExWeb.Skin.current()
 
-    safe_empty = safe_empty()
-
-    explorer_url = explorer_url()
-
     stats_path = "/api/v2/stats"
     tokens_path = "/api/v2/tokens?limit=#{@tokens_limit}"
 
@@ -25,22 +21,12 @@ defmodule FrontendExWeb.TokensController do
     {coin_price, gas_price} = derive_coin_gas(stats_json)
     tokens = parse_tokens(tokens_json)
 
-    base_assigns = %{
-      page_title: "",
-      explorer_url: explorer_url,
-      head_meta: safe_empty,
-      styles: safe_empty,
-      scripts: safe_empty,
-      topbar: safe_empty,
-      nav_home: "",
-      nav_blocks: "",
-      nav_txs: "",
-      nav_tokens: "",
-      nav_nfts: "",
-      tokens: tokens,
-      coin_price: coin_price,
-      gas_price: gas_price
-    }
+    base_assigns =
+      base_assigns(%{
+        tokens: tokens,
+        coin_price: coin_price,
+        gas_price: gas_price
+      })
 
     case skin do
       :classic ->

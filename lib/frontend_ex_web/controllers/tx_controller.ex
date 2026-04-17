@@ -20,10 +20,6 @@ defmodule FrontendExWeb.TxController do
     else
       skin = FrontendExWeb.Skin.current()
 
-      safe_empty = safe_empty()
-
-      explorer_url = explorer_url()
-
       base_url = Application.get_env(:frontend_ex, :base_url, "https://fast.53627.org")
 
       stats_task = Task.async(fn -> Client.get_json_cached("/api/v2/stats", :public) end)
@@ -94,39 +90,29 @@ defmodule FrontendExWeb.TxController do
             do: Format.format_wei_to_gwei(display_tx.max_priority_fee_per_gas),
             else: nil
 
-        base_assigns = %{
-          page_title: "",
-          explorer_url: explorer_url,
-          base_url: base_url,
-          head_meta: safe_empty,
-          styles: safe_empty,
-          scripts: safe_empty,
-          topbar: safe_empty,
-          nav_home: "",
-          nav_blocks: "",
-          nav_txs: "",
-          nav_tokens: "",
-          nav_nfts: "",
-          tx: display_tx,
-          from_is_contract_like: from_is_contract_like,
-          from_is_verified: from_is_verified,
-          to_is_contract_like: to_is_contract_like,
-          to_is_verified: to_is_verified,
-          fee_eth: fee_eth,
-          timestamp_relative: timestamp_relative,
-          timestamp_readable: timestamp_readable,
-          method_id: method_id,
-          gas_display: gas_display,
-          gas_percentage: gas_percentage,
-          gas_price_eth: gas_price_eth,
-          gas_price_gwei: gas_price_gwei,
-          base_fee_gwei: base_fee_gwei,
-          max_fee_gwei: max_fee_gwei,
-          max_priority_fee_gwei: max_priority_fee_gwei,
-          logs_count: logs_count,
-          coin_price: coin_price,
-          gas_price: gas_price
-        }
+        base_assigns =
+          base_assigns(%{
+            base_url: base_url,
+            tx: display_tx,
+            from_is_contract_like: from_is_contract_like,
+            from_is_verified: from_is_verified,
+            to_is_contract_like: to_is_contract_like,
+            to_is_verified: to_is_verified,
+            fee_eth: fee_eth,
+            timestamp_relative: timestamp_relative,
+            timestamp_readable: timestamp_readable,
+            method_id: method_id,
+            gas_display: gas_display,
+            gas_percentage: gas_percentage,
+            gas_price_eth: gas_price_eth,
+            gas_price_gwei: gas_price_gwei,
+            base_fee_gwei: base_fee_gwei,
+            max_fee_gwei: max_fee_gwei,
+            max_priority_fee_gwei: max_priority_fee_gwei,
+            logs_count: logs_count,
+            coin_price: coin_price,
+            gas_price: gas_price
+          })
 
         case skin do
           :classic ->
@@ -206,8 +192,6 @@ defmodule FrontendExWeb.TxController do
     if not valid_tx_hash?(hash) do
       send_tx_not_found(conn)
     else
-      safe_empty = safe_empty()
-
       stats_task = Task.async(fn -> Client.get_json_cached("/api/v2/stats", :public) end)
 
       tx_task =
@@ -245,27 +229,17 @@ defmodule FrontendExWeb.TxController do
         value_eth = Format.format_wei_to_eth(tx.value)
         value_usd = compute_value_usd(tx.value, coin_price_f)
 
-        assigns = %{
-          page_title: "",
-          explorer_url: explorer_url(),
-          base_url: Application.get_env(:frontend_ex, :base_url, "https://fast.53627.org"),
-          head_meta: safe_empty,
-          styles: safe_empty,
-          scripts: safe_empty,
-          topbar: safe_empty,
-          nav_home: "",
-          nav_blocks: "",
-          nav_txs: "",
-          nav_tokens: "",
-          nav_nfts: "",
-          tx: tx,
-          short_hash: tx_short_hash_card(hash),
-          fee_eth: fee_eth,
-          timestamp_relative: timestamp_relative,
-          gas_display: gas_display,
-          value_eth: value_eth,
-          value_usd: value_usd
-        }
+        assigns =
+          base_assigns(%{
+            base_url: Application.get_env(:frontend_ex, :base_url, "https://fast.53627.org"),
+            tx: tx,
+            short_hash: tx_short_hash_card(hash),
+            fee_eth: fee_eth,
+            timestamp_relative: timestamp_relative,
+            gas_display: gas_display,
+            value_eth: value_eth,
+            value_usd: value_usd
+          })
 
         render(conn, :tx_card, assigns)
       end
@@ -418,10 +392,6 @@ defmodule FrontendExWeb.TxController do
   defp valid_eth_address?(address) when is_binary(address), do: eth_address?(String.trim(address))
 
   defp render_logs_tab(conn, hash) when is_binary(hash) do
-    safe_empty = safe_empty()
-
-    explorer_url = explorer_url()
-
     stats_task = Task.async(fn -> Client.get_json_cached("/api/v2/stats", :public) end)
 
     logs_task =
@@ -435,25 +405,15 @@ defmodule FrontendExWeb.TxController do
     logs = parse_tx_logs(logs_json)
     logs_count = length(logs)
 
-    base_assigns = %{
-      page_title: "",
-      explorer_url: explorer_url,
-      base_url: Application.get_env(:frontend_ex, :base_url, "https://fast.53627.org"),
-      head_meta: safe_empty,
-      styles: safe_empty,
-      scripts: safe_empty,
-      topbar: safe_empty,
-      nav_home: "",
-      nav_blocks: "",
-      nav_txs: "",
-      nav_tokens: "",
-      nav_nfts: "",
-      tx_hash: hash,
-      logs: logs,
-      logs_count: logs_count,
-      coin_price: coin_price,
-      gas_price: gas_price
-    }
+    base_assigns =
+      base_assigns(%{
+        base_url: Application.get_env(:frontend_ex, :base_url, "https://fast.53627.org"),
+        tx_hash: hash,
+        logs: logs,
+        logs_count: logs_count,
+        coin_price: coin_price,
+        gas_price: gas_price
+      })
 
     styles = TxHTML.classic_logs_styles(base_assigns)
 
@@ -465,10 +425,6 @@ defmodule FrontendExWeb.TxController do
   end
 
   defp render_state_tab(conn, hash) when is_binary(hash) do
-    safe_empty = safe_empty()
-
-    explorer_url = explorer_url()
-
     stats_task = Task.async(fn -> Client.get_json_cached("/api/v2/stats", :public) end)
 
     state_task =
@@ -492,25 +448,15 @@ defmodule FrontendExWeb.TxController do
     state_changes = parse_state_changes(state_json)
     logs_count = parse_logs_count(logs_json)
 
-    base_assigns = %{
-      page_title: "",
-      explorer_url: explorer_url,
-      base_url: Application.get_env(:frontend_ex, :base_url, "https://fast.53627.org"),
-      head_meta: safe_empty,
-      styles: safe_empty,
-      scripts: safe_empty,
-      topbar: safe_empty,
-      nav_home: "",
-      nav_blocks: "",
-      nav_txs: "",
-      nav_tokens: "",
-      nav_nfts: "",
-      tx_hash: hash,
-      state_changes: state_changes,
-      logs_count: logs_count,
-      coin_price: coin_price,
-      gas_price: gas_price
-    }
+    base_assigns =
+      base_assigns(%{
+        base_url: Application.get_env(:frontend_ex, :base_url, "https://fast.53627.org"),
+        tx_hash: hash,
+        state_changes: state_changes,
+        logs_count: logs_count,
+        coin_price: coin_price,
+        gas_price: gas_price
+      })
 
     styles = TxHTML.classic_state_styles(base_assigns)
 
@@ -522,10 +468,6 @@ defmodule FrontendExWeb.TxController do
   end
 
   defp render_internal_tab(conn, hash, params) when is_binary(hash) and is_map(params) do
-    safe_empty = safe_empty()
-
-    explorer_url = explorer_url()
-
     show_advanced = parse_advanced(params)
 
     stats_task = Task.async(fn -> Client.get_json_cached("/api/v2/stats", :public) end)
@@ -567,27 +509,17 @@ defmodule FrontendExWeb.TxController do
 
     logs_count = parse_logs_count(logs_json)
 
-    base_assigns = %{
-      page_title: "",
-      explorer_url: explorer_url,
-      base_url: Application.get_env(:frontend_ex, :base_url, "https://fast.53627.org"),
-      head_meta: safe_empty,
-      styles: safe_empty,
-      scripts: safe_empty,
-      topbar: safe_empty,
-      nav_home: "",
-      nav_blocks: "",
-      nav_txs: "",
-      nav_tokens: "",
-      nav_nfts: "",
-      tx_hash: hash,
-      internal_txns: internal_txns,
-      logs_count: logs_count,
-      show_advanced: show_advanced,
-      zero_value_count: zero_value_count,
-      coin_price: coin_price,
-      gas_price: gas_price
-    }
+    base_assigns =
+      base_assigns(%{
+        base_url: Application.get_env(:frontend_ex, :base_url, "https://fast.53627.org"),
+        tx_hash: hash,
+        internal_txns: internal_txns,
+        logs_count: logs_count,
+        show_advanced: show_advanced,
+        zero_value_count: zero_value_count,
+        coin_price: coin_price,
+        gas_price: gas_price
+      })
 
     styles = TxHTML.classic_internal_styles(base_assigns)
     scripts = TxHTML.classic_internal_scripts(base_assigns)

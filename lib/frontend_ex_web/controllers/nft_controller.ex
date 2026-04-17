@@ -44,10 +44,6 @@ defmodule FrontendExWeb.NftController do
   defp render_transfers(conn, params) when is_map(params) do
     skin = FrontendExWeb.Skin.current()
 
-    safe_empty = safe_empty()
-
-    explorer_url = explorer_url()
-
     page_size = normalize_page_size(params)
     cursor_query = normalize_cursor_param(Map.get(params, "cursor"))
     is_first_page = is_nil(cursor_query)
@@ -74,27 +70,17 @@ defmodule FrontendExWeb.NftController do
         }
       end)
 
-    base_assigns = %{
-      page_title: "",
-      explorer_url: explorer_url,
-      head_meta: safe_empty,
-      styles: safe_empty,
-      scripts: safe_empty,
-      topbar: safe_empty,
-      nav_home: "",
-      nav_blocks: "",
-      nav_txs: "",
-      nav_tokens: "",
-      nav_nfts: "",
-      transfers: transfers,
-      coin_price: coin_price,
-      gas_price: gas_price,
-      page_size: page_size,
-      page_size_options: page_size_options,
-      page_label: page_label,
-      is_first_page: is_first_page,
-      next_cursor: next_cursor
-    }
+    base_assigns =
+      base_assigns(%{
+        transfers: transfers,
+        coin_price: coin_price,
+        gas_price: gas_price,
+        page_size: page_size,
+        page_size_options: page_size_options,
+        page_label: page_label,
+        is_first_page: is_first_page,
+        next_cursor: next_cursor
+      })
 
     case skin do
       :classic ->
@@ -120,10 +106,6 @@ defmodule FrontendExWeb.NftController do
 
   defp render_latest_mints(conn, params) when is_map(params) do
     skin = FrontendExWeb.Skin.current()
-
-    safe_empty = safe_empty()
-
-    explorer_url = explorer_url()
 
     page_size = normalize_page_size(params)
     cursor_query = normalize_cursor_param(Map.get(params, "cursor"))
@@ -151,27 +133,17 @@ defmodule FrontendExWeb.NftController do
         }
       end)
 
-    base_assigns = %{
-      page_title: "",
-      explorer_url: explorer_url,
-      head_meta: safe_empty,
-      styles: safe_empty,
-      scripts: safe_empty,
-      topbar: safe_empty,
-      nav_home: "",
-      nav_blocks: "",
-      nav_txs: "",
-      nav_tokens: "",
-      nav_nfts: "",
-      mints: mints,
-      coin_price: coin_price,
-      gas_price: gas_price,
-      page_size: page_size,
-      page_size_options: page_size_options,
-      page_label: page_label,
-      is_first_page: is_first_page,
-      next_cursor: next_cursor
-    }
+    base_assigns =
+      base_assigns(%{
+        mints: mints,
+        coin_price: coin_price,
+        gas_price: gas_price,
+        page_size: page_size,
+        page_size_options: page_size_options,
+        page_label: page_label,
+        is_first_page: is_first_page,
+        next_cursor: next_cursor
+      })
 
     case skin do
       :classic ->
