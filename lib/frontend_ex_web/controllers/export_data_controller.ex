@@ -29,7 +29,7 @@ defmodule FrontendExWeb.ExportDataController do
     start_block = params["start_block"] || ""
     end_block = params["end_block"] || ""
 
-    explorer_url = Application.get_env(:frontend_ex, :blockscout_url, "https://sepolia.53627.org")
+    explorer_url = explorer_url()
 
     base_assigns = %{
       page_title: "",

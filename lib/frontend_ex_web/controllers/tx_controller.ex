@@ -247,8 +247,7 @@ defmodule FrontendExWeb.TxController do
 
         assigns = %{
           page_title: "",
-          explorer_url:
-            Application.get_env(:frontend_ex, :blockscout_url, "https://sepolia.53627.org"),
+          explorer_url: explorer_url(),
           base_url: Application.get_env(:frontend_ex, :base_url, "https://fast.53627.org"),
           head_meta: safe_empty,
           styles: safe_empty,
