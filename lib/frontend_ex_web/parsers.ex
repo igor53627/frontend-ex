@@ -46,13 +46,29 @@ defmodule FrontendExWeb.Parsers do
 
   @doc """
   Returns `true` iff `v` is a valid block identifier: either a non-negative
-  decimal string (block number) or a 32-byte hex hash.
+  decimal string (block number, bounded to `u64`) or a 32-byte hex hash.
+
+  Decimal strings above `2^64 - 1` are rejected so the route gate matches the
+  downstream `parse_u64/1` contract — prevents oversized path segments from
+  slipping past the router as "valid" block IDs.
   """
   @spec block_id?(term()) :: boolean()
-  def block_id?(v) when is_binary(v),
-    do: Regex.match?(@decimal_re, v) or Regex.match?(@hash32_re, v)
+  def block_id?(v) when is_binary(v) do
+    cond do
+      Regex.match?(@hash32_re, v) -> true
+      Regex.match?(@decimal_re, v) -> u64_decimal?(v)
+      true -> false
+    end
+  end
 
   def block_id?(_), do: false
+
+  defp u64_decimal?(s) when is_binary(s) do
+    case Integer.parse(s) do
+      {n, ""} when n >= 0 and n <= @u64_max -> true
+      _ -> false
+    end
+  end
 
   @doc """
   Parses a non-negative integer (`u64`-shaped) from an integer or binary.

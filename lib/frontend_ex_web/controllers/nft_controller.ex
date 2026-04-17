@@ -171,13 +171,11 @@ defmodule FrontendExWeb.NftController do
     do:
       FrontendExWeb.Pagination.normalize_page_size(params, @page_size_options, @default_page_size)
 
-  defp normalize_export_page_size(params),
-    do:
-      FrontendExWeb.Pagination.normalize_page_size(
-        params,
-        @page_size_options,
-        @default_export_page_size
-      )
+  # CSV export always uses the largest available page size so
+  # `@max_pages * page_size` can reach `@export_limit`. Previously this read
+  # `ps` from params, which let `ps=10` cap the scan at 50 × 10 = 500 rows,
+  # silently truncating filtered exports below the 1000-row cap.
+  defp normalize_export_page_size(_params), do: @default_export_page_size
 
   defp token_transfers_path(page_size, nil, token_types)
        when is_integer(page_size) and is_binary(token_types) do
