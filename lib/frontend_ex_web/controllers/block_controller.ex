@@ -31,9 +31,11 @@ defmodule FrontendExWeb.BlockController do
         Client.get_json_cached("/api/v2/blocks/#{id}/transactions", :public)
       end)
 
-    stats_json = await_ok(stats_task, "block", "stats")
-    block_json = await_ok(block_task, "block", "block")
-    txs_json = await_ok(txs_task, "block", "block_txs")
+    [stats_json, block_json, txs_json] =
+      await_many_ok(
+        [{"stats", stats_task}, {"block", block_task}, {"block_txs", txs_task}],
+        "block"
+      )
 
     if is_nil(block_json) do
       conn
@@ -97,9 +99,11 @@ defmodule FrontendExWeb.BlockController do
         Client.get_json_cached("/api/v2/blocks/#{id}/transactions", :public)
       end)
 
-    stats_json = await_ok(stats_task, "block", "stats")
-    block_json = await_ok(block_task, "block", "block")
-    txs_json = await_ok(txs_task, "block", "block_txs")
+    [stats_json, block_json, txs_json] =
+      await_many_ok(
+        [{"stats", stats_task}, {"block", block_task}, {"block_txs", txs_task}],
+        "block"
+      )
 
     if is_nil(block_json) do
       conn
