@@ -25,7 +25,9 @@ priority: high
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
-telemetry.ex:52, 58, 64 use tags: [:route]. Every unique URL becomes a Prometheus label — DoS/ops risk at scale.
+**Original premise (superseded by the Final Summary):** telemetry.ex:52, 58, 64 use `tags: [:route]`, suggested DoS/ops risk from unbounded per-URL labels.
+
+**Actual behavior:** Phoenix emits `:route` as the matched route *template* (e.g. `/block/:id`), not the resolved URL. Cardinality is bounded by defined-route count, so there is no risk. See the Final Summary for citations.
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary

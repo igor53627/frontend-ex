@@ -32,6 +32,8 @@ Per-request Application.get_env/2 calls: skin.ex:8 (FF_SKIN), plugs/fast_layout.
 ## Final Summary
 
 <!-- SECTION:FINAL_SUMMARY:BEGIN -->
+**Resolution:** closed as intentionally deferred (the backlog config only supports `To Do` / `In Progress` / `Done`; marking `Done` to close the ticket — none of the ACs were implemented as originally scoped, see below).
+
 Verified: `Application.get_env/3` is an ETS lookup (sub-microsecond). Skin.current/0 is called ~5x per request and request_adapter/0 once per upstream call. Total contribution to request latency: single-digit microseconds against typical ms-scale request times. Not a realistic hot-path concern.
 
 Caching in `:persistent_term` was considered but would break existing test semantics: `test/frontend_ex_web/export_data_parity_test.exs` mutates `:ff_skin` and `test/frontend_ex/blockscout/client_test.exs` mutates `:blockscout_request_adapter` via `Application.put_env/3`. A cache would silently serve the pre-mutation value.
