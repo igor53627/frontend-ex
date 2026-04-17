@@ -138,15 +138,29 @@ defmodule FrontendExWeb.ControllerHelpersTest do
       assert log =~ "test: upstream request timed out"
     end
 
-    test "recovers late task result delivered between yield_many timeout and shutdown" do
-      # Force yield_many/2 to time out (timeout_ms=0 is reliable), so we
-      # enter the late-shutdown branch. Task.shutdown then sees the reply
-      # message that was sent before brutal-kill could land, and returns
-      # {:ok, {:ok, result}}. This locks in the pattern-match recovery
-      # added after codereview of 862ea78.
-      task = Task.async(fn -> {:ok, :late} end)
-      # Give the task process a moment to complete and enqueue its reply.
-      Process.sleep(20)
+    test "does not misclassify completed task as timeout with zero window" do
+      # Regression for the late-reply recovery in await_many_ok/3's
+      # `Task.shutdown/2` branch. Deterministic synchronisation: gate the
+      # task on a `:continue` message, then peek (via `Process.info`, NOT
+      # `receive`) until the task's reply tuple is sitting in our mailbox.
+      # By the time `await_many_ok/3` is called, either yield_many sees it
+      # directly OR shutdown picks up the pending message — the visible
+      # outcome is the same: the value is returned and no timeout is logged.
+      #
+      # Using `receive` to detect the reply would consume it, causing a
+      # real timeout. `:erlang.process_info(self(), :messages)` reads the
+      # mailbox without mutation.
+      task =
+        Task.async(fn ->
+          receive do
+            :continue -> :ok
+          end
+
+          {:ok, :late}
+        end)
+
+      send(task.pid, :continue)
+      await_task_reply_in_mailbox(task.ref)
 
       log =
         capture_log(fn ->
@@ -154,6 +168,26 @@ defmodule FrontendExWeb.ControllerHelpersTest do
         end)
 
       refute log =~ "timed out"
+      refute log =~ "crashed"
+    end
+
+    # Spin until `{ref, _}` appears in the mailbox, without consuming it.
+    defp await_task_reply_in_mailbox(ref, attempts \\ 100)
+
+    defp await_task_reply_in_mailbox(_ref, 0), do: flunk("task reply never arrived")
+
+    defp await_task_reply_in_mailbox(ref, attempts) do
+      {:messages, msgs} = :erlang.process_info(self(), :messages)
+
+      if Enum.any?(msgs, fn
+           {^ref, _} -> true
+           _ -> false
+         end) do
+        :ok
+      else
+        Process.sleep(1)
+        await_task_reply_in_mailbox(ref, attempts - 1)
+      end
     end
   end
 
