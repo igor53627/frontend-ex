@@ -82,6 +82,12 @@ defmodule FrontendExWeb.ParsersTest do
       refute Parsers.block_id?("")
     end
 
+    test "rejects decimal block numbers above u64" do
+      assert Parsers.block_id?("18446744073709551615")
+      refute Parsers.block_id?("18446744073709551616")
+      refute Parsers.block_id?(String.duplicate("9", 40))
+    end
+
     test "rejects non-binary input" do
       refute Parsers.block_id?(123)
       refute Parsers.block_id?(nil)
