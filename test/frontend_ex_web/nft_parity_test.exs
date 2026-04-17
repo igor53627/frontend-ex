@@ -103,6 +103,30 @@ defmodule FrontendExWeb.NftParityTest do
     Golden.assert_golden!(@golden_latest_mints_csv, body)
   end
 
+  test "CSV export ignores user ps — always uses the export default page size" do
+    # CSV export uses `@default_export_page_size` regardless of `?ps=…`, so
+    # `@max_pages * page_size` is always large enough to reach `@export_limit`.
+    # A hostile or small `ps` value would otherwise silently cap the scan
+    # below the intended row limit. Compare: without ps vs ps=10 vs ps=1000.
+    restore =
+      put_env(%{
+        ff_skin: "classic",
+        blockscout_url: @explorer_url,
+        blockscout_api_url: @fixture_api_url,
+        blockscout_ws_url: nil,
+        clock_utc_now: @frozen_now
+      })
+
+    on_exit(restore)
+
+    base = response(get(build_conn(), "/nft-latest-mints.csv?mode=block"), 200)
+    small = response(get(build_conn(), "/nft-latest-mints.csv?mode=block&ps=10"), 200)
+    large = response(get(build_conn(), "/nft-latest-mints.csv?mode=block&ps=1000"), 200)
+
+    assert base == small
+    assert base == large
+  end
+
   defp put_env(kvs) when is_map(kvs) do
     prev =
       for {k, _v} <- kvs, into: %{} do
