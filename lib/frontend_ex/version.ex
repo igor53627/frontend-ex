@@ -6,9 +6,11 @@ defmodule FrontendEx.Version do
   * `sha/0` — short git SHA from the `GIT_SHA` env var at *build* time, or
     `"dev"` when unset. `deploy.sh` forwards the SHA; release builders
     should set it explicitly.
-  * `backend/0` — upstream Blockscout API version, fetched from
-    `/api/v2/health` via the shared cache (5-minute TTL). Returns `nil` if
-    the upstream hasn't exposed a version field.
+  * `backend/0` — upstream Blockscout version+commit, fetched from
+    `/api/v2/health` via the shared cache (5-minute TTL). Returns a
+    `%{version: binary(), sha: binary() | nil}` map if the upstream exposes
+    `version`; `nil` if not. `sha` is `nil` for pre-0.4.4 blockscout-exex
+    (before the `commit` field existed).
   * `display/0` — formatted for display (`"v0.2.0·abc1234"`)
   """
 
@@ -35,18 +37,29 @@ defmodule FrontendEx.Version do
   @spec sha() :: binary()
   def sha, do: Application.get_env(:frontend_ex, :git_sha_override, @compiled_sha)
 
-  @spec backend() :: binary() | nil
+  @spec backend() :: %{version: binary(), sha: binary() | nil} | nil
   def backend do
     case Application.get_env(:frontend_ex, :backend_version_override, :unset) do
       :unset -> fetch_backend()
-      override -> override
+      nil -> nil
+      override when is_map(override) -> override
+      version when is_binary(version) -> %{version: version, sha: nil}
     end
   end
 
   defp fetch_backend do
     case FrontendEx.Blockscout.Client.get_json_cached("/api/v2/health", :public, @backend_ttl_ms) do
-      {:ok, %{"version" => v}} when is_binary(v) and v != "" -> v
-      _ -> nil
+      {:ok, %{"version" => v} = resp} when is_binary(v) and v != "" ->
+        sha =
+          case Map.get(resp, "commit") do
+            s when is_binary(s) and s != "" -> String.slice(s, 0, 12)
+            _ -> nil
+          end
+
+        %{version: v, sha: sha}
+
+      _ ->
+        nil
     end
   end
 

@@ -42,6 +42,8 @@ defmodule FrontendExWeb.ControllerHelpers do
   """
   @spec base_assigns(map() | keyword()) :: map()
   def base_assigns(extras \\ %{}) do
+    backend = Version.backend()
+
     base = %{
       page_title: "",
       explorer_url: explorer_url(),
@@ -56,7 +58,8 @@ defmodule FrontendExWeb.ControllerHelpers do
       nav_nfts: "",
       app_version: Version.app(),
       git_sha: Version.sha(),
-      backend_version: Version.backend()
+      backend_version: backend && backend.version,
+      backend_sha: backend && backend.sha
     }
 
     Map.merge(base, Map.new(extras))
