@@ -1,5 +1,8 @@
 defmodule FrontendEx.VersionTest do
-  use ExUnit.Case, async: true
+  # Some tests here mutate global `:backend_version_override` in the
+  # application env, which is process-global. Keep this non-async so we
+  # don't race other tests that read it.
+  use ExUnit.Case, async: false
 
   alias FrontendEx.Version
 
@@ -146,6 +149,13 @@ defmodule FrontendEx.VersionTest do
     test "override also strips v prefix from the version" do
       Application.put_env(:frontend_ex, :backend_version_override, "v0.4.4")
       assert Version.backend() == %{version: "0.4.4", sha: nil}
+    end
+
+    test "unexpected override shapes return nil without crashing" do
+      for bad <- [42, [:oops], {:tuple, :value}, :atom, 3.14] do
+        Application.put_env(:frontend_ex, :backend_version_override, bad)
+        assert Version.backend() == nil, "expected nil for #{inspect(bad)}"
+      end
     end
   end
 end

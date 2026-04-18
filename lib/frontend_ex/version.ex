@@ -44,6 +44,9 @@ defmodule FrontendEx.Version do
       nil -> nil
       override when is_map(override) -> normalize_override(override)
       version when is_binary(version) -> %{version: strip_v_prefix(version), sha: nil}
+      # Any other shape (integer, list, atom, …) is malformed — reject
+      # gracefully rather than crashing the render path with CaseClauseError.
+      _ -> nil
     end
   end
 
