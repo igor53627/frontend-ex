@@ -58,8 +58,10 @@ defmodule FrontendExWeb.ControllerHelpers do
       nav_nfts: "",
       app_version: Version.app(),
       git_sha: Version.sha(),
-      backend_version: backend && backend.version,
-      backend_sha: backend && backend.sha
+      # `Map.get/2` is defensive: an override with unexpected keys would
+      # otherwise crash the request via `backend.version` KeyError.
+      backend_version: backend && Map.get(backend, :version),
+      backend_sha: backend && Map.get(backend, :sha)
     }
 
     Map.merge(base, Map.new(extras))

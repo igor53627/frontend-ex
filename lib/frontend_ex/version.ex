@@ -42,26 +42,59 @@ defmodule FrontendEx.Version do
     case Application.get_env(:frontend_ex, :backend_version_override, :unset) do
       :unset -> fetch_backend()
       nil -> nil
-      override when is_map(override) -> override
-      version when is_binary(version) -> %{version: version, sha: nil}
+      override when is_map(override) -> normalize_override(override)
+      version when is_binary(version) -> %{version: strip_v_prefix(version), sha: nil}
+    end
+  end
+
+  defp normalize_override(map) when is_map(map) do
+    # Accept both atom-keyed and string-keyed overrides; normalize to atom
+    # keys so callers can always `Map.get(x, :version)` safely.
+    version = Map.get(map, :version) || Map.get(map, "version")
+    sha = Map.get(map, :sha) || Map.get(map, "sha")
+
+    cond do
+      is_binary(version) and version != "" ->
+        %{version: strip_v_prefix(version), sha: (is_binary(sha) and sha) || nil}
+
+      true ->
+        nil
     end
   end
 
   defp fetch_backend do
     case FrontendEx.Blockscout.Client.get_json_cached("/api/v2/health", :public, @backend_ttl_ms) do
-      {:ok, %{"version" => v} = resp} when is_binary(v) and v != "" ->
-        sha =
-          case Map.get(resp, "commit") do
-            s when is_binary(s) and s != "" -> String.slice(s, 0, 12)
-            _ -> nil
-          end
-
-        %{version: v, sha: sha}
-
-      _ ->
-        nil
+      {:ok, resp} when is_map(resp) -> parse_health_response(resp)
+      _ -> nil
     end
   end
+
+  @doc """
+  Parses a `/api/v2/health` response map into a `{version, sha}` map.
+
+  Returns `nil` if the response is missing or malformed. Exposed for tests.
+  """
+  @spec parse_health_response(term()) :: %{version: binary(), sha: binary() | nil} | nil
+  def parse_health_response(%{"version" => v} = resp) when is_binary(v) and v != "" do
+    sha =
+      case Map.get(resp, "commit") do
+        s when is_binary(s) and s != "" -> String.slice(s, 0, 12)
+        _ -> nil
+      end
+
+    %{version: strip_v_prefix(v), sha: sha}
+  end
+
+  def parse_health_response(_), do: nil
+
+  # Strip a single leading `v`/`V` but only when followed by a digit — avoids
+  # mangling strings like "version-1.2.3" while handling `v0.4.4` defensively.
+  defp strip_v_prefix(<<c, d, _::binary>> = s)
+       when (c == ?v or c == ?V) and d >= ?0 and d <= ?9 do
+    binary_part(s, 1, byte_size(s) - 1)
+  end
+
+  defp strip_v_prefix(s) when is_binary(s), do: s
 
   @spec display() :: binary()
   def display, do: "v#{app()}·#{sha()}"
